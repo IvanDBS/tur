@@ -4,7 +4,7 @@ class ObsApiService
   include ActiveModel::Model
   include ActiveModel::Attributes
 
-  attribute :base_url, :string, default: -> { ENV['OBS_API_BASE_URL'] || 'https://api.obs.md' }
+  attribute :base_url, :string, default: -> { ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md' }
   attribute :api_key, :string, default: -> { ENV['OBS_API_KEY'] }
   attribute :api_secret, :string, default: -> { ENV['OBS_API_SECRET'] }
 
@@ -25,7 +25,7 @@ class ObsApiService
 
   def refresh_token(refresh_token)
     response = @connection.post('/api/jwt/refresh-token') do |req|
-      req.body = { refresh_token: refresh_token }.to_json
+      req.body = { refreshToken: refresh_token }.to_json
       req.headers['Content-Type'] = 'application/json'
     end
 
@@ -46,13 +46,19 @@ class ObsApiService
     handle_response(response)
   end
 
-  def countries
-    response = @connection.get('/api/v2/search/countries')
+  def countries(airport_city_from = nil)
+    url = '/api/v2/search/countries'
+    url += "?airport_city_from=#{airport_city_from}" if airport_city_from.present?
+    
+    response = @connection.get(url)
     handle_response(response)
   end
 
-  def package_templates(country_id)
-    response = @connection.get("/api/v2/search/countries/#{country_id}/package_templates")
+  def package_templates(country_id, airport_city_from = nil)
+    url = "/api/v2/search/countries/#{country_id}/package_templates"
+    url += "?airport_city_from=#{airport_city_from}" if airport_city_from.present?
+    
+    response = @connection.get(url)
     handle_response(response)
   end
 
@@ -62,6 +68,46 @@ class ObsApiService
       req.headers['Content-Type'] = 'application/json'
     end
 
+    handle_response(response)
+  end
+
+  # Additional search endpoints from OBS API documentation
+  def calendar_hints(params = {})
+    url = '/api/v2/search/calendar_hints'
+    url += "?#{params.to_query}" if params.any?
+    
+    response = @connection.get(url)
+    handle_response(response)
+  end
+
+  def available_nights(params = {})
+    url = '/api/v2/search/available_nights'
+    url += "?#{params.to_query}" if params.any?
+    
+    response = @connection.get(url)
+    handle_response(response)
+  end
+
+  def hotel_categories(package_template_id)
+    response = @connection.get("/api/v2/search/package_templates/#{package_template_id}/hotel_categories")
+    handle_response(response)
+  end
+
+  def locations(package_template_id)
+    response = @connection.get("/api/v2/search/package_templates/#{package_template_id}/locations")
+    handle_response(response)
+  end
+
+  def hotels(package_template_id, params = {})
+    url = "/api/v2/search/package_templates/#{package_template_id}/hotels"
+    url += "?#{params.to_query}" if params.any?
+    
+    response = @connection.get(url)
+    handle_response(response)
+  end
+
+  def meals(package_template_id)
+    response = @connection.get("/api/v2/search/package_templates/#{package_template_id}/meals")
     handle_response(response)
   end
 

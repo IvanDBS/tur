@@ -14,8 +14,10 @@ class Api::V1::SearchController < Api::V1::BaseController
   
   # GET /api/v1/search/countries
   def countries
+    airport_city_from = params[:airport_city_from]
+    
     begin
-      countries = ObsApiService.new.countries
+      countries = ObsApiService.new.countries(airport_city_from)
       render_success({ countries: countries })
     rescue ObsApiService::Error => e
       render_error("Failed to fetch countries: #{e.message}", :bad_gateway)
@@ -25,13 +27,14 @@ class Api::V1::SearchController < Api::V1::BaseController
   # GET /api/v1/search/countries/:id/package_templates
   def package_templates
     country_id = params[:id]
+    airport_city_from = params[:airport_city_from]
     
     if country_id.blank?
       return render_error('Country ID is required', :bad_request)
     end
     
     begin
-      templates = ObsApiService.new.package_templates(country_id)
+      templates = ObsApiService.new.package_templates(country_id, airport_city_from)
       render_success({ package_templates: templates })
     rescue ObsApiService::Error => e
       render_error("Failed to fetch package templates: #{e.message}", :bad_gateway)
@@ -110,6 +113,74 @@ class Api::V1::SearchController < Api::V1::BaseController
         }
       end
     })
+  end
+
+  # GET /api/v1/search/calendar_hints
+  def calendar_hints
+    begin
+      hints = ObsApiService.new.calendar_hints(params.permit(:date_from, :date_to, :city_from, :city_to))
+      render_success({ calendar_hints: hints })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch calendar hints: #{e.message}", :bad_gateway)
+    end
+  end
+
+  # GET /api/v1/search/available_nights
+  def available_nights
+    begin
+      nights = ObsApiService.new.available_nights(params.permit(:date_from, :date_to, :city_from, :city_to))
+      render_success({ available_nights: nights })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch available nights: #{e.message}", :bad_gateway)
+    end
+  end
+
+  # GET /api/v1/search/package_templates/:id/hotel_categories
+  def hotel_categories
+    package_template_id = params[:id]
+    
+    begin
+      categories = ObsApiService.new.hotel_categories(package_template_id)
+      render_success({ hotel_categories: categories })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch hotel categories: #{e.message}", :bad_gateway)
+    end
+  end
+
+  # GET /api/v1/search/package_templates/:id/locations
+  def locations
+    package_template_id = params[:id]
+    
+    begin
+      locations = ObsApiService.new.locations(package_template_id)
+      render_success({ locations: locations })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch locations: #{e.message}", :bad_gateway)
+    end
+  end
+
+  # GET /api/v1/search/package_templates/:id/hotels
+  def hotels
+    package_template_id = params[:id]
+    
+    begin
+      hotels = ObsApiService.new.hotels(package_template_id, params.permit(:cities, :regions, :categories, :is_exclusive))
+      render_success({ hotels: hotels })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch hotels: #{e.message}", :bad_gateway)
+    end
+  end
+
+  # GET /api/v1/search/package_templates/:id/meals
+  def meals
+    package_template_id = params[:id]
+    
+    begin
+      meals = ObsApiService.new.meals(package_template_id)
+      render_success({ meals: meals })
+    rescue ObsApiService::Error => e
+      render_error("Failed to fetch meals: #{e.message}", :bad_gateway)
+    end
   end
   
   private

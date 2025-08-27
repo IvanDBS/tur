@@ -5,11 +5,26 @@ Rails.application.routes.draw do
       # Health check
       get 'health', to: 'health#index'
       
-      # OBS API integration routes (to be added)
-      # resources :cities, only: [:index]
-      # resources :countries, only: [:index]
-      # resources :tours, only: [:index, :show]
-      # resources :bookings, only: [:create, :show, :index]
+      # Authentication routes
+      post 'auth/login', to: 'auth#login'
+      post 'auth/refresh_token', to: 'auth#refresh_token'
+      post 'auth/logout', to: 'auth#logout'
+      
+      # Search routes
+      get 'search/departure_cities', to: 'search#departure_cities'
+      get 'search/countries', to: 'search#countries'
+      get 'search/countries/:id/package_templates', to: 'search#package_templates'
+      post 'search', to: 'search#search'
+      get 'search', to: 'search#index'
+      get 'search/:id', to: 'search#show'
+      
+      # Booking routes
+      resources :bookings, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          post :calculate
+          post :confirm
+        end
+      end
     end
   end
   
@@ -18,4 +33,10 @@ Rails.application.routes.draw do
   
   # Root redirect to API health
   root to: redirect('/api/v1/health')
+  
+  # Sidekiq web UI (development only)
+  if Rails.env.development?
+    require 'sidekiq/web'
+    mount Sidekiq::Web => '/sidekiq'
+  end
 end

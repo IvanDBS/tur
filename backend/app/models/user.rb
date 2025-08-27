@@ -1,0 +1,66 @@
+# User model for OBS API integration
+class User < ApplicationRecord
+  # Associations
+  has_many :search_queries, dependent: :destroy
+  has_many :bookings, dependent: :destroy
+  
+  # Encrypt sensitive data
+  encrypts :obs_refresh_token, :obs_access_token
+  
+  # Validations
+  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :obs_user_id, presence: true, uniqueness: true
+  
+  # Callbacks
+  before_validation :generate_obs_user_id, on: :create
+  
+  # Instance methods
+  def obs_tokens_valid?
+    obs_access_token.present? && obs_refresh_token.present? && 
+    obs_token_expires_at.present? && obs_token_expires_at > Time.current
+  end
+  
+  def refresh_obs_tokens!
+    return false unless obs_refresh_token.present?
+    
+    begin
+      response = ObsApiService.new.refresh_token(obs_refresh_token)
+      
+      update!(
+        obs_access_token: response['access_token'],
+        obs_refresh_token: response['refresh_token'],
+        obs_token_expires_at: Time.current + response['expires_in'].seconds
+      )
+      
+      true
+    rescue ObsApiService::Error => e
+      Rails.logger.error "Failed to refresh OBS tokens for user #{id}: #{e.message}"
+      false
+    end
+  end
+  
+  def logout_from_obs!
+    return false unless obs_access_token.present?
+    
+    begin
+      ObsApiService.new.logout(obs_access_token)
+      
+      update!(
+        obs_access_token: nil,
+        obs_refresh_token: nil,
+        obs_token_expires_at: nil
+      )
+      
+      true
+    rescue ObsApiService::Error => e
+      Rails.logger.error "Failed to logout from OBS for user #{id}: #{e.message}"
+      false
+    end
+  end
+  
+  private
+  
+  def generate_obs_user_id
+    self.obs_user_id ||= SecureRandom.uuid
+  end
+end

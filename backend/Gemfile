@@ -1,0 +1,81 @@
+source "https://rubygems.org"
+
+ruby "3.3.0"
+
+# Rails 8 (edge version)
+gem "rails", github: "rails/rails", branch: "main"
+
+# Use postgresql as the database for Active Record
+gem "pg", "~> 1.1"
+
+# Use the Puma web server [https://github.com/puma/puma]
+gem "puma", ">= 5.0"
+
+# Build JSON APIs with ease [https://github.com/rails/jbuilder]
+gem "jbuilder"
+
+# Use Redis adapter to run Action Cable in production
+gem "redis", ">= 4.0.1"
+
+# Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
+gem "kredis"
+
+# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
+gem "bcrypt", "~> 3.1.7"
+
+# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
+gem "tzinfo-data", platforms: %i[ windows jruby ]
+
+# Reduces boot times through caching; required in config/boot.rb
+gem "bootsnap", require: false
+
+# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
+# gem "image_processing", "~> 1.2"
+
+# Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
+gem "rack-cors"
+
+# OBS API Integration
+gem "faraday", "~> 2.0"                    # HTTP client for OBS API
+gem "faraday-retry", "~> 2.0"              # Retry logic for API calls
+
+# Background jobs
+gem "sidekiq", "~> 7.0"                    # Background job processing
+
+# Security and encryption
+gem "lockbox", "~> 1.0"                    # Encryption for sensitive data
+gem "rack-attack", "~> 6.0"                # Rate limiting
+
+# Monitoring and logging
+gem "sentry-ruby", "~> 5.0"                # Error monitoring
+gem "sentry-sidekiq", "~> 5.0"             # Sidekiq integration
+
+# API documentation
+gem "rswag", "~> 2.8"                      # OpenAPI/Swagger documentation
+gem "rswag-api", "~> 2.8"
+gem "rswag-ui", "~> 2.8"
+
+group :development, :test do
+  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+  gem "debug", platforms: %i[ mri windows ]
+  
+  # Testing gems
+  gem "rspec-rails", "~> 6.0"
+  gem "factory_bot_rails", "~> 6.0"
+  gem "faker", "~> 3.0"
+  gem "webmock", "~> 3.0"
+end
+
+group :development do
+  # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
+  # gem "spring"
+
+  gem "error_highlight", ">= 0.4.0", platforms: [:ruby]
+  
+  # Development tools
+  gem "rubocop", "~> 1.0", require: false
+  gem "rubocop-rails", "~> 2.0", require: false
+  gem "rubocop-rspec", "~> 2.0", require: false
+  gem "brakeman", "~> 6.0", require: false
+end
+

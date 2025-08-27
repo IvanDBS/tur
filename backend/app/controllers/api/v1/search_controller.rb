@@ -5,9 +5,10 @@ class Api::V1::SearchController < Api::V1::BaseController
   # GET /api/v1/search/departure_cities
   def departure_cities
     begin
-      cities = ObsApiService.new.departure_cities
+      adapter = ObsAdapter.new(user_id: current_user&.id)
+      cities = adapter.departure_cities
       render_success({ departure_cities: cities })
-    rescue ObsApiService::Error => e
+    rescue ObsAdapter::Error => e
       render_error("Failed to fetch departure cities: #{e.message}", :bad_gateway)
     end
   end
@@ -17,9 +18,10 @@ class Api::V1::SearchController < Api::V1::BaseController
     airport_city_from = params[:airport_city_from]
     
     begin
-      countries = ObsApiService.new.countries(airport_city_from)
+      adapter = ObsAdapter.new(user_id: current_user&.id)
+      countries = adapter.arrival_cities(airport_city_from)
       render_success({ countries: countries })
-    rescue ObsApiService::Error => e
+    rescue ObsAdapter::Error => e
       render_error("Failed to fetch countries: #{e.message}", :bad_gateway)
     end
   end
@@ -51,22 +53,23 @@ class Api::V1::SearchController < Api::V1::BaseController
     
     begin
       # Perform search with OBS API
-      obs_response = ObsApiService.new.search(search_params)
+      adapter = ObsAdapter.new(user_id: current_user.id)
+      obs_response = adapter.search_packages(search_params)
       
       # Store search query for user
-      search_query = current_user&.search_queries&.create!(
+      search_query = current_user.search_queries.create!(
         search_params: search_params.to_json,
         search_results: obs_response,
         expires_at: 1.hour.from_now
       )
       
       render_success({
-        search_id: search_query&.obs_search_id,
+        search_id: search_query.obs_search_id,
         results: obs_response,
         total_results: obs_response&.dig('total') || 0
       })
       
-    rescue ObsApiService::Error => e
+    rescue ObsAdapter::Error => e
       render_error("Search failed: #{e.message}", :bad_gateway)
     rescue ActiveRecord::RecordInvalid => e
       render_error("Failed to save search: #{e.message}", :unprocessable_entity)

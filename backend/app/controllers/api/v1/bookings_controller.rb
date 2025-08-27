@@ -63,14 +63,15 @@ class Api::V1::BookingsController < Api::V1::BaseController
     
     begin
       # Get booking details from OBS
-      obs_booking = ObsApiService.new.get_booking(booking_hash)
+      adapter = ObsAdapter.new(user_id: current_user.id)
+      obs_booking = adapter.booking_status(booking_hash)
       
       # Create booking record
       booking = current_user.bookings.build(
         search_query: search_query,
         obs_booking_hash: booking_hash,
-        total_amount: obs_booking['total_amount'] || 0,
-        tour_details: obs_booking['tour_details'] || {},
+        total_amount: obs_booking['total_sum'] || 0,
+        tour_details: obs_booking['hotel'] || {},
         customer_data: booking_params[:customer_data] || {},
         status: 'pending'
       )
@@ -89,7 +90,7 @@ class Api::V1::BookingsController < Api::V1::BaseController
         render_error("Failed to create booking: #{booking.errors.full_messages.join(', ')}", :unprocessable_entity)
       end
       
-    rescue ObsApiService::Error => e
+    rescue ObsAdapter::Error => e
       render_error("Failed to get booking details: #{e.message}", :bad_gateway)
     end
   end
@@ -131,14 +132,15 @@ class Api::V1::BookingsController < Api::V1::BaseController
     
     begin
       # Confirm booking with OBS API
-      obs_response = ObsApiService.new.create_booking(
+      adapter = ObsAdapter.new(user_id: current_user.id)
+      obs_response = adapter.book(
         @booking.obs_booking_hash,
         @booking.customer_data_hash
       )
       
       # Update booking status
       @booking.update!(
-        obs_order_id: obs_response['order_id'],
+        obs_order_id: obs_response['order_number'],
         status: 'confirmed',
         confirmed_at: Time.current
       )
@@ -154,7 +156,7 @@ class Api::V1::BookingsController < Api::V1::BaseController
         }
       })
       
-    rescue ObsApiService::Error => e
+    rescue ObsAdapter::Error => e
       render_error("Failed to confirm booking: #{e.message}", :bad_gateway)
     end
   end
@@ -184,12 +186,21 @@ class Api::V1::BookingsController < Api::V1::BaseController
       return render_error('Cannot cancel confirmed booking after 24 hours', :unprocessable_entity)
     end
     
-    @booking.update!(
-      status: 'cancelled',
-      cancelled_at: Time.current
-    )
-    
-    render_success({ message: 'Booking cancelled successfully' })
+    begin
+      # Cancel booking in OBS API
+      adapter = ObsAdapter.new(user_id: current_user.id)
+      adapter.cancel_booking(@booking.obs_booking_hash)
+      
+      @booking.update!(
+        status: 'cancelled',
+        cancelled_at: Time.current
+      )
+      
+      render_success({ message: 'Booking cancelled successfully' })
+      
+    rescue ObsAdapter::Error => e
+      render_error("Failed to cancel booking: #{e.message}", :bad_gateway)
+    end
   end
   
   private

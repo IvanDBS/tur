@@ -16,8 +16,12 @@ class User < ApplicationRecord
   
   # Instance methods
   def obs_tokens_valid?
-    obs_access_token.present? && obs_refresh_token.present? && 
-    obs_token_expires_at.present? && obs_token_expires_at > Time.current
+    # Check Redis first (faster)
+    redis_token = Redis.current.get("obs_access_token:#{id}")
+    return false unless redis_token.present?
+    
+    # Check Postgres for refresh token
+    obs_refresh_token.present? && obs_token_expires_at.present? && obs_token_expires_at > Time.current
   end
   
   def refresh_obs_tokens!

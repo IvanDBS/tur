@@ -12,33 +12,26 @@ class Api::V1::AuthController < Api::V1::BaseController
     end
     
     begin
-      # Authenticate with OBS API
-      obs_response = ObsApiService.new.login(email, password)
-      
       # Find or create user
       user = User.find_or_initialize_by(email: email)
-      user.assign_attributes(
-        obs_access_token: obs_response['access_token'],
-        obs_refresh_token: obs_response['refresh_token'],
-        obs_token_expires_at: Time.current + obs_response['expires_in'].seconds
-      )
+      user.save! if user.new_record?
       
-      if user.save
-        render_success({
-          user: {
-            id: user.id,
-            email: user.email,
-            obs_user_id: user.obs_user_id
-          },
-          tokens: {
-            access_token: obs_response['access_token'],
-            refresh_token: obs_response['refresh_token'],
-            expires_in: obs_response['expires_in']
-          }
-        })
-      else
-        render_error('Failed to save user', :unprocessable_entity)
-      end
+      # Authenticate with OBS API
+      auth_service = ObsAuthService.new(user_id: user.id, email: email, password: password)
+      obs_response = auth_service.login
+      
+      render_success({
+        user: {
+          id: user.id,
+          email: user.email,
+          obs_user_id: user.obs_user_id
+        },
+        tokens: {
+          access_token: obs_response['access_token'],
+          refresh_token: obs_response['refresh_token'],
+          expires_in: obs_response['expires_in']
+        }
+      })
       
     rescue ObsApiService::UnauthorizedError
       render_error('Invalid email or password', :unauthorized)
@@ -50,12 +43,15 @@ class Api::V1::AuthController < Api::V1::BaseController
   # POST /api/v1/auth/refresh_token
   def refresh_token
     begin
-      if current_user.refresh_obs_tokens!
+      auth_service = ObsAuthService.new(user_id: current_user.id)
+      obs_response = auth_service.refresh_token
+      
+      if obs_response
         render_success({
           tokens: {
-            access_token: current_user.obs_access_token,
-            refresh_token: current_user.obs_refresh_token,
-            expires_in: (current_user.obs_token_expires_at - Time.current).to_i
+            access_token: obs_response['access_token'],
+            refresh_token: obs_response['refresh_token'],
+            expires_in: obs_response['expires_in']
           }
         })
       else
@@ -70,7 +66,9 @@ class Api::V1::AuthController < Api::V1::BaseController
   # POST /api/v1/auth/logout
   def logout
     begin
-      if current_user.logout_from_obs!
+      auth_service = ObsAuthService.new(user_id: current_user.id)
+      
+      if auth_service.logout
         render_success({ message: 'Successfully logged out' })
       else
         render_error('Failed to logout', :bad_gateway)
@@ -100,7 +98,9 @@ class Api::V1::AuthController < Api::V1::BaseController
     
     # Refresh token if it's about to expire (within 5 minutes)
     if @current_user.obs_token_expires_at < 5.minutes.from_now
-      @current_user.refresh_obs_tokens!
+      auth_service = ObsAuthService.new(user_id: @current_user.id)
+      auth_service.refresh_token
+      @current_user.reload
     end
   end
   

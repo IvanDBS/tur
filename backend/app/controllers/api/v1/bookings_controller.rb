@@ -217,7 +217,9 @@ class Api::V1::BookingsController < Api::V1::BaseController
     
     # Refresh token if it's about to expire (within 5 minutes)
     if @current_user.obs_token_expires_at < 5.minutes.from_now
-      @current_user.refresh_obs_tokens!
+      auth_service = ObsAuthService.new(user_id: @current_user.id)
+      auth_service.refresh_token
+      @current_user.reload
     end
   end
   

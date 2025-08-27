@@ -2,42 +2,30 @@
 class Booking < ApplicationRecord
   # Associations
   belongs_to :user
-  belongs_to :search_query, optional: true
-  
-  # Encrypt sensitive data
-  encrypts :obs_booking_hash, :obs_order_id, :customer_data
+  belongs_to :package
   
   # Validations
-  validates :obs_booking_hash, presence: true, uniqueness: true
+  validates :obs_booking_id, presence: true, uniqueness: true
   validates :status, presence: true, inclusion: { in: %w[pending confirmed cancelled failed] }
-  validates :total_amount, presence: true, numericality: { greater_than: 0 }
   
   # Callbacks
-  before_validation :generate_obs_booking_hash, on: :create
+  before_validation :generate_obs_booking_id, on: :create
   before_validation :set_default_status, on: :create
   
   # Scopes
   scope :by_user, ->(user) { where(user: user) }
   scope :by_status, ->(status) { where(status: status) }
   scope :recent, -> { order(created_at: :desc) }
+  scope :expired, -> { where('expires_at < ?', Time.current) }
   
   # Instance methods
-  def customer_data_hash
-    @customer_data_hash ||= JSON.parse(customer_data) rescue {}
+  def raw_data_hash
+    @raw_data_hash ||= JSON.parse(raw_json) rescue {}
   end
   
-  def customer_data_hash=(hash)
-    self.customer_data = hash.to_json
-    @customer_data_hash = hash
-  end
-  
-  def tour_details_hash
-    @tour_details_hash ||= JSON.parse(tour_details) rescue {}
-  end
-  
-  def tour_details_hash=(hash)
-    self.tour_details = hash.to_json
-    @tour_details_hash = hash
+  def raw_data_hash=(hash)
+    self.raw_json = hash.to_json
+    @raw_data_hash = hash
   end
   
   def confirmed?
@@ -56,14 +44,18 @@ class Booking < ApplicationRecord
     status == 'failed'
   end
   
+  def expired?
+    expires_at.present? && expires_at < Time.current
+  end
+  
   def can_be_cancelled?
     confirmed? && created_at > 24.hours.ago
   end
   
   private
   
-  def generate_obs_booking_hash
-    self.obs_booking_hash ||= SecureRandom.uuid
+  def generate_obs_booking_id
+    self.obs_booking_id ||= SecureRandom.uuid
   end
   
   def set_default_status

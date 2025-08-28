@@ -27,7 +27,7 @@
             :searchable="true"
             :canClear="false"
             :canDeselect="false"
-            placeholder="Выберите страну"
+            placeholder="Турция"
             label="name"
             valueProp="id"
           />
@@ -693,7 +693,8 @@ const toggleOption = (optionId: number) => {
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 4px 14px;
+  padding: 0 14px;
+  height: 28px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -701,6 +702,9 @@ const toggleOption = (optionId: number) => {
   transition: all 0.2s ease;
   white-space: nowrap;
   margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-btn-compact:hover {

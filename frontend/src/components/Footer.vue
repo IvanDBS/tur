@@ -104,7 +104,7 @@ const currentYear = computed(() => new Date().getFullYear())
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem 1.5rem; /* Такой же padding как у хедера слева-справа */
+  padding: 3rem 1.5rem 1.5rem;
 }
 
 .footer-content {
@@ -127,16 +127,13 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .logo-icon {
-  color: var(--color-ocean);
+  color: var(--color-primary);
 }
 
 .logo-text {
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-ocean), var(--color-ocean-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-primary);
 }
 
 .footer-description {
@@ -167,7 +164,7 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .footer-link:hover {
-  color: var(--color-ocean);
+  color: var(--color-primary);
   transform: translateX(4px);
 }
 
@@ -186,7 +183,7 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .contact-item svg {
-  color: var(--color-ocean);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -216,17 +213,17 @@ const currentYear = computed(() => new Date().getFullYear())
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--color-ocean);
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .social-link:hover {
-  background: var(--color-ocean);
+  background: var(--color-primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 /* Mobile Responsive */

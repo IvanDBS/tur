@@ -41,6 +41,7 @@ gem "faraday-retry", "~> 2.0"              # Retry logic for API calls
 
 # Background jobs
 gem "sidekiq", "~> 7.0"                    # Background job processing
+gem "sidekiq-cron", "~> 1.12"              # Cron-style scheduled jobs
 
 # Security and encryption
 gem "lockbox", "~> 1.0"                    # Encryption for sensitive data

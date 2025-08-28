@@ -1,5 +1,7 @@
 /* Минималистичные базовые стили */
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
+@import '@vueform/multiselect/themes/default.css';
+@import '@vuepic/vue-datepicker/dist/main.css';
 
 /* CSS Custom Properties */
 :root {

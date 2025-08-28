@@ -3,16 +3,45 @@
 @import '@vueform/multiselect/themes/default.css';
 @import '@vuepic/vue-datepicker/dist/main.css';
 
-/* CSS Custom Properties */
+/* CSS Custom Properties - Ocean & Travel Theme */
 :root {
   --font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  
+  /* Background Colors */
   --color-background: #ffffff;
   --color-background-soft: #f8fafc;
+  --color-background-muted: #f1f5f9;
+  
+  /* Border Colors */
   --color-border: #e2e8f0;
+  --color-border-soft: #f1f5f9;
+  
+  /* Text Colors */
   --color-text: #1e293b;
   --color-text-soft: #64748b;
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
+  --color-text-muted: #94a3b8;
+  
+  /* Ocean Theme Colors */
+  --color-ocean: #0ea5e9;
+  --color-ocean-light: #38bdf8;
+  --color-ocean-dark: #0284c7;
+  --color-ocean-muted: rgba(14, 165, 233, 0.1);
+  
+  /* Legacy (for compatibility) */
+  --color-primary: var(--color-ocean);
+  --color-primary-hover: var(--color-ocean-dark);
+  
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-ocean: 0 4px 20px rgba(14, 165, 233, 0.15);
 }
 
 /* Reset and base styles */

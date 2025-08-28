@@ -1,21 +1,290 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="text-center">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
-          OBS Tours
-        </h1>
-        <p class="text-xl text-gray-600 mb-8">
-          Найдите и забронируйте идеальный тур
-        </p>
+  <div class="home-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">
+            Найдите свой идеальный отдых
+          </h1>
+          <p class="hero-subtitle">
+            Откройте мир незабываемых путешествий с migo.md
+          </p>
+        </div>
         
         <!-- Search Form -->
-        <SearchForm />
+        <div class="search-wrapper">
+          <SearchForm @search="handleSearch" />
+        </div>
       </div>
-    </div>
+      
+      <!-- Background Elements -->
+      <div class="hero-bg">
+        <div class="wave-1"></div>
+        <div class="wave-2"></div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <div class="container">
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Лучшие предложения</h3>
+            <p class="feature-description">
+              Эксклюзивные туры по выгодным ценам от проверенных операторов
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22,4 12,14.01 9,11.01"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Быстрое бронирование</h3>
+            <p class="feature-description">
+              Забронируйте тур за несколько кликов и получите мгновенное подтверждение
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Поддержка 24/7</h3>
+            <p class="feature-description">
+              Наша команда готова помочь вам в любое время до, во время и после поездки
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import SearchForm from '@/components/SearchForm.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const handleSearch = (searchParams: any) => {
+  // Navigate to search page with params
+  router.push({
+    name: 'search',
+    query: searchParams
+  })
+}
 </script>
+
+<style scoped>
+.home-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero Section */
+.hero-section {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 1200px;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-text {
+  margin-bottom: 3rem;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--color-text), var(--color-ocean));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--color-text-soft);
+  font-weight: 400;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.search-wrapper {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+/* Background Elements */
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wave-1,
+.wave-2 {
+  position: absolute;
+  width: 120%;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(56, 189, 248, 0.05));
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.wave-1 {
+  top: 10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  bottom: 10%;
+  right: -10%;
+  animation-delay: 4s;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.03));
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+/* Features Section */
+.features-section {
+  padding: 4rem 0;
+  background: white;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
+  background: var(--color-background-soft);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-ocean-muted), rgba(56, 189, 248, 0.1));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  color: var(--color-ocean);
+}
+
+.feature-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.feature-description {
+  color: var(--color-text-soft);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .hero-text {
+    margin-bottom: 2rem;
+  }
+  
+  .hero-section {
+    min-height: 70vh;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content {
+    padding: 1rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .features-section {
+    padding: 2rem 0;
+  }
+}
+</style>

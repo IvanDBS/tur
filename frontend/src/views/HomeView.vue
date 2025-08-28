@@ -18,10 +18,7 @@
         </div>
       </div>
       
-      <!-- Background Elements -->
-      <div class="hero-bg">
-        <div class="hero-pattern"></div>
-      </div>
+
     </section>
 
     <!-- Features Section -->
@@ -99,8 +96,9 @@ const handleSearch = (searchParams: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
+  min-height: 70vh;
   background: var(--color-background);
+  padding-top: 2rem;
   overflow: hidden;
 }
 
@@ -118,14 +116,11 @@ const handleSearch = (searchParams: any) => {
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-text), var(--color-primary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-text);
   margin-bottom: 1rem;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
@@ -142,28 +137,7 @@ const handleSearch = (searchParams: any) => {
   margin: 0 auto;
 }
 
-/* Background Elements */
-.hero-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
 
-.hero-pattern {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
-  opacity: 0.4;
-}
 
 /* Features Section */
 .features-section {
@@ -186,7 +160,7 @@ const handleSearch = (searchParams: any) => {
 .feature-card {
   text-align: center;
   padding: 2rem 1.5rem;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--color-background);
   border: 1px solid var(--color-border-soft);
   transition: all 0.3s ease;

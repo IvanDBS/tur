@@ -78,12 +78,12 @@ const closeMobileMenu = () => {
   left: 0;
   right: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .nav {
@@ -113,17 +113,13 @@ const closeMobileMenu = () => {
 }
 
 .logo-icon {
-  color: var(--color-ocean);
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  color: var(--color-primary);
 }
 
 .logo-text {
   font-size: 1.75rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-ocean), var(--color-ocean-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-primary);
 }
 
 .nav-links {
@@ -143,11 +139,11 @@ const closeMobileMenu = () => {
 }
 
 .nav-link:hover {
-  color: var(--color-ocean);
+  color: var(--color-primary);
 }
 
 .nav-link.router-link-active {
-  color: var(--color-ocean);
+  color: var(--color-primary);
 }
 
 .nav-link.router-link-active::after {
@@ -157,7 +153,7 @@ const closeMobileMenu = () => {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-ocean), var(--color-ocean-light));
+  background: var(--color-primary);
   border-radius: 1px;
 }
 
@@ -180,20 +176,20 @@ const closeMobileMenu = () => {
   padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 25px;
-  background: linear-gradient(135deg, var(--color-ocean), var(--color-ocean-light));
+  background: var(--color-primary);
   color: white;
   font-family: var(--font-family);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 56, 92, 0.2);
 }
 
 .auth-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
-  background: linear-gradient(135deg, var(--color-ocean-light), var(--color-ocean));
+  box-shadow: 0 4px 16px rgba(255, 56, 92, 0.3);
+  background: var(--color-primary-hover);
 }
 
 .mobile-menu-btn {

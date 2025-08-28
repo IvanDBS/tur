@@ -7,30 +7,30 @@
 :root {
   --font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   
-  /* Professional Minimalist Palette */
-  --color-background: #F9FAFB;
-  --color-background-soft: #FFFFFF;
-  --color-background-muted: #F3F4F6;
+  /* Airbnb Inspired Palette */
+  --color-background: #FFFFFF;
+  --color-background-soft: #F7F7F7;
+  --color-background-muted: #F0F0F0;
   
   /* Border Colors */
-  --color-border: #E5E7EB;
-  --color-border-soft: #F3F4F6;
+  --color-border: #DDDDDD;
+  --color-border-soft: #EBEBEB;
   
   /* Text Colors */
-  --color-text: #111827;
-  --color-text-soft: #6B7280;
-  --color-text-muted: #9CA3AF;
+  --color-text: #222222;
+  --color-text-soft: #717171;
+  --color-text-muted: #B0B0B0;
   
-  /* Primary Colors */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-light: #3B82F6;
-  --color-primary-muted: rgba(37, 99, 235, 0.1);
+  /* Primary Colors (Airbnb Coral/Pink) */
+  --color-primary: #FF385C;
+  --color-primary-hover: #E31C3D;
+  --color-primary-light: #FF5A73;
+  --color-primary-muted: rgba(255, 56, 92, 0.1);
   
   /* Semantic Colors */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
+  --color-success: #00A699;
+  --color-warning: #FFB400;
+  --color-danger: #FF385C;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -52,7 +52,7 @@
 html {
   line-height: 1.6;
   font-family: var(--font-family);
-  font-size: 16px;
+  font-size: 14px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

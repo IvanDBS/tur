@@ -1,662 +1,268 @@
 <template>
-  <div class="search-form">
-    <!-- Main Search Row -->
-    <div class="search-row">
-      <!-- From City -->
-      <div class="search-field">
-        <label class="field-label">Откуда</label>
-        <select v-model="searchForm.departureCity" class="field-input">
-          <option value="">Город вылета</option>
-          <option v-for="city in departureCities" :key="city.id" :value="city">
-            {{ city.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- To Country -->
-      <div class="search-field">
-        <label class="field-label">Куда</label>
-        <select v-model="searchForm.country" class="field-input" :disabled="!searchForm.departureCity">
-          <option value="">Направление</option>
-          <option v-for="country in countries" :key="country.id" :value="country">
-            {{ country.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Date Range -->
-      <div class="search-field">
-        <label class="field-label">Дата вылета</label>
-        <VueDatePicker
-          v-model="searchForm.dateRange"
-          range
-          :min-date="new Date()"
-          :max-date="maxDate"
-          format="dd.MM.yyyy"
-          placeholder="пт 29 авг."
-          class="field-input"
+  <div class="search-container">
+    <!-- Airbnb Style Search Bar -->
+    <div class="search-bar">
+      <!-- Откуда -->
+      <div class="search-section">
+        <label class="section-label">Город отправления</label>
+        <input 
+          type="text" 
+          v-model="searchForm.departureCity" 
+          placeholder="Кишинёв"
+          class="section-input"
         />
       </div>
 
-      <!-- Nights -->
-      <div class="search-field">
-        <label class="field-label">Количество ночей</label>
-        <select v-model="searchForm.nights" class="field-input">
-          <option value="">на 6 - 10 ночей</option>
+      <div class="divider"></div>
+
+      <!-- Куда -->
+      <div class="search-section">
+        <label class="section-label">Куда</label>
+        <input 
+          type="text" 
+          v-model="searchForm.destination" 
+          placeholder="Введите страну курорт или отель"
+          class="section-input"
+        />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Планет/Месность -->
+      <div class="search-section">
+        <label class="section-label">Планет</label>
+        <select v-model="searchForm.package" class="section-input">
+          <option value="">Выберите местность</option>
+          <option value="beach">Пляжный отдых</option>
+          <option value="city">Городской туризм</option>
+          <option value="mountain">Горы</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Дата -->
+      <div class="search-section">
+        <label class="section-label">Дата</label>
+        <input 
+          type="text" 
+          v-model="searchForm.dateDisplay" 
+          placeholder="01.09.2025"
+          class="section-input"
+        />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Ночи -->
+      <div class="search-section">
+        <label class="section-label">Ночи</label>
+        <select v-model="searchForm.nights" class="section-input">
+          <option value="">3</option>
           <option v-for="night in availableNights" :key="night" :value="night">
-            {{ night }} {{ getNightWord(night) }}
+            {{ night }}
           </option>
         </select>
       </div>
 
-      <!-- Guests -->
-      <div class="search-field guests-field" @click="toggleGuestsDropdown">
-        <label class="field-label">Гости</label>
-        <div class="field-input guests-display">
-          <span>{{ formatGuestsShort() }}</span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        
-        <!-- Guests Dropdown -->
-        <div v-if="showGuestsDropdown" class="guests-dropdown">
-          <div class="guest-counter-row">
-            <span class="guest-label">Взрослые</span>
-            <div class="counter-controls">
-              <button type="button" @click.stop="decrementAdults" :disabled="searchForm.adults <= 1" class="counter-btn">-</button>
-              <span class="counter-value">{{ searchForm.adults }}</span>
-              <button type="button" @click.stop="incrementAdults" :disabled="searchForm.adults >= 10" class="counter-btn">+</button>
-            </div>
-          </div>
-          <div class="guest-counter-row">
-            <span class="guest-label">Дети</span>
-            <div class="counter-controls">
-              <button type="button" @click.stop="decrementChildren" :disabled="searchForm.children <= 0" class="counter-btn">-</button>
-              <span class="counter-value">{{ searchForm.children }}</span>
-              <button type="button" @click.stop="incrementChildren" :disabled="searchForm.children >= 10" class="counter-btn">+</button>
-            </div>
-          </div>
-        </div>
+      <div class="divider"></div>
+
+      <!-- Взрослые -->
+      <div class="search-section">
+        <label class="section-label">Взрослые</label>
+        <select v-model="searchForm.adults" class="section-input">
+          <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Дети -->
+      <div class="search-section">
+        <label class="section-label">Дети</label>
+        <select v-model="searchForm.children" class="section-input">
+          <option v-for="n in 11" :key="n-1" :value="n-1">{{ n-1 }}</option>
+        </select>
       </div>
 
       <!-- Search Button -->
       <button 
         type="button" 
         @click="search" 
-        :disabled="!canSearch || isLoading"
-        class="search-btn"
+        class="search-button"
       >
-        {{ isLoading ? 'Поиск...' : 'Найти' }}
-      </button>
-    </div>
-
-    <!-- Advanced Filters Toggle -->
-    <div v-if="!showAdvanced" class="advanced-toggle-row">
-      <button type="button" @click="toggleAdvanced" class="advanced-toggle-btn">
-        <span>Дополнительные параметры</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14"/>
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
         </svg>
+        <span>Поиск тура</span>
       </button>
-    </div>
-
-    <!-- Advanced Panel -->
-    <div v-if="showAdvanced" class="advanced-panel">
-      <div class="advanced-header">
-        <h3>Дополнительные параметры</h3>
-        <button type="button" @click="toggleAdvanced" class="close-advanced">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-      <div class="advanced-content">
-        <p class="info-note">Здесь будут дополнительные фильтры: отели, питание, цены</p>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import VueDatePicker from '@vuepic/vue-datepicker'
-import Multiselect from '@vueform/multiselect'
+import { ref } from 'vue'
 
 // Reactive data
 const searchForm = ref({
-  departureCity: null,
-  country: null,
-  dateRange: null,
-  nights: '',
+  departureCity: 'Кишинёв',
+  destination: '',
+  package: '',
+  dateDisplay: '01.09.2025',
+  nights: '3',
   adults: 2,
   children: 0
 })
 
-const departureCities = ref([])
-const countries = ref([])
-const packageTemplates = ref([])
-const availableNights = ref([7, 8, 10, 14, 15, 21])
+const availableNights = ref([3, 7, 10, 14, 21])
 const isLoading = ref(false)
-const showAdvanced = ref(false)
-const showGuestsDropdown = ref(false)
 
 // Emits
 const emit = defineEmits<{
   search: [params: any]
 }>()
 
-// Computed
-const maxDate = computed(() => {
-  const date = new Date()
-  date.setFullYear(date.getFullYear() + 1)
-  return date
-})
-
-const canSearch = computed(() => {
-  return searchForm.value.departureCity && 
-         searchForm.value.country && 
-         searchForm.value.dateRange && 
-         searchForm.value.nights && 
-         searchForm.value.adults > 0
-})
-
 // Methods
-const loadDepartureCities = async () => {
-  try {
-    // Mock data for now - replace with API call
-    departureCities.value = [
-      { id: 1, label: 'CHISINAU' },
-      { id: 2, label: 'BUCHAREST' }
-    ]
-  } catch (error) {
-    console.error('Failed to load departure cities:', error)
-  }
-}
-
-const loadCountries = async () => {
-  if (!searchForm.value.departureCity) return
-  
-  try {
-    // Mock data for now - replace with API call
-    countries.value = [
-      { id: 223, label: 'TURCIA' },
-      { id: 224, label: 'EGIPT' },
-      { id: 225, label: 'GRECIA' }
-    ]
-  } catch (error) {
-    console.error('Failed to load countries:', error)
-  }
-}
-
-const loadPackageTemplates = async () => {
-  if (!searchForm.value.country) return
-  
-  try {
-    // Mock data for now - replace with API call
-    packageTemplates.value = [
-      { id: 53, label: 'Antalya pachete avion' },
-      { id: 63, label: 'Antalya doar cazare' }
-    ]
-  } catch (error) {
-    console.error('Failed to load package templates:', error)
-  }
-}
-
-const search = async () => {
-  if (!canSearch.value) return
+const search = () => {
+  console.log('Searching with params:', searchForm.value)
   
   isLoading.value = true
-  
-  try {
-    const searchParams = {
-      country: searchForm.value.country.id,
-      airport_city_from: searchForm.value.departureCity.id,
-      date_from: formatDate(searchForm.value.dateRange[0]),
-      date_to: formatDate(searchForm.value.dateRange[1]),
-      nights_from: parseInt(searchForm.value.nights),
-      adults: searchForm.value.adults,
-      children: searchForm.value.children
-    }
-    
-    // Emit search event to parent
-    emit('search', searchParams)
-    
-    // Simulate API delay for UI feedback
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-  } catch (error) {
-    console.error('Search failed:', error)
-  } finally {
+  setTimeout(() => {
     isLoading.value = false
-  }
+    emit('search', searchForm.value)
+  }, 1000)
 }
-
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('en-GB')
-}
-
-const getNightWord = (count: number) => {
-  if (count === 1) return 'ночь'
-  if (count >= 2 && count <= 4) return 'ночи'
-  return 'ночей'
-}
-
-const incrementAdults = () => {
-  if (searchForm.value.adults < 10) searchForm.value.adults++
-}
-
-const decrementAdults = () => {
-  if (searchForm.value.adults > 1) searchForm.value.adults--
-}
-
-const incrementChildren = () => {
-  if (searchForm.value.children < 10) searchForm.value.children++
-}
-
-const decrementChildren = () => {
-  if (searchForm.value.children > 0) searchForm.value.children--
-}
-
-// Methods for UI interactions
-const toggleAdvanced = () => {
-  showAdvanced.value = !showAdvanced.value
-}
-
-const toggleGuestsDropdown = () => {
-  showGuestsDropdown.value = !showGuestsDropdown.value
-}
-
-const formatGuestsShort = () => {
-  const total = searchForm.value.adults + searchForm.value.children
-  if (total === 1) return '1 гость'
-  if (total >= 2 && total <= 4) return `${total} гостя`
-  return `${total} гостей`
-}
-
-const formatDateRange = () => {
-  if (!searchForm.value.dateRange || !Array.isArray(searchForm.value.dateRange)) {
-    return null
-  }
-  
-  const [start, end] = searchForm.value.dateRange
-  if (!start || !end) return null
-  
-  const startDate = new Date(start).toLocaleDateString('ru-RU', { 
-    day: 'numeric', 
-    month: 'short' 
-  })
-  const endDate = new Date(end).toLocaleDateString('ru-RU', { 
-    day: 'numeric', 
-    month: 'short' 
-  })
-  
-  return `${startDate} — ${endDate}`
-}
-
-const formatGuests = () => {
-  const adults = searchForm.value.adults
-  const children = searchForm.value.children
-  const total = adults + children
-  
-  if (total === 1) return '1 гость'
-  if (total >= 2 && total <= 4) return `${total} гостя`
-  return `${total} гостей`
-}
-
-// Watchers  
-watch(() => searchForm.value.departureCity, (newCity) => {
-  if (newCity) {
-    loadCountries()
-  }
-})
-
-// Close guests dropdown when clicking outside
-watch(showGuestsDropdown, (isOpen) => {
-  if (isOpen) {
-    const closeDropdown = (e: Event) => {
-      if (!(e.target as Element)?.closest('.guests-field')) {
-        showGuestsDropdown.value = false
-        document.removeEventListener('click', closeDropdown)
-      }
-    }
-    setTimeout(() => document.addEventListener('click', closeDropdown), 0)
-  }
-})
-
-// Lifecycle
-onMounted(() => {
-  loadDepartureCities()
-})
 </script>
 
 <style scoped>
-/* Search Form */
-.search-form {
+/* Airbnb Style Search Form */
+.search-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
-/* Main Search Row */
-.search-row {
+.search-bar {
   display: flex;
   align-items: stretch;
-  background: var(--color-background-soft);
+  background: var(--color-background);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  border-radius: 32px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
-.search-row:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+.search-bar:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Search Fields */
-.search-field {
+.search-section {
   flex: 1;
-  padding: 1rem;
-  border-right: 1px solid var(--color-border);
+  padding: 12px 24px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 80px;
-  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.search-field:last-of-type {
-  border-right: none;
+.search-section:hover {
+  background-color: var(--color-background-soft);
 }
 
-.search-field:hover {
-  background: var(--color-background-muted);
-}
-
-.field-label {
-  font-size: 0.75rem;
+.section-label {
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text-soft);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--color-text);
+  margin-bottom: 2px;
+  line-height: 1;
 }
 
-.field-input {
+.section-input {
   border: none;
   background: transparent;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
-  outline: none;
-  cursor: pointer;
-  font-family: var(--font-family);
-}
-
-.field-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Guests Field */
-.guests-field {
-  position: relative;
-  cursor: pointer;
-}
-
-.guests-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-
-.guests-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-background-soft);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-  margin-top: 0.5rem;
-  padding: 1rem;
-  animation: slideDown 0.2s ease;
-}
-
-.guest-counter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-}
-
-.guest-counter-row:not(:last-child) {
-  border-bottom: 1px solid var(--color-border);
-}
-
-.guest-label {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.counter-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.counter-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--color-border);
-  background: var(--color-background-soft);
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--color-text-soft);
-  transition: all 0.2s ease;
+  outline: none;
+  font-family: var(--font-family);
+  width: 100%;
 }
 
-.counter-btn:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-primary-muted);
+.section-input::placeholder {
+  color: var(--color-text-muted);
 }
 
-.counter-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.divider {
+  width: 1px;
+  background-color: var(--color-border);
+  margin: 12px 0;
 }
 
-.counter-value {
-  min-width: 24px;
-  text-align: center;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-/* Search Button */
-.search-btn {
+.search-button {
   background: var(--color-primary);
   color: white;
   border: none;
-  padding: 0 2rem;
+  border-radius: 24px;
+  padding: 12px 16px;
+  margin: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-family);
   font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 14px;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.search-btn:hover:not(:disabled) {
+.search-button:hover {
   background: var(--color-primary-hover);
-}
-
-.search-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Advanced Toggle Row */
-.advanced-toggle-row {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.advanced-toggle-btn {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  color: var(--color-text-soft);
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-  font-family: var(--font-family);
-}
-
-.advanced-toggle-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-/* Advanced Panel */
-.advanced-panel {
-  background: var(--color-background-soft);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  margin-top: 1rem;
-  overflow: hidden;
-  animation: slideDown 0.3s ease;
-}
-
-.advanced-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-background-muted);
-}
-
-.advanced-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.close-advanced {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-soft);
-  transition: all 0.2s ease;
-  padding: 0.25rem;
-  border-radius: 4px;
-}
-
-.close-advanced:hover {
-  color: var(--color-text);
-  background: var(--color-border);
-}
-
-.advanced-content {
-  padding: 1.5rem;
-}
-
-.info-note {
-  color: var(--color-text-soft);
-  font-size: 0.9rem;
-  margin: 0;
-  text-align: center;
-  font-style: italic;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Override Date Picker */
-:deep(.dp__main) {
-  width: 100% !important;
-}
-
-:deep(.dp__input) {
-  border: none !important;
-  padding: 0 !important;
-  font-size: 0.9rem !important;
-  font-weight: 500 !important;
-  background: transparent !important;
-  color: var(--color-text) !important;
-  font-family: var(--font-family) !important;
+  transform: scale(1.02);
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .search-row {
+  .search-bar {
     flex-direction: column;
+    border-radius: 16px;
   }
   
-  .search-field {
+  .search-section {
+    padding: 16px 20px;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
-    min-height: 60px;
-    padding: 0.75rem;
   }
   
-  .search-field:last-child {
+  .search-section:last-of-type {
     border-bottom: none;
   }
   
-  .search-btn {
-    font-size: 0.9rem;
-    padding: 1rem;
+  .divider {
+    display: none;
   }
   
-  .guests-dropdown {
-    left: -1rem;
-    right: -1rem;
+  .search-button {
+    margin: 16px;
+    border-radius: 12px;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .search-form {
-    margin: 0 0.5rem;
+  .search-container {
+    margin: 0 16px;
   }
   
-  .search-field {
-    padding: 0.5rem;
-    min-height: 50px;
+  .search-section {
+    padding: 12px 16px;
   }
   
-  .field-label {
-    font-size: 0.7rem;
-  }
-  
-  .field-input {
-    font-size: 0.85rem;
+  .section-input {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 </style>

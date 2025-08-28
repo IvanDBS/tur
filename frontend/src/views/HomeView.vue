@@ -100,7 +100,7 @@ const handleSearch = (searchParams: any) => {
   align-items: center;
   justify-content: center;
   min-height: 80vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  background: var(--color-background);
   overflow: hidden;
 }
 
@@ -114,13 +114,13 @@ const handleSearch = (searchParams: any) => {
 }
 
 .hero-text {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .hero-title {
   font-size: 3.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-text), var(--color-ocean));
+  background: linear-gradient(135deg, var(--color-text), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -160,15 +160,15 @@ const handleSearch = (searchParams: any) => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(8, 145, 178, 0.05) 0%, transparent 50%);
-  opacity: 0.6;
+    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+  opacity: 0.4;
 }
 
 /* Features Section */
 .features-section {
   padding: 4rem 0;
-  background: white;
+  background: var(--color-background-soft);
 }
 
 .container {
@@ -187,7 +187,8 @@ const handleSearch = (searchParams: any) => {
   text-align: center;
   padding: 2rem 1.5rem;
   border-radius: 16px;
-  background: var(--color-background-soft);
+  background: var(--color-background);
+  border: 1px solid var(--color-border-soft);
   transition: all 0.3s ease;
 }
 
@@ -199,13 +200,13 @@ const handleSearch = (searchParams: any) => {
 .feature-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, var(--color-ocean-muted), rgba(56, 189, 248, 0.1));
+  background: var(--color-primary-muted);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
-  color: var(--color-ocean);
+  color: var(--color-primary);
 }
 
 .feature-title {

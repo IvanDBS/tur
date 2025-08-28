@@ -7,37 +7,30 @@
 :root {
   --font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   
-  /* Background Colors */
-  --color-background: #ffffff;
-  --color-background-soft: #f8fafc;
-  --color-background-muted: #f1f5f9;
+  /* Professional Minimalist Palette */
+  --color-background: #F9FAFB;
+  --color-background-soft: #FFFFFF;
+  --color-background-muted: #F3F4F6;
   
   /* Border Colors */
-  --color-border: #e2e8f0;
-  --color-border-soft: #f1f5f9;
+  --color-border: #E5E7EB;
+  --color-border-soft: #F3F4F6;
   
   /* Text Colors */
-  --color-text: #1e293b;
-  --color-text-soft: #64748b;
-  --color-text-muted: #94a3b8;
+  --color-text: #111827;
+  --color-text-soft: #6B7280;
+  --color-text-muted: #9CA3AF;
   
-  /* Professional Theme Colors */
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1d4ed8;
+  /* Primary Colors */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-light: #3B82F6;
   --color-primary-muted: rgba(37, 99, 235, 0.1);
-  --color-primary-hover: #1d4ed8;
-  
-  /* Ocean accents (subtle) */
-  --color-ocean: #0891b2;
-  --color-ocean-light: #06b6d4;
-  --color-ocean-dark: #0e7490;
-  --color-ocean-muted: rgba(8, 145, 178, 0.08);
   
   /* Semantic Colors */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

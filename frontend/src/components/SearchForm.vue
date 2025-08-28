@@ -1,116 +1,102 @@
 <template>
   <div class="search-container">
-    <!-- Compact Search Bar -->
-    <div v-if="!expanded" class="search-bar-compact" @click="expandSearch">
-      <div class="search-sections">
-        <div class="search-section">
-          <div class="section-label">Откуда</div>
-          <div class="section-value">{{ searchForm.departureCity?.label || 'Город вылета' }}</div>
-        </div>
-        
-        <div class="search-divider"></div>
-        
-        <div class="search-section">
-          <div class="section-label">Куда</div>
-          <div class="section-value">{{ searchForm.country?.label || 'Направление' }}</div>
-        </div>
-        
-        <div class="search-divider"></div>
-        
-        <div class="search-section">
-          <div class="section-label">Когда</div>
-          <div class="section-value">{{ formatDateRange() || 'Выберите даты' }}</div>
-        </div>
-        
-        <div class="search-divider"></div>
-        
-        <div class="search-section">
-          <div class="section-label">Гости</div>
-          <div class="section-value">{{ formatGuests() }}</div>
-        </div>
-        
-        <button class="search-btn-compact">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Expanded Search Form -->
-    <div v-if="expanded" class="search-form-expanded">
-      <!-- Close Button -->
-      <button class="close-btn" @click="collapseSearch">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-
-      <!-- Main Search Fields -->
-      <div class="search-grid">
+    <!-- Main Search Bar (Always Visible) -->
+    <div class="search-bar-main">
+      <div class="search-fields">
         <!-- Откуда -->
-        <div class="field-group">
-          <label class="field-label">Откуда</label>
+        <div class="search-field">
+          <div class="field-label">Откуда</div>
           <Multiselect
             v-model="searchForm.departureCity"
             :options="departureCities"
             :searchable="true"
             :close-on-select="true"
-            placeholder="Выберите город"
+            placeholder="Город вылета"
             label="label"
             track-by="id"
-            class="field-input"
+            class="field-select"
+            @select="loadCountries"
           />
         </div>
 
+        <div class="field-divider"></div>
+
         <!-- Куда -->
-        <div class="field-group">
-          <label class="field-label">Куда</label>
+        <div class="search-field">
+          <div class="field-label">Куда</div>
           <Multiselect
             v-model="searchForm.country"
             :options="countries"
             :searchable="true"
             :close-on-select="true"
-            placeholder="Выберите страну"
+            placeholder="Направление"
             label="label"
             track-by="id"
-            class="field-input"
+            class="field-select"
             :disabled="!searchForm.departureCity"
             @select="loadPackageTemplates"
           />
         </div>
 
-        <!-- Даты -->
-        <div class="field-group">
-          <label class="field-label">Даты поездки</label>
+        <div class="field-divider"></div>
+
+        <!-- Дата вылета -->
+        <div class="search-field">
+          <div class="field-label">Дата вылета</div>
           <VueDatePicker
             v-model="searchForm.dateRange"
             range
             :min-date="new Date()"
             :max-date="maxDate"
-            format="dd.MM.yyyy"
+            format="dd.MM"
             placeholder="Выберите даты"
-            class="field-input"
+            class="field-datepicker"
             :teleport="true"
           />
         </div>
 
-        <!-- Ночи -->
-        <div class="field-group">
-          <label class="field-label">Количество ночей</label>
-          <select v-model="searchForm.nights" class="field-input">
-            <option value="">Выберите</option>
+        <div class="field-divider"></div>
+
+        <!-- Количество ночей -->
+        <div class="search-field">
+          <div class="field-label">Количество ночей</div>
+          <select v-model="searchForm.nights" class="field-select-native">
+            <option value="">на 6 - 10 ночей</option>
             <option v-for="night in availableNights" :key="night" :value="night">
               {{ night }} {{ getNightWord(night) }}
             </option>
           </select>
         </div>
-      </div>
 
+        <!-- Search Button -->
+        <button 
+          type="button" 
+          @click="search" 
+          :disabled="!canSearch || isLoading"
+          class="search-btn-main"
+        >
+          {{ isLoading ? 'Поиск...' : 'Найти' }}
+        </button>
+
+        <!-- Advanced Options Toggle -->
+        <button 
+          type="button" 
+          @click="toggleAdvanced"
+          class="advanced-toggle"
+          title="Дополнительные параметры"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path v-if="!showAdvanced" d="M12 5v14M5 12h14"/>
+            <path v-else d="M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Advanced Options Panel -->
+    <div v-if="showAdvanced" class="advanced-panel">
       <!-- Guests Section -->
-      <div class="guests-section">
+      <div class="advanced-section">
         <h3 class="section-title">Гости</h3>
         <div class="guests-grid">
           <div class="guest-row">
@@ -175,20 +161,14 @@
         </div>
       </div>
 
-      <!-- Search Button -->
-      <button 
-        type="button" 
-        @click="search" 
-        :disabled="!canSearch || isLoading"
-        class="search-btn-primary"
-      >
-        <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
-        </svg>
-        <div v-if="isLoading" class="loading-spinner"></div>
-        {{ isLoading ? 'Поиск...' : 'Найти туры' }}
-      </button>
+      <!-- Additional Filters -->
+      <div class="advanced-section">
+        <h3 class="section-title">Дополнительные параметры</h3>
+        <div class="additional-info">
+          <p class="info-text">Гости: {{ formatGuests() }}</p>
+          <p class="info-text" v-if="searchForm.dateRange">Даты: {{ formatDateRange() }}</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -213,7 +193,7 @@ const countries = ref([])
 const packageTemplates = ref([])
 const availableNights = ref([7, 8, 10, 14, 15, 21])
 const isLoading = ref(false)
-const expanded = ref(false)
+const showAdvanced = ref(false)
 
 // Emits
 const emit = defineEmits<{
@@ -332,13 +312,9 @@ const decrementChildren = () => {
   if (searchForm.value.children > 0) searchForm.value.children--
 }
 
-// New methods for compact/expanded view
-const expandSearch = () => {
-  expanded.value = true
-}
-
-const collapseSearch = () => {
-  expanded.value = false
+// Methods for advanced options
+const toggleAdvanced = () => {
+  showAdvanced.value = !showAdvanced.value
 }
 
 const formatDateRange = () => {
@@ -384,43 +360,46 @@ onMounted(() => {
 /* Search Container */
 .search-container {
   width: 100%;
-  max-width: 850px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
-/* Compact Search Bar */
-.search-bar-compact {
+/* Main Search Bar */
+.search-bar-main {
   background: white;
-  border-radius: 50px;
-  box-shadow: var(--shadow-lg);
+  border-radius: 60px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   border: 1px solid var(--color-border-soft);
-  cursor: pointer;
-  transition: all 0.3s ease;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.search-bar-compact:hover {
-  box-shadow: var(--shadow-ocean);
+.search-bar-main:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
-.search-sections {
+.search-fields {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   position: relative;
 }
 
-.search-section {
+.search-field {
   flex: 1;
-  padding: 1rem 1.5rem;
-  transition: all 0.2s ease;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 80px;
+  position: relative;
 }
 
-.search-section:hover {
+.search-field:hover {
   background: var(--color-background-soft);
 }
 
-.section-label {
+.field-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-soft);
@@ -429,74 +408,77 @@ onMounted(() => {
   margin-bottom: 0.25rem;
 }
 
-.section-value {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.search-divider {
+.field-divider {
   width: 1px;
-  height: 32px;
+  height: 40px;
   background: var(--color-border);
   opacity: 0.6;
+  align-self: center;
 }
 
-.search-btn-compact {
-  background: var(--color-ocean);
+/* Form Controls */
+.field-select,
+.field-datepicker,
+.field-select-native {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  color: var(--color-text) !important;
+  outline: none !important;
+  cursor: pointer !important;
+  min-height: auto !important;
+}
+
+.field-select-native {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+  background-position: right 0 center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px 12px !important;
+  padding-right: 20px !important;
+}
+
+/* Search Button */
+.search-btn-main {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  border-radius: 50px;
+  padding: 0 2rem;
   margin: 0.5rem;
+  height: 60px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
 }
 
-.search-btn-compact:hover {
-  background: var(--color-ocean-dark);
-  transform: scale(1.05);
+.search-btn-main:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-/* Expanded Search Form */
-.search-form-expanded {
-  background: white;
-  border-radius: 24px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border-soft);
-  padding: 2rem;
-  position: relative;
-  animation: expandForm 0.3s ease;
+.search-btn-main:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-@keyframes expandForm {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+/* Advanced Toggle */
+.advanced-toggle {
   background: var(--color-background-soft);
-  border: none;
+  border: 1px solid var(--color-border);
   border-radius: 50%;
   width: 40px;
   height: 40px;
+  margin: 0.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -505,58 +487,45 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.close-btn:hover {
+.advanced-toggle:hover {
   background: var(--color-border);
   color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
-/* Search Grid */
-.search-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.field-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin-bottom: 0.5rem;
-}
-
-.field-input {
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  font-family: var(--font-family);
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+/* Advanced Panel */
+.advanced-panel {
   background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-soft);
+  margin-top: 1rem;
+  padding: 1.5rem;
+  animation: slideDown 0.3s ease;
 }
 
-.field-input:focus {
-  outline: none;
-  border-color: var(--color-ocean);
-  box-shadow: 0 0 0 3px var(--color-ocean-muted);
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.field-input:hover {
-  border-color: var(--color-ocean-light);
+/* Advanced Sections */
+.advanced-section {
+  margin-bottom: 1.5rem;
 }
 
-/* Guests Section */
-.guests-section {
-  margin-bottom: 2rem;
+.advanced-section:last-child {
+  margin-bottom: 0;
 }
 
 .section-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 1rem;
@@ -565,14 +534,14 @@ onMounted(() => {
 .guests-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .guest-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   border-bottom: 1px solid var(--color-border-soft);
 }
 
@@ -586,26 +555,26 @@ onMounted(() => {
 }
 
 .guest-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-text);
   margin-bottom: 0.25rem;
 }
 
 .guest-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--color-text-soft);
 }
 
 .guest-counter {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .counter-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--color-border);
   background: white;
   border-radius: 50%;
@@ -618,9 +587,9 @@ onMounted(() => {
 }
 
 .counter-btn:hover:not(:disabled) {
-  border-color: var(--color-ocean);
-  color: var(--color-ocean);
-  background: var(--color-ocean-muted);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-muted);
 }
 
 .counter-btn:disabled {
@@ -629,63 +598,31 @@ onMounted(() => {
 }
 
 .counter-value {
-  min-width: 24px;
+  min-width: 20px;
   text-align: center;
   font-weight: 600;
   color: var(--color-text);
+  font-size: 0.9rem;
 }
 
-/* Search Button */
-.search-btn-primary {
-  width: 100%;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--color-ocean), var(--color-ocean-light));
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-family: var(--font-family);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Additional Info */
+.additional-info {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   gap: 0.5rem;
-  box-shadow: var(--shadow-ocean);
 }
 
-.search-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.3);
-  background: linear-gradient(135deg, var(--color-ocean-light), var(--color-ocean));
-}
-
-.search-btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.info-text {
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+  margin: 0;
 }
 
 /* Override third-party component styles */
 :deep(.multiselect) {
-  min-height: auto;
+  min-height: auto !important;
   border: none !important;
-  border-radius: 12px !important;
+  background: transparent !important;
 }
 
 :deep(.multiselect-input) {
@@ -693,22 +630,25 @@ onMounted(() => {
   padding: 0 !important;
   margin: 0 !important;
   font-size: 0.9rem !important;
+  background: transparent !important;
 }
 
 :deep(.multiselect-single-label) {
   padding: 0 !important;
-  line-height: 1.5 !important;
+  line-height: 1.4 !important;
   font-weight: 500 !important;
+  background: transparent !important;
 }
 
 :deep(.multiselect-dropdown) {
   border-radius: 12px !important;
   border: 1px solid var(--color-border) !important;
-  box-shadow: var(--shadow-lg) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1000 !important;
 }
 
 :deep(.dp__main) {
-  width: 100%;
+  width: 100% !important;
 }
 
 :deep(.dp__input) {
@@ -716,51 +656,63 @@ onMounted(() => {
   padding: 0 !important;
   font-size: 0.9rem !important;
   font-weight: 500 !important;
+  background: transparent !important;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .search-sections {
+  .search-container {
+    margin: 0 1rem;
+  }
+  
+  .search-fields {
     flex-direction: column;
   }
   
-  .search-section {
+  .search-field {
     padding: 0.75rem 1rem;
-    text-align: left;
+    min-height: 60px;
   }
   
-  .search-divider {
+  .field-divider {
     width: 80%;
     height: 1px;
     margin: 0 auto;
   }
   
-  .search-btn-compact {
-    margin: 1rem auto;
+  .search-btn-main {
+    margin: 1rem;
+    height: 50px;
+    border-radius: 25px;
   }
   
-  .search-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .advanced-toggle {
+    margin: 1rem;
   }
   
-  .search-form-expanded {
-    padding: 1.5rem;
-    border-radius: 16px;
-  }
-  
-  .guest-row {
-    padding: 0.75rem 0;
+  .advanced-panel {
+    margin: 1rem;
+    padding: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .search-container {
-    margin: 0 1rem;
+    margin: 0 0.5rem;
   }
   
-  .search-form-expanded {
-    padding: 1rem;
+  .search-field {
+    padding: 0.5rem 0.75rem;
+    min-height: 50px;
+  }
+  
+  .field-label {
+    font-size: 0.7rem;
+  }
+  
+  .search-btn-main {
+    font-size: 0.9rem;
+    padding: 0 1.5rem;
   }
 }
 </style>

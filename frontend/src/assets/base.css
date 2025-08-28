@@ -21,15 +21,18 @@
   --color-text-soft: #64748b;
   --color-text-muted: #94a3b8;
   
-  /* Ocean Theme Colors */
-  --color-ocean: #0ea5e9;
-  --color-ocean-light: #38bdf8;
-  --color-ocean-dark: #0284c7;
-  --color-ocean-muted: rgba(14, 165, 233, 0.1);
+  /* Professional Theme Colors */
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-muted: rgba(37, 99, 235, 0.1);
+  --color-primary-hover: #1d4ed8;
   
-  /* Legacy (for compatibility) */
-  --color-primary: var(--color-ocean);
-  --color-primary-hover: var(--color-ocean-dark);
+  /* Ocean accents (subtle) */
+  --color-ocean: #0891b2;
+  --color-ocean-light: #06b6d4;
+  --color-ocean-dark: #0e7490;
+  --color-ocean-muted: rgba(8, 145, 178, 0.08);
   
   /* Semantic Colors */
   --color-success: #10b981;
@@ -117,4 +120,56 @@ input, textarea, select {
   html {
     font-size: 14px;
   }
+}
+
+/* Vue Datepicker overrides */
+:deep(.dp__main) {
+  --dp-font-family: var(--font-family) !important;
+  --dp-border-color: var(--color-border) !important;
+  --dp-border-color-hover: var(--color-primary) !important;
+  --dp-primary-color: var(--color-primary) !important;
+  --dp-text-color: var(--color-text) !important;
+  --dp-background-color: var(--color-background) !important;
+  --dp-hover-color: var(--color-background-soft) !important;
+  --dp-menu-border-color: var(--color-border) !important;
+  font-family: var(--font-family) !important;
+}
+
+:deep(.dp__input) {
+  font-family: var(--font-family) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+:deep(.dp__menu) {
+  font-family: var(--font-family) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+:deep(.dp__overlay_container) {
+  z-index: 9999 !important;
+}
+
+/* Vue Multiselect overrides */
+:deep(.multiselect) {
+  --ms-font-family: var(--font-family) !important;
+  --ms-border-color: var(--color-border) !important;
+  --ms-border-color-active: var(--color-primary) !important;
+  --ms-border-color-open: var(--color-primary) !important;
+  --ms-ring-color: var(--color-primary-muted) !important;
+  --ms-option-bg-selected: var(--color-primary) !important;
+  --ms-option-bg-selected-pointed: var(--color-primary-hover) !important;
+  --ms-option-color-selected: #fff !important;
+  --ms-option-color-selected-pointed: #fff !important;
+  --ms-tag-bg: var(--color-primary) !important;
+  --ms-tag-color: #fff !important;
+  --ms-tag-radius: 8px !important;
+  --ms-tag-font-weight: 500 !important;
+  --ms-dropdown-bg: var(--color-background) !important;
+  --ms-dropdown-border-color: var(--color-border) !important;
+  --ms-option-color: var(--color-text) !important;
+  --ms-option-bg-pointed: var(--color-background-soft) !important;
 }

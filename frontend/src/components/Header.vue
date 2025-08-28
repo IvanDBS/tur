@@ -78,11 +78,12 @@ const closeMobileMenu = () => {
   left: 0;
   right: 0;
   z-index: 100;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
 }
 
 .nav {

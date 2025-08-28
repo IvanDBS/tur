@@ -20,8 +20,7 @@
       
       <!-- Background Elements -->
       <div class="hero-bg">
-        <div class="wave-1"></div>
-        <div class="wave-2"></div>
+        <div class="hero-pattern"></div>
       </div>
     </section>
 
@@ -154,36 +153,16 @@ const handleSearch = (searchParams: any) => {
   pointer-events: none;
 }
 
-.wave-1,
-.wave-2 {
+.hero-pattern {
   position: absolute;
-  width: 120%;
-  height: 200px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(56, 189, 248, 0.05));
-  border-radius: 50%;
-  animation: float 8s ease-in-out infinite;
-}
-
-.wave-1 {
-  top: 10%;
-  left: -10%;
-  animation-delay: 0s;
-}
-
-.wave-2 {
-  bottom: 10%;
-  right: -10%;
-  animation-delay: 4s;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.03));
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
-  }
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(8, 145, 178, 0.05) 0%, transparent 50%);
+  opacity: 0.6;
 }
 
 /* Features Section */

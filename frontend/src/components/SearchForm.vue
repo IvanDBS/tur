@@ -5,10 +5,14 @@
       <!-- Откуда -->
       <div class="search-section">
         <label class="section-label">Город отправления</label>
-        <input 
-          type="text" 
-          v-model="searchForm.departureCity" 
+        <Multiselect
+          v-model="searchForm.departureCity"
+          :options="departureCities"
+          :searchable="true"
+          :create-option="false"
           placeholder="Кишинёв"
+          label="name"
+          valueProp="id"
           class="section-input"
         />
       </div>
@@ -18,25 +22,16 @@
       <!-- Куда -->
       <div class="search-section">
         <label class="section-label">Куда</label>
-        <input 
-          type="text" 
-          v-model="searchForm.destination" 
-          placeholder="Введите страну курорт или отель"
+        <Multiselect
+          v-model="searchForm.destination"
+          :options="countries"
+          :searchable="true"
+          :create-option="false"
+          placeholder="Выберите страну"
+          label="name"
+          valueProp="id"
           class="section-input"
         />
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Планет/Месность -->
-      <div class="search-section">
-        <label class="section-label">Планет</label>
-        <select v-model="searchForm.package" class="section-input">
-          <option value="">Выберите местность</option>
-          <option value="beach">Пляжный отдых</option>
-          <option value="city">Городской туризм</option>
-          <option value="mountain">Горы</option>
-        </select>
       </div>
 
       <div class="divider"></div>
@@ -44,10 +39,13 @@
       <!-- Дата -->
       <div class="search-section">
         <label class="section-label">Дата</label>
-        <input 
-          type="text" 
-          v-model="searchForm.dateDisplay" 
-          placeholder="01.09.2025"
+        <VueDatePicker
+          v-model="searchForm.dateRange"
+          range
+          :min-date="new Date()"
+          :max-date="maxDate"
+          format="dd.MM.yyyy"
+          placeholder="Выберите даты"
           class="section-input"
         />
       </div>
@@ -58,31 +56,44 @@
       <div class="search-section">
         <label class="section-label">Ночи</label>
         <select v-model="searchForm.nights" class="section-input">
-          <option value="">3</option>
+          <option value="">3-7 ночей</option>
           <option v-for="night in availableNights" :key="night" :value="night">
-            {{ night }}
+            {{ night }} {{ getNightWord(night) }}
           </option>
         </select>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Взрослые -->
-      <div class="search-section">
-        <label class="section-label">Взрослые</label>
-        <select v-model="searchForm.adults" class="section-input">
-          <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
-        </select>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Дети -->
-      <div class="search-section">
-        <label class="section-label">Дети</label>
-        <select v-model="searchForm.children" class="section-input">
-          <option v-for="n in 11" :key="n-1" :value="n-1">{{ n-1 }}</option>
-        </select>
+      <!-- Гости -->
+      <div class="search-section guests-section" @click="toggleGuestsDropdown">
+        <label class="section-label">Гости</label>
+        <div class="section-input guests-display">
+          <span>{{ formatGuests() }}</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        
+        <!-- Guests Dropdown -->
+        <div v-if="showGuestsDropdown" class="guests-dropdown">
+          <div class="guest-row">
+            <span>Взрослые</span>
+            <div class="counter">
+              <button @click.stop="decrementAdults" :disabled="searchForm.adults <= 1">-</button>
+              <span>{{ searchForm.adults }}</span>
+              <button @click.stop="incrementAdults" :disabled="searchForm.adults >= 10">+</button>
+            </div>
+          </div>
+          <div class="guest-row">
+            <span>Дети</span>
+            <div class="counter">
+              <button @click.stop="decrementChildren" :disabled="searchForm.children <= 0">-</button>
+              <span>{{ searchForm.children }}</span>
+              <button @click.stop="incrementChildren" :disabled="searchForm.children >= 10">+</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Search Button -->
@@ -95,28 +106,53 @@
           <circle cx="11" cy="11" r="8"/>
           <path d="M21 21l-4.35-4.35"/>
         </svg>
-        <span>Поиск тура</span>
+        <span>Поиск</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import Multiselect from '@vueform/multiselect'
+import '@vueform/multiselect/themes/default.css'
 
 // Reactive data
 const searchForm = ref({
-  departureCity: 'Кишинёв',
-  destination: '',
-  package: '',
-  dateDisplay: '01.09.2025',
-  nights: '3',
+  departureCity: null,
+  destination: null,
+  dateRange: null,
+  nights: '',
   adults: 2,
   children: 0
 })
 
+const departureCities = ref([
+  { id: 1, name: 'Кишинёв' },
+  { id: 2, name: 'Бухарест' },
+  { id: 3, name: 'Одесса' }
+])
+
+const countries = ref([
+  { id: 1, name: 'Турция' },
+  { id: 2, name: 'Египет' },
+  { id: 3, name: 'Греция' },
+  { id: 4, name: 'Болгария' },
+  { id: 5, name: 'Испания' }
+])
+
 const availableNights = ref([3, 7, 10, 14, 21])
 const isLoading = ref(false)
+const showGuestsDropdown = ref(false)
+
+// Computed
+const maxDate = computed(() => {
+  const date = new Date()
+  date.setFullYear(date.getFullYear() + 1)
+  return date
+})
 
 // Emits
 const emit = defineEmits<{
@@ -133,6 +169,52 @@ const search = () => {
     emit('search', searchForm.value)
   }, 1000)
 }
+
+const incrementAdults = () => {
+  if (searchForm.value.adults < 10) searchForm.value.adults++
+}
+
+const decrementAdults = () => {
+  if (searchForm.value.adults > 1) searchForm.value.adults--
+}
+
+const incrementChildren = () => {
+  if (searchForm.value.children < 10) searchForm.value.children++
+}
+
+const decrementChildren = () => {
+  if (searchForm.value.children > 0) searchForm.value.children--
+}
+
+const toggleGuestsDropdown = () => {
+  showGuestsDropdown.value = !showGuestsDropdown.value
+}
+
+const formatGuests = () => {
+  const total = searchForm.value.adults + searchForm.value.children
+  if (total === 1) return '1 гость'
+  if (total >= 2 && total <= 4) return `${total} гостя`
+  return `${total} гостей`
+}
+
+const getNightWord = (nights: number) => {
+  if (nights === 1) return 'ночь'
+  if (nights >= 2 && nights <= 4) return 'ночи'
+  return 'ночей'
+}
+
+// Close guests dropdown when clicking outside
+watch(showGuestsDropdown, (isOpen) => {
+  if (isOpen) {
+    const closeDropdown = (e: Event) => {
+      if (!(e.target as Element)?.closest('.guests-section')) {
+        showGuestsDropdown.value = false
+        document.removeEventListener('click', closeDropdown)
+      }
+    }
+    setTimeout(() => document.addEventListener('click', closeDropdown), 0)
+  }
+})
 </script>
 
 <style scoped>
@@ -142,9 +224,6 @@ const search = () => {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  /* Временная отладочная рамка */
-  border: 2px solid red;
-  background: yellow;
 }
 
 .search-bar {
@@ -152,7 +231,7 @@ const search = () => {
   align-items: stretch;
   background: #FFFFFF;
   border: 1px solid #DDDDDD;
-  border-radius: 32px;
+  border-radius: 16px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
@@ -210,7 +289,7 @@ const search = () => {
   background: #FF385C;
   color: white;
   border: none;
-  border-radius: 24px;
+  border-radius: 12px;
   padding: 12px 16px;
   margin: 8px;
   cursor: pointer;
@@ -229,17 +308,85 @@ const search = () => {
   transform: scale(1.02);
 }
 
+/* Guests Dropdown */
+.guests-section {
+  position: relative;
+}
+
+.guests-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.guests-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 8px;
+  padding: 16px;
+}
+
+.guest-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.guest-row:not(:last-child) {
+  border-bottom: 1px solid #EBEBEB;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.counter button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #DDDDDD;
+  background: #FFFFFF;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #717171;
+  transition: all 0.2s ease;
+}
+
+.counter button:hover:not(:disabled) {
+  border-color: #FF385C;
+  color: #FF385C;
+}
+
+.counter button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .search-bar {
     flex-direction: column;
-    border-radius: 16px;
+    border-radius: 12px;
   }
   
   .search-section {
     padding: 16px 20px;
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid #DDDDDD;
   }
   
   .search-section:last-of-type {
@@ -252,7 +399,7 @@ const search = () => {
   
   .search-button {
     margin: 16px;
-    border-radius: 12px;
+    border-radius: 8px;
     justify-content: center;
   }
 }
@@ -269,5 +416,87 @@ const search = () => {
   .section-input {
     font-size: 16px; /* Prevents zoom on iOS */
   }
+}
+
+/* Multiselect overrides */
+:deep(.multiselect) {
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  color: #717171 !important;
+  min-height: auto !important;
+}
+
+:deep(.multiselect-wrapper) {
+  position: relative;
+}
+
+:deep(.multiselect-single-label) {
+  color: #717171 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+:deep(.multiselect-placeholder) {
+  color: #B0B0B0 !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+:deep(.multiselect-dropdown) {
+  border: 1px solid #DDDDDD !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 8px !important;
+}
+
+:deep(.multiselect-option) {
+  padding: 12px 16px !important;
+  color: #222222 !important;
+  font-size: 14px !important;
+}
+
+:deep(.multiselect-option.is-pointed) {
+  background: #F7F7F7 !important;
+  color: #222222 !important;
+}
+
+:deep(.multiselect-option.is-selected) {
+  background: #FF385C !important;
+  color: white !important;
+}
+
+/* DatePicker overrides */
+:deep(.dp__main) {
+  width: 100% !important;
+  font-family: var(--font-family) !important;
+}
+
+:deep(.dp__input) {
+  border: none !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  color: #717171 !important;
+  font-family: var(--font-family) !important;
+}
+
+:deep(.dp__input::placeholder) {
+  color: #B0B0B0 !important;
+}
+
+:deep(.dp__menu) {
+  border: 1px solid #DDDDDD !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 8px !important;
+}
+
+:deep(.dp__overlay_container) {
+  z-index: 9999 !important;
 }
 </style>

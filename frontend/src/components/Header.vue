@@ -77,8 +77,8 @@ const closeMobileMenu = () => {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
+  z-index: 999999;
+  backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(20px);
   background: rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -175,7 +175,7 @@ const closeMobileMenu = () => {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border: none;
-  border-radius: 25px;
+  border-radius: 6px; /* Квадратная как кнопка поиска */
   background: var(--color-primary);
   color: white;
   font-family: var(--font-family);

@@ -104,7 +104,7 @@ const currentYear = computed(() => new Date().getFullYear())
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem 1.5rem;
+  padding: 3rem 1.5rem 1.5rem; /* Такой же padding как у хедера слева-справа */
 }
 
 .footer-content {

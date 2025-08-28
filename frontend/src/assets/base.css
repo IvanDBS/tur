@@ -21,15 +21,19 @@
   --color-text-soft: #717171;
   --color-text-muted: #B0B0B0;
   
-  /* Primary Colors (Airbnb Coral/Pink) */
+  /* Primary Colors (Original Bright) */
   --color-primary: #FF385C;
   --color-primary-hover: #E31C3D;
   --color-primary-light: #FF5A73;
   --color-primary-muted: rgba(255, 56, 92, 0.1);
   
+  /* Accent Colors (Only Blue) */
+  --color-accent-blue: #6B9FEE;
+  --color-accent-blue-light: rgba(107, 159, 238, 0.1);
+  
   /* Semantic Colors */
-  --color-success: #00A699;
-  --color-warning: #FFB400;
+  --color-success: #6B9FEE;
+  --color-warning: #6B9FEE;
   --color-danger: #FF385C;
   
   /* Shadows */

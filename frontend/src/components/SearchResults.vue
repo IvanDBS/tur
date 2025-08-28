@@ -159,9 +159,10 @@ const loadMore = () => {
 
 <style scoped>
 .search-results {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .loading {
@@ -204,15 +205,16 @@ const loadMore = () => {
 
 .result-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: 3fr 1.5fr 2fr 1.5fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  min-height: 70px;
 }
 
 .result-card:hover {
@@ -227,15 +229,16 @@ const loadMore = () => {
 .hotel-name {
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .hotel-details {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   color: var(--color-text-soft);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .stars {
@@ -243,15 +246,18 @@ const loadMore = () => {
 }
 
 .trip-info {
-  margin-top: 1rem;
+  grid-column: 2;
+  margin-top: 0;
 }
 
 .dates {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .separator {
@@ -260,55 +266,65 @@ const loadMore = () => {
 
 .duration {
   color: var(--color-text-soft);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 .accommodation-info {
-  margin-top: 1rem;
+  grid-column: 3;
+  margin-top: 0;
   color: var(--color-text-soft);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .room {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.meal {
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .price-info {
-  grid-column: 2;
+  grid-column: 4;
   text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .price {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-primary);
+  line-height: 1.2;
 }
 
 .price-type {
   color: var(--color-text-soft);
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
   background: var(--color-background-soft);
   border-radius: 4px;
 }
 
 .book-btn {
-  grid-column: 2;
-  grid-row: 2;
-  padding: 0.75rem 1.5rem;
+  grid-column: 5;
+  padding: 0.5rem 1rem;
   background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-family: var(--font-family);
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  margin-top: 1rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .book-btn:hover {
@@ -345,20 +361,39 @@ const loadMore = () => {
 /* Mobile responsive */
 @media (max-width: 768px) {
   .result-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     text-align: left;
+    min-height: 60px;
+    gap: 1rem;
+    padding: 1rem;
   }
   
-  .price-info,
-  .book-btn {
+  .hotel-info {
     grid-column: 1;
-    text-align: left;
-    align-items: flex-start;
+  }
+  
+  .trip-info {
+    grid-column: 1;
+    margin-top: 0.25rem;
+  }
+  
+  .accommodation-info {
+    grid-column: 1;
+    margin-top: 0.25rem;
+  }
+  
+  .price-info {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    text-align: right;
+    align-items: flex-end;
   }
   
   .book-btn {
-    width: 100%;
-    margin-top: 1rem;
+    grid-column: 1 / span 2;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
   }
 }
 </style>

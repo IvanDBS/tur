@@ -78,9 +78,9 @@ const closeMobileMenu = () => {
   left: 0;
   right: 0;
   z-index: 100;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);

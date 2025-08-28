@@ -141,17 +141,22 @@ const search = () => {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 20px;
+  /* Временная отладочная рамка */
+  border: 2px solid red;
+  background: yellow;
 }
 
 .search-bar {
   display: flex;
   align-items: stretch;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
   border-radius: 32px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
+  min-height: 60px;
 }
 
 .search-bar:hover {
@@ -169,13 +174,13 @@ const search = () => {
 }
 
 .search-section:hover {
-  background-color: var(--color-background-soft);
+  background-color: #F7F7F7;
 }
 
 .section-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-text);
+  color: #222222;
   margin-bottom: 2px;
   line-height: 1;
 }
@@ -185,24 +190,24 @@ const search = () => {
   background: transparent;
   font-size: 14px;
   font-weight: 400;
-  color: var(--color-text-soft);
+  color: #717171;
   outline: none;
   font-family: var(--font-family);
   width: 100%;
 }
 
 .section-input::placeholder {
-  color: var(--color-text-muted);
+  color: #B0B0B0;
 }
 
 .divider {
   width: 1px;
-  background-color: var(--color-border);
+  background-color: #DDDDDD;
   margin: 12px 0;
 }
 
 .search-button {
-  background: var(--color-primary);
+  background: #FF385C;
   color: white;
   border: none;
   border-radius: 24px;
@@ -220,7 +225,7 @@ const search = () => {
 }
 
 .search-button:hover {
-  background: var(--color-primary-hover);
+  background: #E31C3D;
   transform: scale(1.02);
 }
 

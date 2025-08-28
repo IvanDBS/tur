@@ -133,8 +133,10 @@ const handleSearch = (searchParams: any) => {
 }
 
 .search-wrapper {
-  max-width: 850px;
-  margin: 0 auto;
+  max-width: 1000px;
+  margin: 2rem auto;
+  position: relative;
+  z-index: 10;
 }
 
 

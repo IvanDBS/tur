@@ -69,19 +69,16 @@ class MonitorBookingJob < ApplicationJob
     
     begin
       # Try to cancel on OBS side
-      adapter.cancel_booking(booking.obs_booking_id)
+      adapter.cancel_booking(booking.obs_booking_hash)
     rescue ObsApiService::ApiError => e
       Rails.logger.warn "Failed to cancel booking #{booking.id} on OBS: #{e.message}"
     end
     
-    # Update local status
-    booking.update!(
-      status: 'cancelled',
-      raw_json: booking.raw_data_hash.merge(
-        cancelled_reason: 'expired',
-        cancelled_at: Time.current.iso8601
+          # Update local status
+      booking.update!(
+        status: 'cancelled',
+        cancelled_at: Time.current
       )
-    )
     
     # Notify user (could trigger email job)
     # NotifyBookingCancelledJob.perform_later(booking.id)
@@ -94,7 +91,7 @@ class MonitorBookingJob < ApplicationJob
     
     begin
       # Check if booking can be extended
-      booking_data = adapter.booking_status(booking.obs_booking_id)
+      booking_data = adapter.booking_status(booking.obs_booking_hash)
       
       if booking_can_be_extended?(booking_data)
         new_expiry = Time.current + BOOKING_HOLD_TIME
@@ -113,7 +110,7 @@ class MonitorBookingJob < ApplicationJob
     adapter = ObsAdapter.new
     
     begin
-      booking_data = adapter.booking_status(booking.obs_booking_id)
+      booking_data = adapter.booking_status(booking.obs_booking_hash)
       
       # Update booking based on OBS status
       update_booking_from_obs_data(booking, booking_data)
@@ -140,20 +137,18 @@ class MonitorBookingJob < ApplicationJob
     when 'confirmed'
       booking.update!(
         status: 'confirmed',
-        raw_json: booking.raw_data_hash.merge(obs_data)
+        confirmed_at: Time.current
       )
       Rails.logger.info "Booking #{booking.id} confirmed via OBS"
     when 'cancelled'
       booking.update!(
         status: 'cancelled',
-        raw_json: booking.raw_data_hash.merge(obs_data)
+        cancelled_at: Time.current
       )
       Rails.logger.info "Booking #{booking.id} cancelled via OBS"
     else
-      # Update raw data but keep current status
-      booking.update!(
-        raw_json: booking.raw_data_hash.merge(obs_data)
-      )
+      # Status unchanged - booking is still pending
+      Rails.logger.debug "Booking #{booking.id} status unchanged: #{obs_status}"
     end
   end
 end

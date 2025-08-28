@@ -18,7 +18,7 @@ class ObsAdapter
     make_request(:get, '/api/v2/search/departure_cities')
   end
 
-  def arrival_cities(airport_city_from)
+  def countries(airport_city_from)
     make_request(:get, '/api/v2/search/countries', { airport_city_from: airport_city_from })
   end
 

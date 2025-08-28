@@ -2,14 +2,13 @@
 class Booking < ApplicationRecord
   # Associations
   belongs_to :user
-  belongs_to :package
+  belongs_to :search_query, optional: true
   
   # Validations
-  validates :obs_booking_id, presence: true, uniqueness: true
+  validates :obs_booking_hash, presence: true, uniqueness: true
   validates :status, presence: true, inclusion: { in: %w[pending confirmed cancelled failed] }
   
-  # Callbacks
-  before_validation :generate_obs_booking_id, on: :create
+  # Callbacks  
   before_validation :set_default_status, on: :create
   
   # Scopes
@@ -19,13 +18,22 @@ class Booking < ApplicationRecord
   scope :expired, -> { where('expires_at < ?', Time.current) }
   
   # Instance methods
-  def raw_data_hash
-    @raw_data_hash ||= JSON.parse(raw_json) rescue {}
+  def tour_details_hash
+    @tour_details_hash ||= JSON.parse(tour_details) rescue {}
   end
   
-  def raw_data_hash=(hash)
-    self.raw_json = hash.to_json
-    @raw_data_hash = hash
+  def tour_details_hash=(hash)
+    self.tour_details = hash.to_json
+    @tour_details_hash = hash
+  end
+  
+  def customer_data_hash
+    @customer_data_hash ||= JSON.parse(customer_data) rescue {}
+  end
+  
+  def customer_data_hash=(hash)
+    self.customer_data = hash.to_json
+    @customer_data_hash = hash
   end
   
   def confirmed?
@@ -53,10 +61,6 @@ class Booking < ApplicationRecord
   end
   
   private
-  
-  def generate_obs_booking_id
-    self.obs_booking_id ||= SecureRandom.uuid
-  end
   
   def set_default_status
     self.status ||= 'pending'

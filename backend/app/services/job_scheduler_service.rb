@@ -46,13 +46,8 @@ class JobSchedulerService
       end
     end
     
-    # Schedule immediate availability refresh after booking
-    def refresh_after_booking(booking)
-      return unless booking.package_id
-      
-      # Refresh availability for the booked package
-      refresh_package_availability(booking.package_id, delay: 1.minute)
-      
+    # Schedule immediate monitoring after booking
+    def monitor_after_booking(booking)
       # Monitor the new booking
       monitor_booking(booking.id, delay: 2.minutes)
     end

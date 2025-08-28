@@ -12,6 +12,33 @@ class Api::V1::BaseController < ApplicationController
   
   protected
   
+  def authenticate_user!
+    token = request.headers['Authorization']&.gsub(/^Bearer /, '')
+    
+    if token.blank?
+      render_error('Authorization token required', :unauthorized)
+      return
+    end
+    
+    @current_user = User.find_by(obs_access_token: token)
+    
+    if @current_user.nil? || !@current_user.obs_tokens_valid?
+      render_error('Invalid or expired token', :unauthorized)
+      return
+    end
+    
+    # Refresh token if it's about to expire (within 5 minutes)
+    if @current_user.obs_token_expires_at.present? && @current_user.obs_token_expires_at < 5.minutes.from_now
+      auth_service = ObsAuthService.new(user_id: @current_user.id)
+      auth_service.refresh_token
+      @current_user.reload
+    end
+  end
+  
+  def current_user
+    @current_user
+  end
+  
   def render_success(data = {}, message = 'Success', status = :ok)
     render json: {
       success: true,

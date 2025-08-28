@@ -60,7 +60,7 @@ class SyncHotelsJob < ApplicationJob
     return unless departure_city&.obs_id
     
     begin
-      countries = adapter.arrival_cities(departure_city.obs_id)
+      countries = adapter.countries(departure_city.obs_id)
       
       countries.each do |country_data|
         sync_country_and_cities(country_data, departure_city.obs_id)
@@ -82,7 +82,7 @@ class SyncHotelsJob < ApplicationJob
     return unless departure_city&.obs_id
     
     # Get countries first
-    countries = adapter.arrival_cities(departure_city.obs_id)
+    countries = adapter.countries(departure_city.obs_id)
     
     countries.each do |country_data|
       sync_hotels_for_country(country_data, departure_city.obs_id)
@@ -123,8 +123,9 @@ class SyncHotelsJob < ApplicationJob
     
     adapter = ObsAdapter.new
     
-    # Get package templates for this country
-    package_templates = adapter.hotels(country_id, departure_city_id)
+    # Get package templates for this country  
+    obs_service = ObsApiService.new
+    package_templates = obs_service.package_templates(country_id, departure_city_id)
     
     package_templates.each do |template|
       sync_package_template(template, country_data)
@@ -139,7 +140,8 @@ class SyncHotelsJob < ApplicationJob
     
     begin
       # Get package templates
-      package_templates = adapter.hotels(country_id, departure_city_id)
+      obs_service = ObsApiService.new
+      package_templates = obs_service.package_templates(country_id, departure_city_id)
       
       package_templates.each do |template|
         sync_hotels_from_template(template, departure_city_id)
@@ -185,17 +187,18 @@ class SyncHotelsJob < ApplicationJob
     adapter = ObsAdapter.new
     
     begin
-      # Get actual hotels for this template
-      hotels_data = adapter.search_packages(
+      # Get actual hotels for this template  
+      obs_service = ObsApiService.new
+      hotels_data = obs_service.search({
         country: template_data['country_id'] || 223, # Default to Turkey
         package_template: template_id,
         airport_city_from: departure_city_id,
-        date_from: Date.current + 1.month,
-        date_to: Date.current + 2.months,
+        date_from: (Date.current + 1.month).strftime("%d.%m.%Y"),
+        date_to: (Date.current + 2.months).strftime("%d.%m.%Y"),
         nights_from: 7,
         adults: 2,
         selected_hotels: []
-      )
+      })
       
       process_hotels_from_search(hotels_data)
     rescue ObsApiService::ApiError => e

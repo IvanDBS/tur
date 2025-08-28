@@ -73,13 +73,6 @@ class ObsAuthService
       obs_refresh_token: response['refresh_token'],
       obs_token_expires_at: Time.current + response['expires_in'].seconds
     )
-    
-    # Store in Redis with TTL
-    Redis.current.setex(
-      "obs_access_token:#{user.id}",
-      response['expires_in'],
-      response['access_token']
-    )
   end
 
   def clear_tokens(user)
@@ -89,8 +82,5 @@ class ObsAuthService
       obs_refresh_token: nil,
       obs_token_expires_at: nil
     )
-    
-    # Clear from Redis
-    Redis.current.del("obs_access_token:#{user.id}")
   end
 end

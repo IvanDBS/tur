@@ -17,11 +17,14 @@ class Api::V1::SearchController < Api::V1::BaseController
   def countries
     airport_city_from = params[:airport_city_from]
     
+    if airport_city_from.blank?
+      return render_error('airport_city_from parameter is required', :bad_request)
+    end
+    
     begin
-      adapter = ObsAdapter.new(user_id: current_user&.id)
-      countries = adapter.arrival_cities(airport_city_from)
+      countries = ObsApiService.new.countries(airport_city_from)
       render_success({ countries: countries })
-    rescue ObsAdapter::Error => e
+    rescue ObsApiService::Error => e
       render_error("Failed to fetch countries: #{e.message}", :bad_gateway)
     end
   end
@@ -187,31 +190,4 @@ class Api::V1::SearchController < Api::V1::BaseController
   end
   
   private
-  
-  def authenticate_user!
-    token = request.headers['Authorization']&.gsub(/^Bearer /, '')
-    
-    if token.blank?
-      render_error('Authorization token required', :unauthorized)
-      return
-    end
-    
-    @current_user = User.find_by(obs_access_token: token)
-    
-    if @current_user.nil? || !@current_user.obs_tokens_valid?
-      render_error('Invalid or expired token', :unauthorized)
-      return
-    end
-    
-    # Refresh token if it's about to expire (within 5 minutes)
-    if @current_user.obs_token_expires_at < 5.minutes.from_now
-      auth_service = ObsAuthService.new(user_id: @current_user.id)
-      auth_service.refresh_token
-      @current_user.reload
-    end
-  end
-  
-  def current_user
-    @current_user
-  end
 end

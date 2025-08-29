@@ -14,6 +14,7 @@
         <!-- Navigation Links -->
         <div class="nav-links">
           <router-link to="/" class="nav-link">Поиск</router-link>
+          <router-link to="/spinner-demo" class="nav-link">Демо анимаций</router-link>
           <router-link to="/about" class="nav-link">О нас</router-link>
           <router-link to="/contact" class="nav-link">Контакты</router-link>
         </div>
@@ -49,6 +50,7 @@
       <div class="mobile-menu" :class="{ 'mobile-menu-open': isMobileMenuOpen }">
         <router-link to="/" class="mobile-link" @click="closeMobileMenu">Поиск</router-link>
         <router-link to="/bookings" class="mobile-link" @click="closeMobileMenu">Мои туры</router-link>
+        <router-link to="/spinner-demo" class="mobile-link" @click="closeMobileMenu">Демо анимаций</router-link>
         <router-link to="/about" class="mobile-link" @click="closeMobileMenu">О нас</router-link>
         <router-link to="/contact" class="mobile-link" @click="closeMobileMenu">Контакты</router-link>
         <button class="mobile-auth-btn" @click="closeMobileMenu">Войти</button>

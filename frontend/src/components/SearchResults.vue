@@ -1,8 +1,8 @@
 <template>
   <div class="search-results">
     <div v-if="isLoading" class="loading">
-      <div class="spinner"></div>
-      <p>Поиск туров...</p>
+      <div class="blue-spinner"></div>
+      <p class="loading-text">Поиск лучших вариантов...</p>
     </div>
 
     <div v-else-if="results.length === 0" class="no-results">
@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 interface SearchResult {
   unique_key: string
@@ -165,24 +165,57 @@ const loadMore = () => {
   box-sizing: border-box;
 }
 
+
+
 .loading {
   text-align: center;
-  padding: 3rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--color-border);
-  border-top: 3px solid var(--color-primary);
+.loading-text {
+  color: var(--color-text-soft);
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.blue-spinner {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-top: 3px solid #A7D8F0;      /* голубой */
+  border-bottom: 0;
+  border-left: 3px solid #A7D8F0;     /* голубой */
+  border-right: 3px solid transparent;
+  animation: rotate 1.6s linear infinite;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.blue-spinner::before {
+  content: '';
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23FF5A5F' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 11.6C20 10.96 19.44 10.4 18.8 10.4H14.4L10.4 4H8.8L10.8 10.4H6.4L5.2 8.8H4L4.8 11.6L4 14.4H5.2L6.4 12.8H10.8L8.8 19.2H10.4L14.4 12.8H18.8C19.44 12.8 20 12.24 20 11.6Z'/%3E%3C/svg%3E%0A");
+  display: block;
+  background-size: 30px;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: absolute;
+  z-index: 999;
+  top: -19px;
+  left: 19px;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transform: rotate(41deg);
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .no-results {

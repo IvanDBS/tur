@@ -157,6 +157,64 @@ input, textarea, select {
   z-index: 9999 !important;
 }
 
+/* Убираем селекторы года и месяца */
+:deep(.dp__month_year_row) {
+  display: none !important;
+}
+
+/* Делаем стрелки видимыми */
+:deep(.dp__arrow_btn) {
+  background: var(--color-secondary) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+:deep(.dp__arrow_btn:hover) {
+  background: var(--color-secondary-hover) !important;
+}
+
+:deep(.dp__arrow_btn svg) {
+  width: 16px !important;
+  height: 16px !important;
+  fill: white !important;
+}
+
+/* Русские дни недели */
+:deep(.dp__weekday) {
+  color: #666 !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+/* Скрываем ненужные элементы */
+:deep(.dp__time_picker) {
+  display: none !important;
+}
+
+:deep(.dp__action_buttons) {
+  display: none !important;
+}
+
+:deep(.dp__select) {
+  display: none !important;
+}
+
+:deep(.dp__today) {
+  display: none !important;
+}
+
+:deep(.dp__clear_icon) {
+  display: none !important;
+}
+
 /* Vue Multiselect overrides */
 :deep(.multiselect) {
   --ms-font-family: var(--font-family) !important;

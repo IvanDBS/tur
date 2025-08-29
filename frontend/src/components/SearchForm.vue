@@ -165,10 +165,10 @@ const toggleExpanded = () => {
 }
 
 :deep(.multiselect-wrapper) {
-  padding-left: 8px !important; /* ОТСТУП СЛЕВА! */
+  padding-left: 10px !important; /* ОТСТУП СЛЕВА! */
   padding-right: 25px !important;
-  padding-top: 9px !important;
-  padding-bottom: 9px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
   min-height: 20px !important;
   height: 20px !important;
   line-height: 20px !important;
@@ -182,6 +182,10 @@ const toggleExpanded = () => {
   margin: 0 !important;
   display: flex !important;
   align-items: center !important;
+}
+
+:deep(.multiselect-search) {
+  padding-left: 10px !important;
 }
 
 :deep(.multiselect:focus-within) {
@@ -247,6 +251,7 @@ const toggleExpanded = () => {
   --ms-option-color-selected: var(--color-secondary) !important;
   --ms-option-bg-selected: rgba(26, 60, 97, 0.1) !important;
   --ms-option-bg-selected-pointed: rgba(26, 60, 97, 0.2) !important;
+  --ms-padding: 10px !important;
 }
 
 /* DatePicker overrides */
@@ -276,7 +281,7 @@ const toggleExpanded = () => {
 
 :deep(.dp__input) {
   border: none !important;
-  padding: 4px 8px !important;
+  padding: 4px 10px !important;
   font-size: 14px !important;
   font-weight: 400 !important;
   background: transparent !important;

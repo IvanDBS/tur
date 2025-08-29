@@ -62,7 +62,7 @@
     <!-- Row 2 -->
     <div class="form-row">
       <div class="field-group">
-        <label>Период заезда:</label>
+        <label>Период заезда от:</label>
         <VueDatePicker
           v-model="form.checkInDate"
           :min-date="new Date()"
@@ -71,11 +71,12 @@
           :month-change-on-scroll="false"
           :auto-apply="true"
           :enable-time-picker="false"
+          :week-start="1"
         />
       </div>
 
       <div class="field-group">
-        <label></label>
+        <label>Период заезда до:</label>
         <VueDatePicker
           v-model="form.checkOutDate"
           :min-date="form.checkInDate || new Date()"
@@ -84,6 +85,7 @@
           :month-change-on-scroll="false"
           :auto-apply="true"
           :enable-time-picker="false"
+          :week-start="1"
         />
       </div>
 
@@ -224,6 +226,8 @@ import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import SearchFilters from './SearchFilters.vue'
 
+
+
 interface SearchForm {
   departureCity: any
   destination: any
@@ -291,6 +295,13 @@ const filteredNights2Options = computed(() => {
 watch(() => form.value.nights, (newValue) => {
   if (newValue && (!form.value.nights2 || form.value.nights2 < newValue)) {
     form.value.nights2 = newValue
+  }
+}, { immediate: true })
+
+// Следим за изменениями даты заезда и устанавливаем дату выезда
+watch(() => form.value.checkInDate, (newValue) => {
+  if (newValue && (!form.value.checkOutDate || form.value.checkOutDate < newValue)) {
+    form.value.checkOutDate = newValue
   }
 }, { immediate: true })
 
@@ -481,5 +492,219 @@ const handleReset = () => {
   .form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* DatePicker custom styles */
+:deep(.dp__main) {
+  width: 100% !important;
+  font-family: var(--font-family) !important;
+  position: relative;
+  z-index: 50;
+}
+
+:deep(.dp__input_wrap) {
+  border: 1px solid #DDDDDD !important;
+  border-radius: 4px !important;
+  background: #FFFFFF !important;
+  position: relative !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+:deep(.dp__input_wrap:focus-within) {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+:deep(.dp__input) {
+  border: none !important;
+  padding: 4px 10px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  color: #222222 !important;
+  font-family: var(--font-family) !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+:deep(.dp__input::placeholder) {
+  color: #B0B0B0 !important;
+}
+
+:deep(.dp__menu) {
+  border: 1px solid #DDDDDD !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 2px !important;
+  z-index: 500 !important;
+  position: absolute !important;
+  background: white !important;
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  contain: layout !important;
+}
+
+:deep(.dp__outer_menu_wrap) {
+  left: 0 !important;
+  transform: none !important;
+}
+
+:deep(.dp__outer_menu_wrap:hover) {
+  left: 0 !important;
+  transform: none !important;
+}
+
+:deep(.dp__menu:hover) {
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+:deep(.dp__menu:focus-within) {
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* Убираем селекторы года и месяца */
+:deep(.dp__month_year_row) {
+  display: none !important;
+}
+
+:deep(.dp__month_year_select) {
+  pointer-events: none !important;
+  cursor: default !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--color-text) !important;
+}
+
+/* Делаем стрелки видимыми */
+:deep(.dp__inner_nav) {
+  background: transparent !important;
+  color: var(--color-secondary) !important;
+  border: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s ease !important;
+}
+
+:deep(.dp__inner_nav:hover) {
+  opacity: 0.7 !important;
+}
+
+:deep(.dp__inner_nav .dp__icon) {
+  width: 16px !important;
+  height: 16px !important;
+  fill: var(--color-secondary) !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Русские дни недели */
+:deep(.dp__calendar_header_item:nth-child(1))::after {
+  content: 'Пн' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(2))::after {
+  content: 'Вт' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(3))::after {
+  content: 'Ср' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(4))::after {
+  content: 'Чт' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(5))::after {
+  content: 'Пт' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(6))::after {
+  content: 'Сб' !important;
+}
+
+:deep(.dp__calendar_header_item:nth-child(7))::after {
+  content: 'Вс' !important;
+}
+
+/* Скрываем оригинальный текст */
+:deep(.dp__calendar_header_item) {
+  font-size: 0 !important;
+}
+
+:deep(.dp__calendar_header_item)::after {
+  font-size: 12px !important;
+  color: #666 !important;
+  font-weight: 500 !important;
+}
+
+/* Скрываем ненужные элементы */
+:deep(.dp__time_picker) {
+  display: none !important;
+}
+
+/* Стили для выбранной даты */
+:deep(.dp__active_date) {
+  background: rgba(26, 60, 97, 0.1) !important; /* Светлая заливка */
+  border: 2px solid var(--color-secondary) !important; /* Темно-синий контур */
+  color: var(--color-secondary) !important; /* Темно-синий текст */
+}
+
+:deep(.dp__active_date:hover) {
+  background: rgba(26, 60, 97, 0.2) !important; /* Чуть темнее при hover */
+  border: 2px solid var(--color-secondary) !important;
+  color: var(--color-secondary) !important;
+}
+
+:deep(.dp__action_buttons) {
+  display: none !important;
+}
+
+:deep(.dp__select) {
+  display: none !important;
+}
+
+:deep(.dp__today) {
+  display: none !important;
+}
+
+:deep(.dp__clear_icon) {
+  display: none !important;
+}
+
+:deep(.dp__input_icon) {
+  display: none !important;
+}
+
+:deep(.dp__icon) {
+  display: none !important;
+}
+
+:deep(.dp__calendar_icon) {
+  display: none !important;
+}
+
+:deep(.dp__action_icon) {
+  display: none !important;
 }
 </style>

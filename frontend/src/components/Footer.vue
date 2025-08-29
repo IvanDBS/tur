@@ -134,6 +134,7 @@ const currentYear = computed(() => new Date().getFullYear())
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-primary);
+  letter-spacing: -0.02em;
 }
 
 .footer-description {
@@ -164,7 +165,7 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .footer-link:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
   transform: translateX(4px);
 }
 
@@ -183,7 +184,7 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .contact-item svg {
-  color: var(--color-primary);
+  color: var(--color-secondary);
   flex-shrink: 0;
 }
 
@@ -213,14 +214,14 @@ const currentYear = computed(() => new Date().getFullYear())
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--color-primary-muted);
-  color: var(--color-primary);
+  background: var(--color-secondary-muted);
+  color: var(--color-secondary);
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .social-link:hover {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: white;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);

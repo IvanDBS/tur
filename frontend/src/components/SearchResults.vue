@@ -218,8 +218,8 @@ const loadMore = () => {
 }
 
 .result-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  border-color: var(--color-secondary);
+  box-shadow: 0 4px 12px rgba(26, 60, 97, 0.1);
 }
 
 .hotel-info {
@@ -300,7 +300,7 @@ const loadMore = () => {
 .price {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-dark-gray);
   line-height: 1.2;
 }
 
@@ -315,20 +315,20 @@ const loadMore = () => {
 .book-btn {
   grid-column: 5;
   padding: 0.5rem 1rem;
-  background: var(--color-primary);
-  color: white;
-  border: none;
+  background: white;
+  color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
   border-radius: 6px;
   font-family: var(--font-family);
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
 .book-btn:hover {
-  background: var(--color-primary-hover);
+  background: var(--color-secondary-muted);
 }
 
 .load-more {

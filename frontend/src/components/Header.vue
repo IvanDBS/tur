@@ -120,6 +120,7 @@ const closeMobileMenu = () => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
+  letter-spacing: -0.02em;
 }
 
 .nav-links {
@@ -139,11 +140,11 @@ const closeMobileMenu = () => {
 }
 
 .nav-link:hover {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .nav-link.router-link-active {
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .nav-link.router-link-active::after {
@@ -153,7 +154,7 @@ const closeMobileMenu = () => {
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--color-primary);
+  background: var(--color-secondary);
   border-radius: 1px;
 }
 
@@ -175,21 +176,21 @@ const closeMobileMenu = () => {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border: none;
-  border-radius: 6px; /* Квадратная как кнопка поиска */
-  background: var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-secondary);
   color: white;
   font-family: var(--font-family);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 56, 92, 0.2);
+  box-shadow: 0 2px 8px var(--color-secondary-muted);
 }
 
 .auth-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(255, 56, 92, 0.3);
-  background: var(--color-primary-hover);
+  box-shadow: 0 4px 16px var(--color-secondary-muted);
+  background: var(--color-secondary-hover);
 }
 
 .mobile-menu-btn {
@@ -243,8 +244,8 @@ const closeMobileMenu = () => {
 }
 
 .mobile-link:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--color-ocean);
+  background: var(--color-secondary-muted);
+  color: var(--color-secondary);
 }
 
 .mobile-auth-btn {
@@ -253,7 +254,7 @@ const closeMobileMenu = () => {
   margin-top: 1rem;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-ocean), var(--color-ocean-light));
+  background: var(--color-secondary);
   color: white;
   font-family: var(--font-family);
   font-weight: 600;
@@ -262,7 +263,7 @@ const closeMobileMenu = () => {
 }
 
 .mobile-auth-btn:hover {
-  background: linear-gradient(135deg, var(--color-ocean-light), var(--color-ocean));
+  background: var(--color-secondary-hover);
 }
 
 /* Mobile Responsive */

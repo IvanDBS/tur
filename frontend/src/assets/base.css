@@ -3,38 +3,45 @@
 @import '@vueform/multiselect/themes/default.css';
 @import '@vuepic/vue-datepicker/dist/main.css';
 
-/* CSS Custom Properties - Ocean & Travel Theme */
+/* CSS Custom Properties - Business Minimalist Theme */
 :root {
   --font-family: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   
-  /* Airbnb Inspired Palette */
+  /* Minimalist Neutral Backgrounds */
   --color-background: #FFFFFF;
   --color-background-soft: #F7F7F7;
-  --color-background-muted: #F0F0F0;
+  --color-background-muted: #EFEFEF;
   
   /* Border Colors */
   --color-border: #DDDDDD;
   --color-border-soft: #EBEBEB;
   
-  /* Text Colors */
+  /* Text Colors - Minimalist */
   --color-text: #222222;
-  --color-text-soft: #717171;
-  --color-text-muted: #B0B0B0;
+  --color-text-soft: #333333;
+  --color-text-muted: #717171;
   
-  /* Primary Colors (Original Bright) */
-  --color-primary: #FF385C;
-  --color-primary-hover: #E31C3D;
-  --color-primary-light: #FF5A73;
-  --color-primary-muted: rgba(255, 56, 92, 0.1);
+  /* Primary Colors - Airbnb */
+  --color-primary: #FF5A5F;
+  --color-primary-hover: #E74E54;
+  --color-primary-light: #FF8A8E;
+  --color-primary-muted: rgba(255, 90, 95, 0.1);
   
-  /* Accent Colors (Only Blue) */
-  --color-accent-blue: #6B9FEE;
-  --color-accent-blue-light: rgba(107, 159, 238, 0.1);
+  /* Secondary Colors - Темно-синий (дополнительный к коралловому) */
+  --color-secondary: #1A3C61;
+  --color-secondary-hover: #132E4C;
+  --color-secondary-light: #2D5A8A;
+  --color-secondary-muted: rgba(26, 60, 97, 0.1);
+  
+  /* Dark Gray for UI Elements */
+  --color-dark-gray: #484848;
+  --color-dark-gray-hover: #333333;
+  --color-dark-gray-muted: rgba(72, 72, 72, 0.1);
   
   /* Semantic Colors */
-  --color-success: #6B9FEE;
-  --color-warning: #6B9FEE;
-  --color-danger: #FF385C;
+  --color-success: #4CAF50;
+  --color-warning: #FFB400;
+  --color-danger: #FF5A5F;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -123,8 +130,8 @@ input, textarea, select {
 :deep(.dp__main) {
   --dp-font-family: var(--font-family) !important;
   --dp-border-color: var(--color-border) !important;
-  --dp-border-color-hover: var(--color-primary) !important;
-  --dp-primary-color: var(--color-primary) !important;
+  --dp-border-color-hover: var(--color-secondary) !important;
+  --dp-primary-color: var(--color-secondary) !important;
   --dp-text-color: var(--color-text) !important;
   --dp-background-color: var(--color-background) !important;
   --dp-hover-color: var(--color-background-soft) !important;

@@ -91,11 +91,34 @@
             valueProp="value"
           />
         </div>
+        
+
 
         <!-- Search Button -->
         <button type="button" @click="search" class="search-btn-compact">
           Поиск тура
         </button>
+      </div>
+      
+      <!-- Селекторы возраста детей -->
+      <div v-if="searchForm.children > 0" class="children-ages-row">
+        <div 
+          v-for="(age, index) in searchForm.childrenAges" 
+          :key="index"
+          class="field-group children-age"
+        >
+          <label>Возраст ребенка {{ index + 1 }}:</label>
+          <Multiselect
+            v-model="searchForm.childrenAges[index]"
+            :options="childrenAgeOptions"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="0"
+            label="label"
+            valueProp="value"
+          />
+        </div>
       </div>
       
       <!-- Expand Link -->
@@ -257,6 +280,27 @@
                     valueProp="value"
                   />
                 </div>
+                
+                <!-- Селекторы возраста детей -->
+                <template v-if="searchForm.children > 0">
+                  <div 
+                    v-for="(age, index) in searchForm.childrenAges" 
+                    :key="index"
+                    class="field-group children-age"
+                  >
+                    <label>Возраст ребенка {{ index + 1 }}:</label>
+                    <Multiselect
+                      v-model="searchForm.childrenAges[index]"
+                      :options="childrenAgeOptions"
+                      :searchable="false"
+                      :canClear="false"
+                      :canDeselect="false"
+                      placeholder="0"
+                      label="label"
+                      valueProp="value"
+                    />
+                  </div>
+                </template>
 
         <div class="field-group">
           <label>Цена € от:</label>
@@ -412,6 +456,7 @@ const searchForm = ref({
   nights2: 6,
   adults: 2,
   children: 0,
+  childrenAges: [] as number[],
   priceFrom: null,
   priceTo: null,
   selectedHotels: [] as number[]
@@ -591,6 +636,22 @@ watch(() => searchForm.value.nights, (newValue) => {
   }
 }, { immediate: true })
 
+// Следим за изменениями количества детей и обновляем массив возрастов
+watch(() => searchForm.value.children, (newValue) => {
+  if (newValue === 0) {
+    searchForm.value.childrenAges = []
+  } else {
+    // Сохраняем текущие значения возрастов
+    const currentAges = [...searchForm.value.childrenAges]
+    
+    // Создаем новый массив с нужным количеством элементов
+    searchForm.value.childrenAges = Array(newValue).fill(0).map((_, index) => {
+      // Если есть сохраненное значение для этого индекса, используем его
+      return index < currentAges.length ? currentAges[index] : 0
+    })
+  }
+}, { immediate: true })
+
 const adultsOptions = ref([
   { value: 1, label: '1' },
   { value: 2, label: '2' },
@@ -605,18 +666,17 @@ const adultsOptions = ref([
 ])
 
 const childrenOptions = ref([
-  { value: 0, label: '0' },
+  { value: 0, label: 'Без детей' },
   { value: 1, label: '1' },
   { value: 2, label: '2' },
   { value: 3, label: '3' },
-  { value: 4, label: '4' },
-  { value: 5, label: '5' },
-  { value: 6, label: '6' },
-  { value: 7, label: '7' },
-  { value: 8, label: '8' },
-  { value: 9, label: '9' },
-  { value: 10, label: '10' }
+  { value: 4, label: '4' }
 ])
+
+// Опции для выбора возраста детей (от 0 до 17 лет)
+const childrenAgeOptions = ref(
+  Array.from({ length: 18 }, (_, i) => ({ value: i, label: i.toString() }))
+)
 
 // Selected filters
 const selectedRegions = ref<number[]>([])
@@ -650,7 +710,8 @@ const search = () => {
     categories: selectedCategories.value,
     meals: selectedMeals.value,
     options: selectedOptions.value,
-    hotels: selectedHotels.value
+    hotels: selectedHotels.value,
+    childrenAges: searchForm.value.childrenAges
   })
   
   // После поиска всегда показываем компактную форму
@@ -664,7 +725,8 @@ const search = () => {
       selectedRegions: selectedRegions.value,
       selectedCategories: selectedCategories.value,
       selectedMeals: selectedMeals.value,
-      selectedOptions: selectedOptions.value
+      selectedOptions: selectedOptions.value,
+      childrenAges: searchForm.value.childrenAges
     })
   }, 1000)
 }
@@ -682,6 +744,7 @@ const reset = () => {
     nights2: 6,
     adults: 2,
     children: 0,
+    childrenAges: [],
     priceFrom: null,
     priceTo: null,
     selectedHotels: []
@@ -983,6 +1046,25 @@ const toggleOption = (optionId: number) => {
   gap: 12px;
   margin-bottom: 12px;
   align-items: end;
+}
+
+/* Стили для селекторов возраста детей */
+.children-age {
+  grid-column: span 1;
+}
+
+.children-ages-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.children-ages-row .field-group {
+  flex: 0 0 25%;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .filters-section {

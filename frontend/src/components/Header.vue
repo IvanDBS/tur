@@ -4,10 +4,6 @@
       <div class="nav-container">
         <!-- Logo -->
         <router-link to="/" class="logo">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon">
-            <path d="M12 2.5c-1.5 0-3 .5-4.2 1.4L3 8l9 5 9-5-4.8-4.1C15 3 13.5 2.5 12 2.5z" fill="currentColor"/>
-            <path d="M3 8v8c0 .8.4 1.5 1 1.9L12 22l8-4.1c.6-.4 1-1.1 1-1.9V8l-9 5-9-5z" fill="currentColor" opacity="0.7"/>
-          </svg>
           <span class="logo-text">migo.md</span>
         </router-link>
 
@@ -112,10 +108,6 @@ const closeMobileMenu = () => {
 
 .logo:hover {
   transform: scale(1.02);
-}
-
-.logo-icon {
-  color: var(--color-primary);
 }
 
 .logo-text {

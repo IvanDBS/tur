@@ -6,10 +6,6 @@
         <!-- Company Info -->
         <div class="footer-section">
           <div class="footer-logo">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="logo-icon">
-              <path d="M12 2.5c-1.5 0-3 .5-4.2 1.4L3 8l9 5 9-5-4.8-4.1C15 3 13.5 2.5 12 2.5z" fill="currentColor"/>
-              <path d="M3 8v8c0 .8.4 1.5 1 1.9L12 22l8-4.1c.6-.4 1-1.1 1-1.9V8l-9 5-9-5z" fill="currentColor" opacity="0.7"/>
-            </svg>
             <span class="logo-text">migo.md</span>
           </div>
           <p class="footer-description">
@@ -126,12 +122,8 @@ const currentYear = computed(() => new Date().getFullYear())
   margin-bottom: 1rem;
 }
 
-.logo-icon {
-  color: var(--color-primary);
-}
-
 .logo-text {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: -0.02em;

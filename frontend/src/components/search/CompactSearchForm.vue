@@ -250,6 +250,13 @@
     outline: none !important;
   }
 
+  /* Выравнивание высоты полей дат с другими селекторами */
+  :deep(.dp__input) {
+    min-height: 38px !important;
+    height: 38px !important;
+    box-sizing: border-box !important;
+  }
+
   /* Compact Form */
   .search-compact {
     background: #ffffff;
@@ -266,6 +273,13 @@
     align-items: end;
     gap: 12px;
     flex-wrap: wrap;
+  }
+
+  /* Дополнительное выравнивание для полей дат */
+  .field-group:has(.dp__input) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .field-group {

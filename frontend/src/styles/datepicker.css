@@ -40,14 +40,10 @@
   font-weight: 500 !important;
 }
 
-
-
-
-
 :deep(.dp__input_wrap) {
-  border: 1px solid #DDDDDD !important;
+  border: 1px solid #dddddd !important;
   border-radius: 4px !important;
-  background: #FFFFFF !important;
+  background: #ffffff !important;
   position: relative !important;
   min-height: 38px !important;
   height: 38px !important;
@@ -140,12 +136,12 @@
 }
 
 :deep(.dp__input::placeholder) {
-  color: #B0B0B0 !important;
+  color: #b0b0b0 !important;
 }
 
 /* Меню календаря */
 :deep(.dp__menu) {
-  border: 1px solid #DDDDDD !important;
+  border: 1px solid #dddddd !important;
   border-radius: 4px !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   margin-top: 2px !important;
@@ -378,5 +374,3 @@
 .search-compact :deep(.dp__menu) {
   z-index: 2000 !important; /* Выше чем в расширенной форме */
 }
-
-

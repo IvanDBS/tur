@@ -7,35 +7,35 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: HomeView,
     },
     {
       path: '/search',
       name: 'search',
-      component: () => import('../views/SearchView.vue')
+      component: () => import('../views/SearchView.vue'),
     },
     {
       path: '/bookings',
       name: 'bookings',
-      component: () => import('../views/BookingsView.vue')
+      component: () => import('../views/BookingsView.vue'),
     },
 
     {
       path: '/auth-test',
       name: 'auth-test',
-      component: () => import('../views/AuthTestView.vue')
+      component: () => import('../views/AuthTestView.vue'),
     },
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue')
+      component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/contact',
       name: 'contact',
-      component: () => import('../views/ContactView.vue')
-    }
-  ]
+      component: () => import('../views/ContactView.vue'),
+    },
+  ],
 })
 
 export default router

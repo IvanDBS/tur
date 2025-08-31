@@ -5,8 +5,8 @@ class ObsApiService
   include ActiveModel::Attributes
 
   attribute :base_url, :string, default: -> { ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md' }
-  attribute :api_key, :string, default: -> { ENV['OBS_API_KEY'] }
-  attribute :api_secret, :string, default: -> { ENV['OBS_API_SECRET'] }
+  attribute :api_key, :string, default: -> { ENV.fetch('OBS_API_KEY', nil) }
+  attribute :api_secret, :string, default: -> { ENV.fetch('OBS_API_SECRET', nil) }
 
   def initialize(attributes = {})
     super
@@ -49,7 +49,7 @@ class ObsApiService
   def countries(airport_city_from = nil)
     url = '/api/v2/search/countries'
     url += "?airport_city_from=#{airport_city_from}" if airport_city_from.present?
-    
+
     response = @connection.get(url)
     handle_response(response)
   end
@@ -57,7 +57,7 @@ class ObsApiService
   def package_templates(country_id, airport_city_from = nil)
     url = "/api/v2/search/countries/#{country_id}/package_templates"
     url += "?airport_city_from=#{airport_city_from}" if airport_city_from.present?
-    
+
     response = @connection.get(url)
     handle_response(response)
   end
@@ -75,7 +75,7 @@ class ObsApiService
   def calendar_hints(params = {})
     url = '/api/v2/search/calendar_hints'
     url += "?#{params.to_query}" if params.any?
-    
+
     response = @connection.get(url)
     handle_response(response)
   end
@@ -83,7 +83,7 @@ class ObsApiService
   def available_nights(params = {})
     url = '/api/v2/search/available_nights'
     url += "?#{params.to_query}" if params.any?
-    
+
     response = @connection.get(url)
     handle_response(response)
   end
@@ -101,7 +101,7 @@ class ObsApiService
   def hotels(package_template_id, params = {})
     url = "/api/v2/search/package_templates/#{package_template_id}/hotels"
     url += "?#{params.to_query}" if params.any?
-    
+
     response = @connection.get(url)
     handle_response(response)
   end

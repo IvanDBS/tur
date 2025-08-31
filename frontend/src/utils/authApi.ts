@@ -1,9 +1,9 @@
 import { apiClient } from './api'
-import type { 
-  LoginCredentials, 
-  RegisterCredentials, 
-  AuthResponse, 
-  User 
+import type {
+  LoginCredentials,
+  RegisterCredentials,
+  AuthResponse,
+  User,
 } from '../types/auth'
 
 export class AuthApi {
@@ -13,7 +13,9 @@ export class AuthApi {
   }
 
   // Регистрация
-  static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+  static async register(
+    credentials: RegisterCredentials
+  ): Promise<AuthResponse> {
     return apiClient.post<AuthResponse>('/auth/sign_up', credentials)
   }
 
@@ -33,7 +35,10 @@ export class AuthApi {
   }
 
   // Смена пароля
-  static async changePassword(data: { currentPassword: string, newPassword: string }): Promise<{ message: string }> {
+  static async changePassword(data: {
+    currentPassword: string
+    newPassword: string
+  }): Promise<{ message: string }> {
     return apiClient.put<{ message: string }>('/auth/change_password', data)
   }
 }

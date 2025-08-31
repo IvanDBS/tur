@@ -8,137 +8,130 @@
             Бесплатный сервис бронирования туров.
           </h1>
           <p class="hero-subtitle animate-fade-in-up-delay">
-            <span class="brand-bold">migo.md</span> - путешествуй легко и бронируй онлайн!
+            <span class="brand-bold">migo.md</span> - путешествуй легко и
+            бронируй онлайн!
           </p>
         </div>
-        
+
         <!-- Search Form -->
         <div class="search-wrapper animate-fade-in-up">
           <SearchForm @search="handleSearch" />
         </div>
       </div>
     </section>
-    
-
   </div>
 </template>
 
 <script setup lang="ts">
-import SearchForm from '@/components/SearchForm.vue'
-import { useRouter } from 'vue-router'
+  import SearchForm from '@/components/SearchForm.vue'
+  import { useRouter } from 'vue-router'
 
-const router = useRouter()
+  const router = useRouter()
 
-const handleSearch = (searchParams: Record<string, unknown>) => {
-  // Navigate to search page with params
-  router.push({
-    name: 'search',
-    query: searchParams
-  })
-}
+  const handleSearch = (searchParams: Record<string, unknown>) => {
+    // Navigate to search page with params
+    router.push({
+      name: 'search',
+      query: searchParams,
+    })
+  }
 </script>
 
 <style scoped>
-.home-page {
-  min-height: calc(100vh - 72px);
-  display: flex;
-  flex-direction: column;
-}
-
-
-
-/* Hero Section */
-.hero-section {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  min-height: 60vh;
-  background: var(--color-background);
-  padding-top: 7rem;
-  overflow: hidden;
-}
-
-.hero-content {
-  max-width: 1200px;
-  width: 100%;
-  padding: 1rem 1.5rem 2rem;
-  text-align: center;
-  position: relative;
-  z-index: 2;
-}
-
-.hero-text {
-  margin-bottom: 2rem;
-}
-
-.hero-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-secondary);
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  opacity: 0.8;
-}
-
-.hero-subtitle {
-  font-size: 1.5rem;
-  color: var(--color-secondary);
-  font-weight: 400;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
-  opacity: 0.8;
-}
-
-.brand-bold {
-  font-weight: 600;
-}
-
-.search-wrapper {
-  width: 100%;
-  margin: 2rem auto;
-  position: relative;
-  z-index: 10;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-
-
-
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 2rem;
+  .home-page {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
   }
-  
-  .hero-subtitle {
-    font-size: 1.25rem;
+
+  /* Hero Section */
+  .hero-section {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 60vh;
+    background: var(--color-background);
+    padding-top: 7rem;
+    overflow: hidden;
   }
-  
+
+  .hero-content {
+    max-width: 1200px;
+    width: 100%;
+    padding: 1rem 1.5rem 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
   .hero-text {
     margin-bottom: 2rem;
   }
-  
-  .hero-section {
-    min-height: 70vh;
-  }
-}
 
-@media (max-width: 480px) {
-  .hero-content {
-    padding: 1rem;
-  }
-  
   .hero-title {
-    font-size: 1.75rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    opacity: 0.8;
   }
-  
+
   .hero-subtitle {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+    color: var(--color-secondary);
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+    opacity: 0.8;
   }
-}
+
+  .brand-bold {
+    font-weight: 600;
+  }
+
+  .search-wrapper {
+    width: 100%;
+    margin: 2rem auto;
+    position: relative;
+    z-index: 10;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+    }
+
+    .hero-text {
+      margin-bottom: 2rem;
+    }
+
+    .hero-section {
+      min-height: 70vh;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-content {
+      padding: 1rem;
+    }
+
+    .hero-title {
+      font-size: 1.75rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+    }
+  }
 </style>

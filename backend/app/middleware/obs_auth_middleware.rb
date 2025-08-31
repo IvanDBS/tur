@@ -7,21 +7,19 @@ class ObsAuthMiddleware
 
   def call(env)
     request = ActionDispatch::Request.new(env)
-    
+
     # Only for OBS API requests
-    if obs_api_request?(request)
-      add_authorization_header(env, request)
-    end
-    
+    add_authorization_header(env, request) if obs_api_request?(request)
+
     @app.call(env)
   end
 
   private
 
   def obs_api_request?(request)
-    request.path.start_with?('/api/v1/') && 
-    !request.path.include?('/auth/login') &&
-    !request.path.include?('/health')
+    request.path.start_with?('/api/v1/') &&
+      request.path.exclude?('/auth/login') &&
+      request.path.exclude?('/health')
   end
 
   def add_authorization_header(env, request)
@@ -32,10 +30,10 @@ class ObsAuthMiddleware
     # Get valid access token
     auth_service = ObsAuthService.new(user_id: user.id)
     access_token = auth_service.valid_access_token
-    
-    if access_token
-      env['HTTP_AUTHORIZATION'] = "Bearer #{access_token}"
-    end
+
+    return unless access_token
+
+    env['HTTP_AUTHORIZATION'] = "Bearer #{access_token}"
   end
 
   def current_user_from_request(request)

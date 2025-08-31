@@ -1,26 +1,26 @@
 export interface SearchForm {
-  departureCity: any
-  destination: any
-  package?: any
-  arrivalCity?: any
-  date?: any
-  checkInDate?: any
-  checkOutDate?: any
+  departureCity: DepartureCity | null
+  destination: Country | null
+  package?: Package | null
+  arrivalCity?: ArrivalCity | null
+  date?: string | null
+  checkInDate?: string | null
+  checkOutDate?: string | null
   nights: number
   nights2?: number
   adults: number
   children: number
   childrenAges: number[]
-  priceFrom?: any
-  priceTo?: any
+  priceFrom?: number | null
+  priceTo?: number | null
   selectedHotels?: number[]
 }
 
 // Упрощенный интерфейс для компактной формы
 export interface CompactSearchForm {
-  departureCity: any
-  destination: any
-  date: any
+  departureCity: DepartureCity | null
+  destination: Country | null
+  date: string | null
   nights: number
   adults: number
   children: number
@@ -29,19 +29,19 @@ export interface CompactSearchForm {
 
 // Расширенный интерфейс для расширенной формы
 export interface ExpandedSearchForm {
-  departureCity: any
-  destination: any
-  package: any
-  arrivalCity: any
-  checkInDate: any
-  checkOutDate: any
+  departureCity: DepartureCity | null
+  destination: Country | null
+  package: Package | null
+  arrivalCity: ArrivalCity | null
+  checkInDate: string | null
+  checkOutDate: string | null
   nights: number
   nights2: number
   adults: number
   children: number
   childrenAges: number[]
-  priceFrom: any
-  priceTo: any
+  priceFrom: number | null
+  priceTo: number | null
 }
 
 export interface SelectedFilters {

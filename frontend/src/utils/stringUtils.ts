@@ -68,19 +68,19 @@ export const generateRandomString = (length: number): string => {
  */
 export const formatPhone = (phone: string): string => {
   if (!phone) return phone
-  
+
   // Удаляем все нецифровые символы
   const digits = phone.replace(/\D/g, '')
-  
+
   // Форматируем в зависимости от длины
   if (digits.length === 11) {
     return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9)}`
   }
-  
+
   if (digits.length === 10) {
     return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8)}`
   }
-  
+
   return phone
 }
 

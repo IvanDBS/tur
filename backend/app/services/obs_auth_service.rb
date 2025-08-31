@@ -16,23 +16,23 @@ class ObsAuthService
   # Login to OBS API
   def login
     response = @obs_service.login(email, password)
-    
+
     # Store tokens
     store_tokens(response)
-    
+
     response
   end
 
   # Refresh access token
   def refresh_token
     user = User.find(user_id)
-    return false unless user.obs_refresh_token.present?
+    return false if user.obs_refresh_token.blank?
 
     response = @obs_service.refresh_token(user.obs_refresh_token)
-    
+
     # Update tokens
     store_tokens(response, user)
-    
+
     response
   rescue ObsApiService::Error
     false
@@ -41,13 +41,13 @@ class ObsAuthService
   # Logout from OBS API
   def logout
     user = User.find(user_id)
-    return false unless user.obs_access_token.present?
+    return false if user.obs_access_token.blank?
 
     @obs_service.logout(user.obs_access_token)
-    
+
     # Clear tokens
     clear_tokens(user)
-    
+
     true
   rescue ObsApiService::Error
     false
@@ -66,7 +66,7 @@ class ObsAuthService
 
   def store_tokens(response, user = nil)
     user ||= User.find(user_id)
-    
+
     # Store in Postgres (encrypted)
     user.update!(
       obs_access_token: response['access_token'],

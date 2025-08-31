@@ -14,6 +14,6 @@ export const useAuthModal = () => {
   return {
     isAuthModalOpen,
     openAuthModal,
-    closeAuthModal
+    closeAuthModal,
   }
 }

@@ -4,3 +4,34 @@
 require_relative "config/application"
 
 Rails.application.load_tasks
+
+# RuboCop tasks
+namespace :rubocop do
+  desc "Run RuboCop with auto-correct"
+  task :fix do
+    sh "bundle exec rubocop -a"
+  end
+
+  desc "Run RuboCop without auto-correct"
+  task :check do
+    sh "bundle exec rubocop"
+  end
+
+  desc "Run RuboCop with auto-correct and check"
+  task :all do
+    sh "bundle exec rubocop -a"
+    sh "bundle exec rubocop"
+  end
+end
+
+# Code quality tasks
+namespace :code do
+  desc "Fix code style issues"
+  task fix: "rubocop:fix"
+
+  desc "Check code style"
+  task check: "rubocop:check"
+
+  desc "Fix and check code style"
+  task all: "rubocop:all"
+end

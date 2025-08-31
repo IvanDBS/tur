@@ -62,7 +62,7 @@ class ObsAdapter
 
   def make_request(method, path, params = {})
     start_time = Time.current
-    
+
     # Add authorization header
     headers = {}
     if @auth_service&.user_id
@@ -96,11 +96,11 @@ class ObsAdapter
     when 200..299
       response.body
     when 401
-      raise ObsAdapter::UnauthorizedError, "Authentication failed"
+      raise ObsAdapter::UnauthorizedError, 'Authentication failed'
     when 422
       raise ObsAdapter::ValidationError, "Validation failed: #{response.body}"
     when 429
-      raise ObsAdapter::RateLimitError, "Rate limit exceeded"
+      raise ObsAdapter::RateLimitError, 'Rate limit exceeded'
     when 500..599
       raise ObsAdapter::ServerError, "Server error: #{response.status}"
     else
@@ -113,11 +113,11 @@ class ObsAdapter
       max: 3,
       interval: 0.5,
       backoff_factor: 2,
-      retry_if: ->(env, exception) {
+      retry_if: lambda { |env, exception|
         # Retry on network errors and 5xx responses
         exception.is_a?(Faraday::TimeoutError) ||
-        exception.is_a?(Faraday::ConnectionFailed) ||
-        (env[:status] && env[:status] >= 500)
+          exception.is_a?(Faraday::ConnectionFailed) ||
+          (env[:status] && env[:status] >= 500)
       }
     }
   end
@@ -125,7 +125,7 @@ class ObsAdapter
   def log_request(method, path, params, headers, start_time)
     sanitized_params = sanitize_params(params)
     sanitized_headers = sanitize_headers(headers)
-    
+
     Rails.logger.info "[OBS Adapter] #{method.upcase} #{path} - Params: #{sanitized_params} - Headers: #{sanitized_headers} - Started at: #{start_time}"
   end
 
@@ -141,26 +141,24 @@ class ObsAdapter
 
   def sanitize_params(params)
     return {} unless params.is_a?(Hash)
-    
+
     params.dup.tap do |sanitized|
       # Remove sensitive fields
       %w[password token access_token refresh_token].each do |field|
         sanitized.delete(field)
         sanitized.delete(field.to_sym)
       end
-      
+
       # Sanitize nested hashes
       sanitized.each do |key, value|
-        if value.is_a?(Hash)
-          sanitized[key] = sanitize_params(value)
-        end
+        sanitized[key] = sanitize_params(value) if value.is_a?(Hash)
       end
     end
   end
 
   def sanitize_headers(headers)
     return {} unless headers.is_a?(Hash)
-    
+
     headers.dup.tap do |sanitized|
       # Remove authorization header
       sanitized.delete('Authorization')

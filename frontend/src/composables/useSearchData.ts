@@ -30,7 +30,7 @@ export const useSearchData = () => {
     { value: 27, label: '27' },
     { value: 28, label: '28' },
     { value: 29, label: '29' },
-    { value: 30, label: '30' }
+    { value: 30, label: '30' },
   ])
 
   const adultsOptions = ref([
@@ -43,7 +43,7 @@ export const useSearchData = () => {
     { value: 7, label: '7' },
     { value: 8, label: '8' },
     { value: 9, label: '9' },
-    { value: 10, label: '10' }
+    { value: 10, label: '10' },
   ])
 
   const childrenOptions = ref([
@@ -51,7 +51,7 @@ export const useSearchData = () => {
     { value: 1, label: '1' },
     { value: 2, label: '2' },
     { value: 3, label: '3' },
-    { value: 4, label: '4' }
+    { value: 4, label: '4' },
   ])
 
   // Опции для выбора возраста детей (от 0 до 17 лет)
@@ -62,7 +62,7 @@ export const useSearchData = () => {
   const departureCities = ref([
     { id: 1, name: 'CHISINAU' },
     { id: 2, name: 'BUCHAREST' },
-    { id: 3, name: 'ODESSA' }
+    { id: 3, name: 'ODESSA' },
   ])
 
   const countries = ref([
@@ -70,19 +70,19 @@ export const useSearchData = () => {
     { id: 2, name: 'EGYPT' },
     { id: 3, name: 'GREECE' },
     { id: 4, name: 'BULGARIA' },
-    { id: 5, name: 'SPAIN' }
+    { id: 5, name: 'SPAIN' },
   ])
 
   const packages = ref([
     { id: 1, name: 'ANTALYA FULL' },
     { id: 2, name: 'ANTALYA HOTEL ONLY' },
-    { id: 3, name: 'KEMER FULL' }
+    { id: 3, name: 'KEMER FULL' },
   ])
 
   const arrivalCities = ref([
     { id: 1, name: 'ANTALYA' },
     { id: 2, name: 'ISTANBUL' },
-    { id: 3, name: 'BODRUM' }
+    { id: 3, name: 'BODRUM' },
   ])
 
   const regions = ref([
@@ -92,7 +92,7 @@ export const useSearchData = () => {
     { id: 4, name: 'BELEK' },
     { id: 5, name: 'FETHIYE' },
     { id: 6, name: 'KEMER' },
-    { id: 7, name: 'SIDE' }
+    { id: 7, name: 'SIDE' },
   ])
 
   const categories = ref([
@@ -102,7 +102,7 @@ export const useSearchData = () => {
     { id: 4, name: '3⭐' },
     { id: 5, name: '4⭐' },
     { id: 6, name: '5⭐' },
-    { id: 7, name: 'BOUTIQUE' }
+    { id: 7, name: 'BOUTIQUE' },
   ])
 
   // Список отелей
@@ -112,7 +112,10 @@ export const useSearchData = () => {
     { id: 3, name: 'ALBATROS LAGUNA VISTA BEACH' },
     { id: 4, name: 'ALBATROS PALACE' },
     { id: 5, name: 'ALBATROS ROYAL GRAND SHARM RESORT (ADULT ONLY)' },
-    { id: 6, name: 'ALBATROS SHARM RESORT (EX.BEACH ALBATROS SHARM EL SHEIKH)' }
+    {
+      id: 6,
+      name: 'ALBATROS SHARM RESORT (EX.BEACH ALBATROS SHARM EL SHEIKH)',
+    },
   ])
 
   const meals = ref([
@@ -121,7 +124,7 @@ export const useSearchData = () => {
     { id: 3, name: 'BB' },
     { id: 4, name: 'FB' },
     { id: 5, name: 'HB' },
-    { id: 6, name: 'RO' }
+    { id: 6, name: 'RO' },
   ])
 
   const options = ref([
@@ -130,7 +133,7 @@ export const useSearchData = () => {
     { id: 3, name: 'Бизнесс класс $' },
     { id: 4, name: 'Доступные туры' },
     { id: 5, name: 'Ночной рейс' },
-    { id: 6, name: 'Дневной рейс' }
+    { id: 6, name: 'Дневной рейс' },
   ])
 
   return {
@@ -146,6 +149,6 @@ export const useSearchData = () => {
     categories,
     hotels,
     meals,
-    options
+    options,
   }
 }

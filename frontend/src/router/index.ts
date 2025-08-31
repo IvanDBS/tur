@@ -19,11 +19,7 @@ const router = createRouter({
       name: 'bookings',
       component: () => import('../views/BookingsView.vue')
     },
-    {
-      path: '/spinner-demo',
-      name: 'spinner-demo',
-      component: () => import('../views/SpinnerDemo.vue')
-    },
+
     {
       path: '/auth-test',
       name: 'auth-test',

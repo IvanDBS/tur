@@ -123,7 +123,7 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .logo-text {
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: -0.02em;

@@ -1,7 +1,13 @@
 /* Минималистичные базовые стили */
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
-@import '@vueform/multiselect/themes/default.css';
+
+@import '../styles/animations.css';
+@import '../styles/spinner.css';
+@import '../styles/layout.css';
 @import '@vuepic/vue-datepicker/dist/main.css';
+@import '../styles/datepicker.css';
+@import '../styles/components/multiselect.css';
+@import '../styles/components/forms.css';
 
 /* CSS Custom Properties - Business Minimalist Theme */
 :root {
@@ -39,7 +45,7 @@
   --color-dark-gray-muted: rgba(72, 72, 72, 0.1);
   
   /* Semantic Colors */
-  --color-success: #4CAF50;
+  --color-success: var(--color-secondary);
   --color-warning: #FFB400;
   --color-danger: #FF5A5F;
   
@@ -124,114 +130,4 @@ input, textarea, select {
   html {
     font-size: 14px;
   }
-}
-
-/* Vue Datepicker overrides */
-:deep(.dp__main) {
-  --dp-font-family: var(--font-family) !important;
-  --dp-border-color: var(--color-border) !important;
-  --dp-border-color-hover: var(--color-secondary) !important;
-  --dp-primary-color: var(--color-secondary) !important;
-  --dp-text-color: var(--color-text) !important;
-  --dp-background-color: var(--color-background) !important;
-  --dp-hover-color: var(--color-background-soft) !important;
-  --dp-menu-border-color: var(--color-border) !important;
-  font-family: var(--font-family) !important;
-}
-
-:deep(.dp__input) {
-  font-family: var(--font-family) !important;
-  font-size: 0.9rem !important;
-  line-height: 1.4 !important;
-  padding: 0 !important;
-  border: none !important;
-}
-
-:deep(.dp__menu) {
-  font-family: var(--font-family) !important;
-  border-radius: 12px !important;
-  box-shadow: var(--shadow-lg) !important;
-}
-
-:deep(.dp__overlay_container) {
-  z-index: 9999 !important;
-}
-
-/* Убираем селекторы года и месяца */
-:deep(.dp__month_year_row) {
-  display: none !important;
-}
-
-/* Делаем стрелки видимыми */
-:deep(.dp__arrow_btn) {
-  background: var(--color-secondary) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 4px !important;
-  width: 32px !important;
-  height: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  transition: background-color 0.2s ease !important;
-}
-
-:deep(.dp__arrow_btn:hover) {
-  background: var(--color-secondary-hover) !important;
-}
-
-:deep(.dp__arrow_btn svg) {
-  width: 16px !important;
-  height: 16px !important;
-  fill: white !important;
-}
-
-/* Русские дни недели */
-:deep(.dp__weekday) {
-  color: #666 !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
-}
-
-/* Скрываем ненужные элементы */
-:deep(.dp__time_picker) {
-  display: none !important;
-}
-
-:deep(.dp__action_buttons) {
-  display: none !important;
-}
-
-:deep(.dp__select) {
-  display: none !important;
-}
-
-:deep(.dp__today) {
-  display: none !important;
-}
-
-:deep(.dp__clear_icon) {
-  display: none !important;
-}
-
-/* Vue Multiselect overrides */
-:deep(.multiselect) {
-  --ms-font-family: var(--font-family) !important;
-  --ms-border-color: var(--color-border) !important;
-  --ms-border-color-active: var(--color-primary) !important;
-  --ms-border-color-open: var(--color-primary) !important;
-  --ms-ring-color: var(--color-primary-muted) !important;
-  --ms-option-bg-selected: var(--color-primary) !important;
-  --ms-option-bg-selected-pointed: var(--color-primary-hover) !important;
-  --ms-option-color-selected: #fff !important;
-  --ms-option-color-selected-pointed: #fff !important;
-  --ms-tag-bg: var(--color-primary) !important;
-  --ms-tag-color: #fff !important;
-  --ms-tag-radius: 8px !important;
-  --ms-tag-font-weight: 500 !important;
-  --ms-dropdown-bg: var(--color-background) !important;
-  --ms-dropdown-border-color: var(--color-border) !important;
-  --ms-option-color: var(--color-text) !important;
-  --ms-option-bg-pointed: var(--color-background-soft) !important;
 }

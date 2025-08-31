@@ -105,13 +105,21 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { 
+  SelectedFilters,
+  Region,
+  Category,
+  Hotel,
+  Meal,
+  Option
+} from '../../types/search'
 
 interface Props {
-  regions: any[]
-  categories: any[]
-  hotels: any[]
-  meals: any[]
-  options: any[]
+  regions: Region[]
+  categories: Category[]
+  hotels: Hotel[]
+  meals: Meal[]
+  options: Option[]
   selectedRegions: number[]
   selectedCategories: number[]
   selectedHotels: number[]

@@ -11,7 +11,6 @@
         <div class="nav-links">
           <router-link to="/" class="nav-link">Поиск</router-link>
           <router-link v-if="authStore.isAuthenticated" to="/bookings" class="nav-link">Мои туры</router-link>
-          <router-link to="/spinner-demo" class="nav-link">Демо анимаций</router-link>
           <router-link to="/auth-test" class="nav-link">Тест авторизации</router-link>
           <router-link to="/about" class="nav-link">О нас</router-link>
           <router-link to="/contact" class="nav-link">Контакты</router-link>
@@ -68,7 +67,6 @@
       <div class="mobile-menu" :class="{ 'mobile-menu-open': isMobileMenuOpen }">
         <router-link to="/" class="mobile-link" @click="closeMobileMenu">Поиск</router-link>
         <router-link to="/bookings" class="mobile-link" @click="closeMobileMenu">Мои туры</router-link>
-        <router-link to="/spinner-demo" class="mobile-link" @click="closeMobileMenu">Демо анимаций</router-link>
         <router-link to="/auth-test" class="mobile-link" @click="closeMobileMenu">Тест авторизации</router-link>
         <router-link to="/about" class="mobile-link" @click="closeMobileMenu">О нас</router-link>
         <router-link to="/contact" class="mobile-link" @click="closeMobileMenu">Контакты</router-link>
@@ -210,7 +208,7 @@ onUnmounted(() => {
 }
 
 .logo-text {
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: -0.02em;
@@ -491,7 +489,7 @@ onUnmounted(() => {
   }
   
   .logo-text {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 }
 
@@ -501,7 +499,7 @@ onUnmounted(() => {
   }
   
   .logo-text {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 }
 </style>

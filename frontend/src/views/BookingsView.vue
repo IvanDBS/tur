@@ -1,5 +1,5 @@
 <template>
-  <div class="bookings-page">
+  <div class="page-layout">
     <div class="container">
       <h1 class="page-title animate-fade-in-up">
         Мои бронирования
@@ -7,16 +7,14 @@
       
       <div v-if="isLoading" class="loading">
         <div class="blue-spinner"></div>
-        <p>Загрузка бронирований...</p>
+        <p class="loading-text">Загрузка бронирований...</p>
       </div>
 
-      <div v-else-if="bookings.length === 0" class="no-bookings">
-        <div class="empty-state">
-          <p>У вас пока нет бронирований</p>
-          <router-link to="/" class="cta-link">
-            Найти туры
-          </router-link>
-        </div>
+      <div v-else-if="bookings.length === 0" class="empty-state">
+        <p>У вас пока нет бронирований</p>
+        <router-link to="/" class="cta-link">
+          Найти туры
+        </router-link>
       </div>
 
       <div v-else class="bookings-grid">
@@ -72,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { formatDate, getNightWord } from '@/utils/dateUtils'
 
 interface Booking {
   id: number
@@ -156,25 +155,7 @@ const getStatusText = (status: string) => {
   return statusMap[status] || status
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
-}
 
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 
 const confirmBooking = async (bookingId: number) => {
   try {
@@ -214,11 +195,7 @@ const viewDetails = (bookingId: number) => {
   console.log('Viewing booking details:', bookingId)
 }
 
-const getNightWord = (nights: number) => {
-  if (nights === 1) return 'ночь'
-  if (nights >= 2 && nights <= 4) return 'ночи'
-  return 'ночей'
-}
+
 
 // Lifecycle
 onMounted(() => {
@@ -227,93 +204,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.bookings-page {
-  min-height: calc(100vh - 72px - 200px); /* Вычитаем высоту хедера и футера */
-  padding-top: 7rem;
-  padding-bottom: 2rem;
-  background: var(--color-background-soft);
-}
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 2rem;
-}
-
-/* Анимации появления */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-}
-
-.blue-spinner {
-  position: relative;
-  width: 54px;
-  height: 54px;
-  border-top: 3px solid #A7D8F0;      /* голубой */
-  border-bottom: 0;
-  border-left: 3px solid #A7D8F0;     /* голубой */
-  border-right: 3px solid transparent;
-  animation: rotate 1.6s linear infinite;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-}
-
-.blue-spinner::before {
-  content: '';
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23FF5A5F' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 11.6C20 10.96 19.44 10.4 18.8 10.4H14.4L10.4 4H8.8L10.8 10.4H6.4L5.2 8.8H4L4.8 11.6L4 14.4H5.2L6.4 12.8H10.8L8.8 19.2H10.4L14.4 12.8H18.8C19.44 12.8 20 12.24 20 11.6Z'/%3E%3C/svg%3E%0A");
-  display: block;
-  background-size: 30px;
-  background-repeat: no-repeat;
-  background-position: center;
-  position: absolute;
-  z-index: 999;
-  top: -19px;
-  left: 19px;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transform: rotate(41deg);
-}
-
-@keyframes rotate {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.no-bookings {
-  text-align: center;
-  padding: 4rem;
-}
-
-.empty-state p {
-  color: var(--color-text-soft);
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-}
 
 .cta-link {
   display: inline-block;

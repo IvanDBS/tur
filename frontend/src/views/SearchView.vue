@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-6xl mx-auto px-6 py-8">
+  <div class="search-page">
+    <div class="container">
       <!-- Search Form -->
-      <div class="mb-8">
+      <div class="search-form-wrapper">
         <SearchForm @search="handleSearch" />
       </div>
       
@@ -139,3 +139,35 @@ const loadMoreResults = async () => {
   }
 }
 </script>
+
+<style scoped>
+.search-page {
+  min-height: calc(100vh - 72px - 200px); /* Вычитаем высоту хедера и футера */
+  padding-top: 7rem;
+  padding-bottom: 2rem;
+  background: var(--color-background-soft);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.search-form-wrapper {
+  margin-bottom: 2rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .search-page {
+    min-height: calc(100vh - 64px - 200px);
+    padding-top: 5rem;
+    padding-bottom: 1rem;
+  }
+  
+  .container {
+    padding: 0 1rem;
+  }
+}
+</style>

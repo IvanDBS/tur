@@ -9,11 +9,10 @@
 
 <style scoped>
 .arrows-demo {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: #f8f9fa;
-  min-height: 100vh;
+  min-height: calc(100vh - 72px - 200px); /* Вычитаем высоту хедера и футера */
+  padding-top: 7rem;
+  padding-bottom: 2rem;
+  background: var(--color-background-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,8 +20,21 @@
 
 .demo-title {
   text-align: center;
-  color: #1A3C61;
+  color: var(--color-text);
   font-size: 2.5rem;
   font-weight: 700;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .arrows-demo {
+    min-height: calc(100vh - 64px - 200px);
+    padding-top: 5rem;
+    padding-bottom: 1rem;
+  }
+  
+  .demo-title {
+    font-size: 2rem;
+  }
 }
 </style>

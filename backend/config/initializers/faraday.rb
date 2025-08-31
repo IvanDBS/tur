@@ -6,13 +6,13 @@ require 'faraday/retry'
 Faraday.default_adapter = :net_http
 
 # Default connection options
-Faraday.default_options = {
+Faraday.default_adapter_options = {
   timeout: 30,
   open_timeout: 10
 }
 
 # Retry configuration
-Faraday::Request::Retry::DEFAULT_OPTIONS = {
+Faraday::Retryable::DEFAULT_OPTIONS = {
   max: 3,
   interval: 0.5,
   backoff_factor: 2,

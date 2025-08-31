@@ -23,6 +23,21 @@ const router = createRouter({
       path: '/spinner-demo',
       name: 'spinner-demo',
       component: () => import('../views/SpinnerDemo.vue')
+    },
+    {
+      path: '/auth-test',
+      name: 'auth-test',
+      component: () => import('../views/AuthTestView.vue')
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/AboutView.vue')
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: () => import('../views/ContactView.vue')
     }
   ]
 })

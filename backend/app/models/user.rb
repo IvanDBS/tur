@@ -1,5 +1,13 @@
-# User model for OBS API integration
+# User model for OBS API integration and Devise authentication
 class User < ApplicationRecord
+  # Include default devise modules
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable,
+         :lockable, :timeoutable, :trackable
+  
+  # Include JWT authentication
+  devise :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
+  
   # Associations
   has_many :search_queries, dependent: :destroy
   has_many :bookings, dependent: :destroy
@@ -13,6 +21,7 @@ class User < ApplicationRecord
   
   # Callbacks
   before_validation :generate_obs_user_id, on: :create
+  before_validation :set_uid, on: :create
   
   # Instance methods
   def obs_tokens_valid?
@@ -64,5 +73,9 @@ class User < ApplicationRecord
   
   def generate_obs_user_id
     self.obs_user_id ||= SecureRandom.uuid
+  end
+  
+  def set_uid
+    self.uid = email if uid.blank?
   end
 end

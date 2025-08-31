@@ -10,22 +10,44 @@
         <!-- Navigation Links -->
         <div class="nav-links">
           <router-link to="/" class="nav-link">Поиск</router-link>
+          <router-link v-if="authStore.isAuthenticated" to="/bookings" class="nav-link">Мои туры</router-link>
           <router-link to="/spinner-demo" class="nav-link">Демо анимаций</router-link>
+          <router-link to="/auth-test" class="nav-link">Тест авторизации</router-link>
           <router-link to="/about" class="nav-link">О нас</router-link>
           <router-link to="/contact" class="nav-link">Контакты</router-link>
         </div>
 
         <!-- Auth Section -->
         <div class="nav-auth">
-          <router-link to="/bookings" class="nav-link bookings-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
-              <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-            Мои туры
-          </router-link>
           
-          <button class="auth-btn">
+          <!-- Authenticated User -->
+          <div v-if="authStore.isAuthenticated" class="user-menu">
+            <button @click="toggleUserMenu" class="user-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ userDisplayName }}
+            </button>
+            
+            <div v-if="isUserMenuOpen" class="user-dropdown">
+              <div class="user-info">
+                <div class="user-name">{{ userFullName }}</div>
+                <div class="user-email">{{ authStore.currentUser?.email }}</div>
+              </div>
+              <button @click="handleLogout" class="dropdown-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16,17 21,12 16,7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Выйти
+              </button>
+            </div>
+          </div>
+          
+          <!-- Guest User -->
+          <button v-else @click="handleOpenAuthModal" class="auth-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
@@ -47,19 +69,67 @@
         <router-link to="/" class="mobile-link" @click="closeMobileMenu">Поиск</router-link>
         <router-link to="/bookings" class="mobile-link" @click="closeMobileMenu">Мои туры</router-link>
         <router-link to="/spinner-demo" class="mobile-link" @click="closeMobileMenu">Демо анимаций</router-link>
+        <router-link to="/auth-test" class="mobile-link" @click="closeMobileMenu">Тест авторизации</router-link>
         <router-link to="/about" class="mobile-link" @click="closeMobileMenu">О нас</router-link>
         <router-link to="/contact" class="mobile-link" @click="closeMobileMenu">Контакты</router-link>
-        <button class="mobile-auth-btn" @click="closeMobileMenu">Войти</button>
+        
+        <!-- Mobile Auth -->
+        <div v-if="authStore.isAuthenticated" class="mobile-user">
+          <div class="mobile-user-info">
+            <div class="mobile-user-name">{{ userFullName }}</div>
+            <div class="mobile-user-email">{{ authStore.currentUser?.email }}</div>
+          </div>
+          <button @click="handleLogout" class="mobile-logout-btn">Выйти</button>
+        </div>
+        <button v-else @click="handleOpenAuthModal" class="mobile-auth-btn">Войти</button>
       </div>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useAuthModal } from '@/composables/useAuthModal'
+
+const authStore = useAuthStore()
+const { openAuthModal } = useAuthModal()
 
 const isMobileMenuOpen = ref(false)
+const isUserMenuOpen = ref(false)
 
+// Wrapper for opening auth modal that also closes mobile menu
+const handleOpenAuthModal = () => {
+  openAuthModal()
+  closeMobileMenu()
+}
+
+// Computed
+const userDisplayName = computed(() => {
+  const user = authStore.currentUser
+  if (!user) return ''
+  
+  if (user.firstName) {
+    return user.firstName
+  } else {
+    return user.email.split('@')[0]
+  }
+})
+
+const userFullName = computed(() => {
+  const user = authStore.currentUser
+  if (!user) return ''
+  
+  if (user.firstName && user.lastName) {
+    return `${user.firstName} ${user.lastName}`
+  } else if (user.firstName) {
+    return user.firstName
+  } else {
+    return user.email.split('@')[0]
+  }
+})
+
+// Methods
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
@@ -67,6 +137,35 @@ const toggleMobileMenu = () => {
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
+
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
+  isUserMenuOpen.value = false
+  closeMobileMenu()
+}
+
+// Close user menu when clicking outside
+const handleClickOutside = (event: Event) => {
+  const target = event.target as Element
+  if (!target.closest('.user-menu')) {
+    isUserMenuOpen.value = false
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  // Try to get current user on mount
+  authStore.getCurrentUser()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -135,6 +234,7 @@ const closeMobileMenu = () => {
 
 .nav-link:hover {
   color: var(--color-secondary);
+  transform: scale(1.02);
 }
 
 .nav-link.router-link-active {
@@ -152,11 +252,7 @@ const closeMobileMenu = () => {
   border-radius: 1px;
 }
 
-.bookings-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+
 
 .nav-auth {
   display: flex;
@@ -177,14 +273,125 @@ const closeMobileMenu = () => {
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-shadow: 0 2px 8px var(--color-secondary-muted);
 }
 
 .auth-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px var(--color-secondary-muted);
+  transform: scale(1.02);
   background: var(--color-secondary-hover);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-secondary);
+  color: white;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--color-secondary-muted);
+}
+
+.user-btn:hover {
+  transform: scale(1.02);
+  background: var(--color-secondary-hover);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.user-info {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.user-email {
+  font-size: 0.875rem;
+  color: var(--color-text-soft);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mobile-user {
+  padding: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+}
+
+.mobile-user-info {
+  margin-bottom: 1rem;
+}
+
+.mobile-user-name {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.mobile-user-email {
+  font-size: 0.875rem;
+  color: var(--color-text-soft);
+}
+
+.mobile-logout-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: white;
+  font-family: var(--font-family);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-logout-btn:hover {
+  background: #dc2626;
 }
 
 .mobile-menu-btn {

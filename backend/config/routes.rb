@@ -6,9 +6,19 @@ Rails.application.routes.draw do
       get 'health', to: 'health#index'
       
       # Authentication routes
-      post 'auth/login', to: 'auth#login'
-      post 'auth/refresh_token', to: 'auth#refresh_token'
-      post 'auth/logout', to: 'auth#logout'
+      devise_for :users, controllers: {
+        sessions: 'api/v1/sessions',
+        registrations: 'api/v1/registrations'
+      }, path: 'auth', path_names: {
+        sign_in: 'sign_in',
+        sign_up: 'sign_up',
+        sign_out: 'sign_out'
+      }
+      
+      # Custom auth routes
+      get 'auth/me', to: 'auth#me'
+      put 'auth/profile', to: 'auth#update_profile'
+      put 'auth/change_password', to: 'auth#change_password'
       
       # Search routes
       get 'search/departure_cities', to: 'search#departure_cities'

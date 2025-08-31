@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">
+  <div class="bookings-page">
+    <div class="container">
+      <h1 class="page-title animate-fade-in-up">
         Мои бронирования
       </h1>
       
@@ -19,82 +19,51 @@
         </div>
       </div>
 
-      <div v-else class="bookings-list">
+      <div v-else class="bookings-grid">
         <div 
           v-for="booking in bookings" 
           :key="booking.id"
           class="booking-card"
         >
-          <!-- Status Badge -->
-          <div class="status-badge" :class="booking.status">
-            {{ getStatusText(booking.status) }}
-          </div>
-
           <!-- Hotel Info -->
-          <div class="booking-info">
+          <div class="hotel-info">
             <h3 class="hotel-name">{{ booking.tour_details.hotel }}</h3>
             <div class="hotel-details">
-              <span class="category">{{ booking.tour_details.hotel_category }}</span>
+              <span class="stars">{{ booking.tour_details.hotel_category }}</span>
               <span class="location">{{ booking.tour_details.city }}</span>
             </div>
           </div>
 
-          <!-- Trip Details -->
-          <div class="trip-details">
+          <!-- Dates & Duration -->
+          <div class="trip-info">
             <div class="dates">
-              <span class="label">Даты:</span>
-              <span class="value">
-                {{ formatDate(booking.tour_details.check_in) }} — 
-                {{ formatDate(booking.tour_details.check_out) }}
-              </span>
+              <span class="date">{{ formatDate(booking.tour_details.check_in) }}</span>
+              <span class="separator">—</span>
+              <span class="date">{{ formatDate(booking.tour_details.check_out) }}</span>
             </div>
-            <div class="nights">
-              <span class="label">Ночей:</span>
-              <span class="value">{{ booking.tour_details.nights }}</span>
-            </div>
-            <div class="room">
-              <span class="label">Номер:</span>
-              <span class="value">{{ booking.tour_details.room }}</span>
-            </div>
-            <div class="meal">
-              <span class="label">Питание:</span>
-              <span class="value">{{ booking.tour_details.meal }}</span>
+            <div class="duration">
+              {{ booking.tour_details.nights }} {{ getNightWord(booking.tour_details.nights) }}
             </div>
           </div>
 
-          <!-- Price & Actions -->
-          <div class="booking-actions">
+          <!-- Room & Meal -->
+          <div class="accommodation-info">
+            <div class="room">{{ booking.tour_details.room }}</div>
+            <div class="meal">{{ booking.tour_details.meal }}</div>
+          </div>
+
+          <!-- Price -->
+          <div class="price-info">
             <div class="price">
               {{ booking.total_amount }} EUR
             </div>
-            <div class="actions">
-              <button 
-                v-if="booking.status === 'pending'" 
-                @click="confirmBooking(booking.id)"
-                class="action-btn primary"
-              >
-                Подтвердить
-              </button>
-              <button 
-                v-if="booking.can_be_cancelled" 
-                @click="cancelBooking(booking.id)"
-                class="action-btn danger"
-              >
-                Отменить
-              </button>
-              <button 
-                @click="viewDetails(booking.id)"
-                class="action-btn secondary"
-              >
-                Подробнее
-              </button>
-            </div>
+            <div class="price-type">{{ getStatusText(booking.status) }}</div>
           </div>
 
-          <!-- Booking Date -->
-          <div class="booking-meta">
-            Забронировано: {{ formatDateTime(booking.created_at) }}
-          </div>
+          <!-- Details Button -->
+          <button class="details-btn" @click="viewDetails(booking.id)">
+            Подробнее
+          </button>
         </div>
       </div>
     </div>
@@ -245,6 +214,12 @@ const viewDetails = (bookingId: number) => {
   console.log('Viewing booking details:', bookingId)
 }
 
+const getNightWord = (nights: number) => {
+  if (nights === 1) return 'ночь'
+  if (nights >= 2 && nights <= 4) return 'ночи'
+  return 'ночей'
+}
+
 // Lifecycle
 onMounted(() => {
   loadBookings()
@@ -252,7 +227,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.bookings-page {
+  min-height: calc(100vh - 72px - 200px); /* Вычитаем высоту хедера и футера */
+  padding-top: 7rem;
+  padding-bottom: 2rem;
+  background: var(--color-background-soft);
+}
 
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
+
+/* Анимации появления */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
 
 .loading {
   text-align: center;
@@ -321,7 +330,7 @@ onMounted(() => {
   background: var(--color-primary-hover);
 }
 
-.bookings-list {
+.bookings-grid {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -329,170 +338,183 @@ onMounted(() => {
 
 .booking-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
-  padding: 1.5rem;
-  position: relative;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: grid;
+  grid-template-columns: 3fr 1.5fr 2fr 1.5fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  min-height: 70px;
+  width: 100%;
 }
 
-.status-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+.booking-card:hover {
+  border-color: var(--color-secondary);
+  box-shadow: 0 4px 12px rgba(26, 60, 97, 0.1);
 }
 
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge.confirmed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.booking-info {
-  margin-bottom: 1rem;
+.hotel-info {
+  grid-column: 1;
 }
 
 .hotel-name {
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  padding-right: 8rem; /* Space for status badge */
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .hotel-details {
   display: flex;
-  gap: 1rem;
-  color: var(--color-text-soft);
-  font-size: 0.9rem;
-}
-
-.trip-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: var(--color-background-soft);
-  border-radius: 8px;
-}
-
-.trip-details > div {
-  display: flex;
   gap: 0.5rem;
-}
-
-.label {
-  font-weight: 500;
   color: var(--color-text-soft);
-  min-width: 60px;
+  font-size: 0.85rem;
 }
 
-.value {
-  color: var(--color-text);
+.stars {
+  font-weight: 500;
 }
 
-.booking-actions {
+.trip-info {
+  grid-column: 2;
+  margin-top: 0;
+}
+
+.dates {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  gap: 0.25rem;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.separator {
+  color: var(--color-text-soft);
+}
+
+.duration {
+  color: var(--color-text-soft);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.accommodation-info {
+  grid-column: 3;
+  margin-top: 0;
+  color: var(--color-text-soft);
+  font-size: 0.85rem;
+}
+
+.room {
+  margin-bottom: 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.meal {
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.price-info {
+  grid-column: 4;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
 }
 
 .price {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-dark-gray);
+  line-height: 1.2;
 }
 
-.actions {
-  display: flex;
-  gap: 0.5rem;
+.price-type {
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  background: var(--color-background-soft);
+  border-radius: 4px;
 }
 
-.action-btn {
+.details-btn {
+  grid-column: 5;
   padding: 0.5rem 1rem;
-  border: none;
+  background: white;
+  color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
   border-radius: 6px;
   font-family: var(--font-family);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
-.action-btn.primary {
-  background: var(--color-primary);
-  color: white;
-}
-
-.action-btn.primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.action-btn.danger {
-  background: #ef4444;
-  color: white;
-}
-
-.action-btn.danger:hover {
-  background: #dc2626;
-}
-
-.action-btn.secondary {
-  background: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-}
-
-.action-btn.secondary:hover {
-  background: var(--color-primary);
-  color: white;
-}
-
-.booking-meta {
-  color: var(--color-text-soft);
-  font-size: 0.8rem;
-  text-align: right;
+.details-btn:hover {
+  background: var(--color-secondary-muted);
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .hotel-name {
-    padding-right: 0;
-    margin-bottom: 2rem;
+  .bookings-page {
+    min-height: calc(100vh - 64px - 200px);
+    padding-top: 5rem;
+    padding-bottom: 1rem;
   }
   
-  .status-badge {
-    position: static;
-    display: inline-block;
-    margin-bottom: 1rem;
+  .container {
+    padding: 0 1rem;
   }
   
-  .booking-actions {
-    flex-direction: column;
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .booking-card {
+    grid-template-columns: 1fr auto;
+    text-align: left;
+    min-height: 60px;
     gap: 1rem;
-    align-items: stretch;
+    padding: 1rem;
   }
   
-  .actions {
-    justify-content: center;
+  .hotel-info {
+    grid-column: 1;
   }
   
-  .action-btn {
-    flex: 1;
+  .trip-info {
+    grid-column: 1;
+    margin-top: 0.25rem;
+  }
+  
+  .accommodation-info {
+    grid-column: 1;
+    margin-top: 0.25rem;
+  }
+  
+  .price-info {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    text-align: right;
+    align-items: flex-end;
+  }
+  
+  .details-btn {
+    grid-column: 1 / span 2;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
   }
 }
 </style>

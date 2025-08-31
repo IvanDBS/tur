@@ -4,9 +4,6 @@ module Api
       # Base controller for all API endpoints
       # Add common functionality here
 
-      # Skip CSRF protection for API
-      skip_before_action :verify_authenticity_token
-
       # Handle exceptions
       rescue_from StandardError, with: :handle_exception
       rescue_from ActiveRecord::RecordNotFound, with: :handle_not_found

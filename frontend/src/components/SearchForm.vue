@@ -256,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
+  import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
   import VueDatePicker from '@vuepic/vue-datepicker'
   import '@vuepic/vue-datepicker/dist/main.css'
   import Multiselect from '@vueform/multiselect'
@@ -318,6 +318,91 @@
       console.error('Failed to initialize search data:', err)
     }
   })
+
+  // Следим за изменениями города отправления и загружаем страны
+  watch(() => searchForm.value.departureCity, async (newCity) => {
+    console.log('Departure city watch triggered:', newCity)
+    try {
+      if (newCity && newCity.id) {
+        console.log(`Loading countries for city ${newCity.id}`)
+        searchForm.value.destination = null
+        searchForm.value.package = null
+        // Загружаем страны для выбранного города через useSearchData
+        await searchData.loadCountries(newCity.id)
+        console.log(`Loaded countries for departure city: ${newCity.name}`)
+      } else {
+        console.log('Departure city watch: missing city data', newCity)
+      }
+    } catch (err) {
+      console.error('Departure city watch error:', err)
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        city: newCity
+      })
+    }
+  })
+
+  // Следим за изменениями страны и загружаем пакеты
+  watch(() => searchForm.value.destination, async (newCountry) => {
+    console.log('Destination watch triggered:', newCountry)
+    try {
+      if (newCountry && newCountry.id && searchForm.value.departureCity?.id) {
+        console.log(`Loading packages for country ${newCountry.id} and city ${searchForm.value.departureCity.id}`)
+        // Очищаем предыдущий выбор
+        searchForm.value.package = null
+        
+        // Загружаем пакеты для выбранной страны через useSearchData
+        await searchData.loadPackageTemplates(newCountry.id, searchForm.value.departureCity.id)
+        
+        console.log(`Loaded packages for country: ${newCountry.name}`)
+      } else {
+        console.log('Destination watch: missing required data', {
+          newCountry,
+          departureCity: searchForm.value.departureCity
+        })
+      }
+    } catch (err) {
+      console.error('Destination watch error:', err)
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        country: newCountry,
+        departureCity: searchForm.value.departureCity
+      })
+    }
+  })
+
+  // Следим за изменениями количества детей и обновляем массив возрастов
+  watch(() => searchForm.value.children, (newValue) => {
+    if (newValue === 0) {
+      searchForm.value.childrenAges = []
+    } else {
+      const currentAges = [...searchForm.value.childrenAges]
+      searchForm.value.childrenAges = Array(newValue)
+        .fill(0)
+        .map((_, index) => {
+          return index < currentAges.length ? currentAges[index] : 0
+        })
+    }
+  }, { immediate: true })
+
+  // Следим за изменениями nights и обновляем nights2
+  watch(() => searchForm.value.nights, (newValue) => {
+    if (newValue && (!searchForm.value.nights2 || searchForm.value.nights2 < newValue)) {
+      searchForm.value.nights2 = newValue
+    }
+  }, { immediate: true })
+
+  // Следим за изменениями даты заезда и устанавливаем дату выезда
+  watch(() => searchForm.value.checkInDate, (newValue) => {
+    if (
+      newValue &&
+      (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newValue)
+    ) {
+      searchForm.value.checkOutDate = newValue
+    }
+  }, { immediate: true })
 
   // Emits
   const emit = defineEmits<{

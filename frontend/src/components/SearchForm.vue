@@ -72,8 +72,8 @@
             label="name"
             valueProp="id"
             :disabled="true"
+            title="Автоматически устанавливается на основе выбранного пакета"
           />
-          <small class="field-hint">Автоматически устанавливается на основе выбранного пакета</small>
         </div>
       </div>
 
@@ -382,15 +382,62 @@
     try {
       if (newPackage && newPackage.id) {
         console.log(`Loading data for package ${newPackage.id}: ${newPackage.label || newPackage.name}`)
+        console.log('Package full data:', JSON.stringify(newPackage, null, 2))
         
         // Если у пакета есть аэропорты, устанавливаем город прилета
         if (newPackage.airports && newPackage.airports.length > 0) {
           const airport = newPackage.airports[0]
-          searchForm.value.arrivalCity = {
+          console.log('Found airport in package:', airport)
+          
+          // Создаем объект города прилета
+          const arrivalCity = {
             id: airport.id,
             name: airport.label || airport.name || `Airport ${airport.id}`
           }
-          console.log(`Set arrival city to: ${airport.label || airport.name} (${airport.id})`)
+          
+          searchForm.value.arrivalCity = arrivalCity
+          console.log(`Set arrival city to:`, arrivalCity)
+        } else {
+          console.log('No airports found in package, checking if it\'s a specific destination package')
+          
+          // Если это пакет для конкретного направления, 
+          // попробуем определить город по названию пакета
+          const packageName = (newPackage.label || newPackage.name || '').toLowerCase()
+          let arrivalCity = null
+          
+          if (packageName.includes('antalya')) {
+            arrivalCity = {
+              id: 50004, // ID аэропорта ANTALYA из документации
+              name: 'ANTALYA'
+            }
+          } else if (packageName.includes('istanbul')) {
+            arrivalCity = {
+              id: 50005, // ID аэропорта ISTANBUL
+              name: 'ISTANBUL'
+            }
+          } else if (packageName.includes('bodrum')) {
+            arrivalCity = {
+              id: 50006, // ID аэропорта BODRUM
+              name: 'BODRUM'
+            }
+          } else if (packageName.includes('kemer')) {
+            arrivalCity = {
+              id: 50007, // ID аэропорта KEMER
+              name: 'KEMER'
+            }
+          } else if (packageName.includes('alanya')) {
+            arrivalCity = {
+              id: 50008, // ID аэропорта ALANYA
+              name: 'ALANYA'
+            }
+          }
+          
+          if (arrivalCity) {
+            searchForm.value.arrivalCity = arrivalCity
+            console.log(`Set arrival city based on package name:`, arrivalCity)
+          } else {
+            console.log('Could not determine arrival city from package name')
+          }
         }
         
         // Загружаем связанные данные для поиска отелей

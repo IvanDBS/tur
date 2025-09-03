@@ -103,6 +103,13 @@ export const useSearchData = () => {
     { id: 3, name: 'BODRUM' },
   ])
 
+  // Добавляем fallback для аэропортов
+  const fallbackAirports = ref([
+    { id: 50004, name: 'ANTALYA' },
+    { id: 50005, name: 'ISTANBUL' },
+    { id: 50006, name: 'BODRUM' },
+  ])
+
   const fallbackRegions = ref([
     { id: 1, name: 'Любой' },
     { id: 2, name: 'ALANYA' },

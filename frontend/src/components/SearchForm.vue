@@ -262,7 +262,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
+  import { ref, onMounted, computed, defineAsyncComponent, watch, nextTick } from 'vue'
   import VueDatePicker from '@vuepic/vue-datepicker'
   import '@vuepic/vue-datepicker/dist/main.css'
   import Multiselect from '@vueform/multiselect'
@@ -319,7 +319,12 @@
   const arrivalCityOptions = computed(() => {
     console.log('arrivalCityOptions computed - searchForm.arrivalCity:', searchForm.value.arrivalCity)
     if (searchForm.value.arrivalCity) {
-      const options = [searchForm.value.arrivalCity]
+      // Создаем массив с одним элементом, но с правильной структурой для Multiselect
+      const options = [{
+        id: searchForm.value.arrivalCity.id,
+        name: searchForm.value.arrivalCity.name,
+        label: searchForm.value.arrivalCity.name // Добавляем label для совместимости
+      }]
       console.log('arrivalCityOptions returning:', options)
       return options
     }
@@ -415,6 +420,10 @@
           searchForm.value.arrivalCity = { ...arrivalCity }
           console.log(`Set arrival city to:`, arrivalCity)
           console.log('searchForm.arrivalCity after set:', searchForm.value.arrivalCity)
+          
+          // Ждем обновления DOM и принудительно обновляем Multiselect
+          await nextTick()
+          console.log('DOM updated, arrival city should now be visible')
         } else {
           console.log('No airports found in package, checking if it\'s a specific destination package')
           
@@ -455,6 +464,10 @@
             searchForm.value.arrivalCity = { ...arrivalCity }
             console.log(`Set arrival city based on package name:`, arrivalCity)
             console.log('searchForm.arrivalCity after fallback set:', searchForm.value.arrivalCity)
+            
+            // Ждем обновления DOM
+            await nextTick()
+            console.log('DOM updated for fallback city')
           } else {
             console.log('Could not determine arrival city from package name')
           }

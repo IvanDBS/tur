@@ -11,6 +11,7 @@ class ObsAdapter
     super
     @connection = build_connection
     @auth_service = ObsAuthService.new(user_id: user_id) if user_id.present?
+    @site_auth_service = ObsSiteAuthService.instance
   end
 
   # Search endpoints
@@ -63,12 +64,10 @@ class ObsAdapter
   def make_request(method, path, params = {})
     start_time = Time.current
 
-    # Add authorization header
+    # Add authorization header - prioritize site auth, fallback to user auth
     headers = {}
-    if @auth_service&.user_id
-      access_token = @auth_service.valid_access_token
-      headers['Authorization'] = "Bearer #{access_token}" if access_token
-    end
+    access_token = get_access_token
+    headers['Authorization'] = "Bearer #{access_token}" if access_token
 
     # Log request (without sensitive data)
     log_request(method, path, params, headers, start_time)
@@ -89,6 +88,20 @@ class ObsAdapter
   rescue StandardError => e
     log_error(e, method, path, start_time)
     raise ObsAdapter::Error, "Request failed: #{e.message}"
+  end
+
+  def get_access_token
+    # First try site-level authentication
+    site_token = @site_auth_service.access_token
+    return site_token if site_token.present?
+
+    # Fallback to user-level authentication if available
+    if @auth_service&.user_id
+      user_token = @auth_service.valid_access_token
+      return user_token if user_token.present?
+    end
+
+    nil
   end
 
   def handle_response(response)
@@ -113,7 +126,7 @@ class ObsAdapter
       max: 3,
       interval: 0.5,
       backoff_factor: 2,
-      retry_if: lambda { |env, exception|
+      retry_if: ->(env, exception) {
         # Retry on network errors and 5xx responses
         exception.is_a?(Faraday::TimeoutError) ||
           exception.is_a?(Faraday::ConnectionFailed) ||

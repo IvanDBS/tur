@@ -6,11 +6,17 @@ module Api
 
       # GET /api/v1/search/departure_cities
       def departure_cities
-        adapter = ObsAdapter.new(user_id: current_user&.id)
-        cities = adapter.departure_cities
-        render_success({ departure_cities: cities })
-      rescue ObsAdapter::Error => e
-        render_error("Failed to fetch departure cities: #{e.message}", :bad_gateway)
+        begin
+          # Use site-level authentication for public endpoints
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          cities = obs_service.departure_cities
+          render_success({ departure_cities: cities })
+        rescue ObsApiService::Error => e
+          render_error("Failed to fetch departure cities: #{e.message}", :bad_gateway)
+        end
       end
 
       # GET /api/v1/search/countries
@@ -20,7 +26,12 @@ module Api
         return render_error('airport_city_from parameter is required', :bad_request) if airport_city_from.blank?
 
         begin
-          countries = ObsApiService.new.countries(airport_city_from)
+          # Use site-level authentication for public endpoints
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          countries = obs_service.countries(airport_city_from)
           render_success({ countries: countries })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch countries: #{e.message}", :bad_gateway)
@@ -35,7 +46,12 @@ module Api
         return render_error('Country ID is required', :bad_request) if country_id.blank?
 
         begin
-          templates = ObsApiService.new.package_templates(country_id, airport_city_from)
+          # Use site-level authentication for public endpoints
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          templates = obs_service.package_templates(country_id, airport_city_from)
           render_success({ package_templates: templates })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch package templates: #{e.message}", :bad_gateway)
@@ -112,18 +128,30 @@ module Api
 
       # GET /api/v1/search/calendar_hints
       def calendar_hints
-        hints = ObsApiService.new.calendar_hints(params.permit(:date_from, :date_to, :city_from, :city_to))
-        render_success({ calendar_hints: hints })
-      rescue ObsApiService::Error => e
-        render_error("Failed to fetch calendar hints: #{e.message}", :bad_gateway)
+        begin
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          hints = obs_service.calendar_hints(params.permit(:date_from, :date_to, :city_from, :city_to))
+          render_success({ calendar_hints: hints })
+        rescue ObsApiService::Error => e
+          render_error("Failed to fetch calendar hints: #{e.message}", :bad_gateway)
+        end
       end
 
       # GET /api/v1/search/available_nights
       def available_nights
-        nights = ObsApiService.new.available_nights(params.permit(:date_from, :date_to, :city_from, :city_to))
-        render_success({ available_nights: nights })
-      rescue ObsApiService::Error => e
-        render_error("Failed to fetch available nights: #{e.message}", :bad_gateway)
+        begin
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          nights = obs_service.available_nights(params.permit(:date_from, :date_to, :city_from, :city_to))
+          render_success({ available_nights: nights })
+        rescue ObsApiService::Error => e
+          render_error("Failed to fetch available nights: #{e.message}", :bad_gateway)
+        end
       end
 
       # GET /api/v1/search/package_templates/:id/hotel_categories
@@ -131,7 +159,11 @@ module Api
         package_template_id = params[:id]
 
         begin
-          categories = ObsApiService.new.hotel_categories(package_template_id)
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          categories = obs_service.hotel_categories(package_template_id)
           render_success({ hotel_categories: categories })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch hotel categories: #{e.message}", :bad_gateway)
@@ -143,7 +175,11 @@ module Api
         package_template_id = params[:id]
 
         begin
-          locations = ObsApiService.new.locations(package_template_id)
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          locations = obs_service.locations(package_template_id)
           render_success({ locations: locations })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch locations: #{e.message}", :bad_gateway)
@@ -155,7 +191,11 @@ module Api
         package_template_id = params[:id]
 
         begin
-          hotels = ObsApiService.new.hotels(package_template_id,
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          hotels = obs_service.hotels(package_template_id,
                                             params.permit(:cities, :regions, :categories, :is_exclusive))
           render_success({ hotels: hotels })
         rescue ObsApiService::Error => e
@@ -168,7 +208,11 @@ module Api
         package_template_id = params[:id]
 
         begin
-          meals = ObsApiService.new.meals(package_template_id)
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: ObsSiteAuthService.instance.access_token
+          )
+          meals = obs_service.meals(package_template_id)
           render_success({ meals: meals })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch meals: #{e.message}", :bad_gateway)

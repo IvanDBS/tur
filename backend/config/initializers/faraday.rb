@@ -11,8 +11,8 @@ Faraday.default_adapter_options = {
   open_timeout: 10
 }
 
-# Retry configuration
-Faraday::Retryable::DEFAULT_OPTIONS = {
+# Retry configuration - updated for Faraday 2.x
+Faraday::Retry::DEFAULT_OPTIONS = {
   max: 3,
   interval: 0.5,
   backoff_factor: 2,

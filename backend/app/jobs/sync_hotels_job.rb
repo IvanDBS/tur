@@ -35,17 +35,20 @@ class SyncHotelsJob < ApplicationJob
   def sync_cities
     Rails.logger.info 'Syncing departure cities...'
 
-    adapter = ObsAdapter.new
-
     begin
-      departure_cities = adapter.departure_cities
+      # Use site-level authentication
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      departure_cities = obs_service.departure_cities
 
       departure_cities.each do |city_data|
         sync_city(city_data, 'departure')
       end
 
       Rails.logger.info "Synced #{departure_cities.size} departure cities"
-    rescue ObsApiService::ApiError => e
+    rescue ObsApiService::Error => e
       Rails.logger.error "Failed to sync departure cities: #{e.message}"
       raise
     end
@@ -54,20 +57,24 @@ class SyncHotelsJob < ApplicationJob
   def sync_countries
     Rails.logger.info 'Syncing countries and arrival cities...'
 
-    adapter = ObsAdapter.new
     departure_city = City.departure.first
 
     return unless departure_city&.obs_id
 
     begin
-      countries = adapter.countries(departure_city.obs_id)
+      # Use site-level authentication
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      countries = obs_service.countries(departure_city.obs_id)
 
       countries.each do |country_data|
         sync_country_and_cities(country_data, departure_city.obs_id)
       end
 
       Rails.logger.info 'Synced countries and arrival cities'
-    rescue ObsApiService::ApiError => e
+    rescue ObsApiService::Error => e
       Rails.logger.error "Failed to sync countries: #{e.message}"
       raise
     end
@@ -76,22 +83,29 @@ class SyncHotelsJob < ApplicationJob
   def sync_hotels
     Rails.logger.info 'Syncing hotels and packages...'
 
-    adapter = ObsAdapter.new
     departure_city = City.departure.first
 
     return unless departure_city&.obs_id
 
-    # Get countries first
-    countries = adapter.countries(departure_city.obs_id)
+    begin
+      # Use site-level authentication
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      
+      # Get countries first
+      countries = obs_service.countries(departure_city.obs_id)
 
-    countries.each do |country_data|
-      sync_hotels_for_country(country_data, departure_city.obs_id)
+      countries.each do |country_data|
+        sync_hotels_for_country(country_data, departure_city.obs_id)
+      end
+
+      Rails.logger.info 'Completed hotels sync'
+    rescue ObsApiService::Error => e
+      Rails.logger.error "Failed to sync hotels: #{e.message}"
+      raise
     end
-
-    Rails.logger.info 'Completed hotels sync'
-  rescue ObsApiService::ApiError => e
-    Rails.logger.error "Failed to sync hotels: #{e.message}"
-    raise
   end
 
   def sync_city(city_data, type)
@@ -121,10 +135,11 @@ class SyncHotelsJob < ApplicationJob
     country_id = country_data['id'] || country_data[:id]
     return unless country_id
 
-    ObsAdapter.new
-
     # Get package templates for this country
-    obs_service = ObsApiService.new
+    obs_service = ObsApiService.new(
+      base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+      access_token: ObsSiteAuthService.instance.access_token
+    )
     package_templates = obs_service.package_templates(country_id, departure_city_id)
 
     package_templates.each do |template|
@@ -136,11 +151,12 @@ class SyncHotelsJob < ApplicationJob
     country_id = country_data['id'] || country_data[:id]
     return unless country_id
 
-    ObsAdapter.new
-
     begin
       # Get package templates
-      obs_service = ObsApiService.new
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
       package_templates = obs_service.package_templates(country_id, departure_city_id)
 
       package_templates.each do |template|
@@ -184,11 +200,12 @@ class SyncHotelsJob < ApplicationJob
     template_id = template_data['id'] || template_data[:id]
     return unless template_id
 
-    ObsAdapter.new
-
     begin
       # Get actual hotels for this template
-      obs_service = ObsApiService.new
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
       hotels_data = obs_service.search({
                                          country: template_data['country_id'] || 223, # Default to Turkey
                                          package_template: template_id,

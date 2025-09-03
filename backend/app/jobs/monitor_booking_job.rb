@@ -67,14 +67,16 @@ class MonitorBookingJob < ApplicationJob
   def cancel_expired_booking(booking)
     Rails.logger.info "Cancelling expired booking #{booking.id}"
 
-    adapter = ObsAdapter.new
-
     begin
       # Try to cancel on OBS side
-      adapter.cancel_booking(booking.obs_booking_hash)
-    rescue ObsApiService::ApiError => e
-      Rails.logger.warn "Failed to cancel booking #{booking.id} on OBS: #{e.message}"
-    end
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      obs_service.cancel_booking(booking.obs_booking_hash)
+          rescue ObsApiService::Error => e
+        Rails.logger.warn "Failed to cancel booking #{booking.id} on OBS: #{e.message}"
+      end
 
     # Update local status
     booking.update!(
@@ -89,11 +91,13 @@ class MonitorBookingJob < ApplicationJob
   def extend_booking_hold(booking)
     Rails.logger.info "Extending hold for booking #{booking.id}"
 
-    adapter = ObsAdapter.new
-
     begin
       # Check if booking can be extended
-      booking_data = adapter.booking_status(booking.obs_booking_hash)
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      booking_data = obs_service.booking_status(booking.obs_booking_hash)
 
       if booking_can_be_extended?(booking_data)
         new_expiry = Time.current + BOOKING_HOLD_TIME
@@ -103,22 +107,24 @@ class MonitorBookingJob < ApplicationJob
       else
         Rails.logger.warn "Cannot extend booking #{booking.id}, will expire soon"
       end
-    rescue ObsApiService::ApiError => e
-      Rails.logger.error "Failed to extend booking #{booking.id}: #{e.message}"
-    end
+          rescue ObsApiService::Error => e
+        Rails.logger.error "Failed to extend booking #{booking.id}: #{e.message}"
+      end
   end
 
   def check_booking_status(booking)
-    adapter = ObsAdapter.new
-
     begin
-      booking_data = adapter.booking_status(booking.obs_booking_hash)
+      obs_service = ObsApiService.new(
+        base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+        access_token: ObsSiteAuthService.instance.access_token
+      )
+      booking_data = obs_service.booking_status(booking.obs_booking_hash)
 
       # Update booking based on OBS status
       update_booking_from_obs_data(booking, booking_data)
-    rescue ObsApiService::ApiError => e
-      Rails.logger.error "Failed to check status for booking #{booking.id}: #{e.message}"
-    end
+          rescue ObsApiService::Error => e
+        Rails.logger.error "Failed to check status for booking #{booking.id}: #{e.message}"
+      end
   end
 
   def booking_can_be_extended?(booking_data)

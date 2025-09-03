@@ -26,10 +26,12 @@ class RefreshAvailabilityJob < ApplicationJob
   def refresh_package_availability(package, date_range)
     return unless package.obs_id
 
-    adapter = ObsAdapter.new
-
     # Get calendar hints for the package
-    calendar_data = adapter.calendar_hints(
+    obs_service = ObsApiService.new(
+      base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+      access_token: ObsSiteAuthService.instance.access_token
+    )
+    calendar_data = obs_service.calendar_hints(
       date_from: date_range.begin,
       date_to: date_range.end,
       city_from: get_departure_city_id,

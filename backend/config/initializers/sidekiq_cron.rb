@@ -5,6 +5,13 @@ require 'sidekiq-cron'
 # Configure cron-style scheduled jobs
 if Rails.env.production? || Rails.env.development?
   Sidekiq::Cron::Job.load_from_hash({
+    # Check OBS API health every 15 minutes
+    'obs_health_check' => {
+      'cron' => '*/15 * * * *',
+      'class' => 'ObsHealthCheckJob',
+      'description' => 'Check OBS API health and re-authenticate if needed every 15 minutes'
+    },
+    
     # Refresh availability every 30 minutes
     'refresh_availability' => {
       'cron' => '*/30 * * * *',

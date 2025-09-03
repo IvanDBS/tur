@@ -8,15 +8,21 @@
           <label>Регион:</label>
           <div class="filter-options vertical">
             <button
+              class="all-button"
+              :class="{ active: selectedRegions.includes(1) }"
+              @click="toggleRegion(1)"
+            >
+              Любой
+            </button>
+            <button
               v-for="region in regions"
               :key="region.id"
               :class="{
                 active: selectedRegions.includes(region.id),
-                'all-button': region.id === 1,
               }"
               @click="toggleRegion(region.id)"
             >
-              {{ region.name }}
+              {{ region.label || region.name }}
             </button>
           </div>
         </div>
@@ -29,15 +35,21 @@
           <label>Категория:</label>
           <div class="filter-options vertical">
             <button
+              class="all-button"
+              :class="{ active: selectedCategories.includes(1) }"
+              @click="toggleCategory(1)"
+            >
+              Любой
+            </button>
+            <button
               v-for="category in categories"
               :key="category.id"
               :class="{
                 active: selectedCategories.includes(category.id),
-                'all-button': category.id === 1,
               }"
               @click="toggleCategory(category.id)"
             >
-              {{ category.name }}
+              {{ category.label || category.name }}
             </button>
           </div>
         </div>
@@ -88,7 +100,7 @@
               @click="toggleHotel(hotel.id)"
               :class="{ active: selectedHotels.includes(hotel.id) }"
             >
-              <span>{{ hotel.name }}</span>
+              <span>{{ hotel.label || hotel.name }}</span>
             </div>
           </div>
         </div>
@@ -101,15 +113,21 @@
           <label>Питание:</label>
           <div class="filter-options vertical">
             <button
+              class="all-button"
+              :class="{ active: selectedMeals.includes(1) }"
+              @click="toggleMeal(1)"
+            >
+              Любой
+            </button>
+            <button
               v-for="meal in meals"
               :key="meal.id"
               :class="{
                 active: selectedMeals.includes(meal.id),
-                'all-button': meal.id === 1,
               }"
               @click="toggleMeal(meal.id)"
             >
-              {{ meal.name }}
+              {{ meal.label || meal.name }}
             </button>
           </div>
         </div>
@@ -122,15 +140,21 @@
           <label>Опции:</label>
           <div class="filter-options vertical">
             <button
+              class="all-button"
+              :class="{ active: selectedOptions.includes(1) }"
+              @click="toggleOption(1)"
+            >
+              Любой
+            </button>
+            <button
               v-for="option in options"
               :key="option.id"
               :class="{
                 active: selectedOptions.includes(option.id),
-                'all-button': option.id === 1,
               }"
               @click="toggleOption(option.id)"
             >
-              {{ option.name }}
+              {{ option.label || option.name }}
             </button>
           </div>
         </div>
@@ -140,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted, watch } from 'vue'
   import type {
     Region,
     Category,
@@ -171,22 +195,134 @@
     'update:options': [value: number[]]
   }>()
 
+  // Логирование при получении данных
+  onMounted(() => {
+    console.log('SearchFilters mounted with props:', {
+      regions: props.regions.length,
+      categories: props.categories.length,
+      hotels: props.hotels.length,
+      meals: props.meals.length,
+      options: props.options.length
+    })
+  })
+
+  // Следим за изменениями данных
+  watch(() => props.hotels, (newHotels) => {
+    console.log('SearchFilters: hotels prop changed:', newHotels.length)
+    console.log('Hotels data:', newHotels)
+    console.log('Sample hotels with city_id:', newHotels.slice(0, 10).map(h => ({ 
+      id: h.id, 
+      name: h.label || h.name, 
+      city_id: h.city_id 
+    })))
+  }, { immediate: true })
+
+  watch(() => props.categories, (newCategories) => {
+    console.log('SearchFilters: categories prop changed:', newCategories.length)
+    console.log('Categories data:', newCategories.map(c => ({ id: c.id, name: c.label || c.name })))
+  }, { immediate: true })
+
+  watch(() => props.regions, (newRegions) => {
+    console.log('SearchFilters: regions prop changed:', newRegions.length)
+    console.log('Regions data:', newRegions.map(r => ({ id: r.id, name: r.label || r.name })))
+  }, { immediate: true })
+
+  // Создаем динамический маппинг регионов к городам на основе props.regions
+  const regionCitiesMap = computed(() => {
+    const map = new Map<number, number[]>()
+    
+    // Используем реальные данные из props.regions
+    props.regions.forEach(region => {
+      // Если у региона есть cities массив, используем его
+      if (region.cities && Array.isArray(region.cities)) {
+        const cityIds = region.cities.map(city => city.id)
+        map.set(region.id, cityIds)
+        console.log(`Region ${region.label || region.name} (${region.id}) mapped to cities:`, cityIds)
+      }
+    })
+    
+    const mapObj: Record<number, number[]> = {}
+    map.forEach((value, key) => {
+      mapObj[key] = value
+    })
+    console.log('Dynamic region cities map:', mapObj)
+    console.log('Available regions:', props.regions.map(r => ({ id: r.id, label: r.label || r.name })))
+    return map
+  })
+
   // Поиск отелей
   const hotelSearchQuery = ref('')
   const allHotelsSelected = computed(() => {
-    return props.selectedHotels.length === props.hotels.length
+    return props.selectedHotels.length === filteredHotels.value.length && filteredHotels.value.length > 0
   })
 
-  // Фильтрация отелей по поисковому запросу
+  // Фильтрация отелей по поисковому запросу и выбранным регионам
   const filteredHotels = computed(() => {
-    if (!hotelSearchQuery.value) {
-      return props.hotels
+    console.log('=== filteredHotels computed triggered ===')
+    console.log('props.selectedRegions changed to:', props.selectedRegions)
+    console.log('props.hotels count:', props.hotels.length)
+    
+    let hotels = props.hotels
+    console.log('filteredHotels computed - total hotels:', hotels.length)
+    console.log('Selected regions:', props.selectedRegions)
+    console.log('Sample hotels with city_id:', hotels.slice(0, 5).map(h => ({ id: h.id, name: h.label || h.name, city_id: h.city_id })))
+
+    // Фильтрация по выбранным регионам
+    if (props.selectedRegions.length > 0) {
+      // Если выбран "Все" (id: 1), показываем все отели
+      if (props.selectedRegions.includes(1)) {
+        console.log('All regions selected, showing all hotels')
+        // Показываем все отели
+      } else {
+        // Фильтруем отели по выбранным регионам
+        const beforeFilter = hotels.length
+        
+        // Получаем все города для выбранных регионов
+        const selectedCities = new Set<number>()
+        props.selectedRegions.forEach(regionId => {
+          const cities = regionCitiesMap.value.get(regionId)
+          if (cities) {
+            cities.forEach(cityId => selectedCities.add(cityId))
+          }
+        })
+        
+        console.log('Selected cities for filtering:', Array.from(selectedCities))
+        console.log('Region cities map keys:', Array.from(regionCitiesMap.value.keys()))
+        
+        hotels = hotels.filter(hotel => {
+          // Проверяем, есть ли у отеля city_id и соответствует ли он выбранным городам
+          if (hotel.city_id) {
+            const matches = selectedCities.has(hotel.city_id)
+            if (matches) {
+              console.log(`Hotel ${hotel.label || hotel.name} (city_id: ${hotel.city_id}) matches selected cities`)
+            }
+            return matches
+          }
+          // Если у отеля нет city_id, НЕ показываем его (только отели с city_id)
+          console.log(`Hotel ${hotel.label || hotel.name} has no city_id, filtering out`)
+          return false
+        })
+        console.log(`Filtered hotels by regions: ${beforeFilter} -> ${hotels.length}`)
+      }
+    } else {
+      // Если не выбрано ни одного региона, показываем пустой список
+      console.log('No regions selected, showing empty list')
+      hotels = []
     }
 
-    const query = hotelSearchQuery.value.toLowerCase()
-    return props.hotels.filter(hotel =>
-      hotel.name.toLowerCase().includes(query)
-    )
+    // Фильтрация по поисковому запросу
+    if (hotelSearchQuery.value) {
+      const beforeSearch = hotels.length
+      const query = hotelSearchQuery.value.toLowerCase()
+      hotels = hotels.filter(hotel =>
+        hotel.name?.toLowerCase().includes(query) || hotel.label?.toLowerCase().includes(query)
+      )
+      console.log(`Filtered hotels by search: ${beforeSearch} -> ${hotels.length}`)
+    }
+
+    console.log('Final filtered hotels:', hotels.length)
+    console.log('=== filteredHotels computed finished ===')
+    return hotels
   })
 
   // Выбор/отмена выбора всех отелей
@@ -196,7 +332,7 @@
     } else {
       emit(
         'update:hotels',
-        props.hotels.map(hotel => hotel.id)
+        filteredHotels.value.map(hotel => hotel.id)
       )
     }
   }
@@ -222,18 +358,24 @@
   // Filter toggle methods
   const toggleRegion = (regionId: number) => {
     const currentRegions = [...props.selectedRegions]
+    console.log('=== toggleRegion called ===')
+    console.log('regionId:', regionId)
+    console.log('Current selected regions:', currentRegions)
+    console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
 
     // Если нажата кнопка "Все" (id: 1)
     if (regionId === 1) {
       // Если "Все" уже выбрано, снимаем все выделения
       if (currentRegions.includes(1)) {
         emit('update:regions', [])
+        console.log('Deselected all regions')
       } else {
         // Иначе выбираем все регионы
         emit(
           'update:regions',
-          props.regions.map(region => region.id)
+          [1, ...props.regions.map(r => r.id)] // Выбираем "Все" + все регионы
         )
+        console.log('Selected all regions')
       }
       return
     }
@@ -247,6 +389,7 @@
         const allIndex = currentRegions.indexOf(1)
         currentRegions.splice(allIndex, 1)
       }
+      console.log('Removed region:', regionId, 'New selection:', currentRegions)
     } else {
       currentRegions.push(regionId)
       // Если выбраны все регионы кроме "Все", добавляем и "Все"
@@ -257,9 +400,12 @@
       if (allRegionsSelected && !currentRegions.includes(1)) {
         currentRegions.push(1)
       }
+      console.log('Added region:', regionId, 'New selection:', currentRegions)
     }
 
+    console.log('About to emit regions:', currentRegions)
     emit('update:regions', currentRegions)
+    console.log('Emitted regions. Next tick should update filteredHotels')
   }
 
   const toggleCategory = (categoryId: number) => {
@@ -274,7 +420,7 @@
         // Иначе выбираем все категории
         emit(
           'update:categories',
-          props.categories.map(category => category.id)
+          [1, ...props.categories.map(c => c.id)] // Выбираем "Все" + все категории
         )
       }
       return

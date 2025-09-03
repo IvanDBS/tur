@@ -4,8 +4,8 @@ export interface SearchForm {
   package?: Package | null
   arrivalCity?: ArrivalCity | null
   date?: string | null
-  checkInDate?: string | null
-  checkOutDate?: string | null
+  checkInDate?: Date | null
+  checkOutDate?: Date | null
   nights: number
   nights2?: number
   adults: number
@@ -99,8 +99,14 @@ export interface ArrivalCity {
 
 export interface Region {
   id: number
-  name?: string
+  name: string
   label?: string
+  city_id?: number
+  cities?: Array<{
+    id: number
+    label: string
+    region_id: number
+  }>
 }
 
 export interface Category {
@@ -114,6 +120,9 @@ export interface Hotel {
   name?: string
   label?: string
   category?: string
+  city_id?: number
+  category_id?: number
+  is_exclusive?: boolean
 }
 
 export interface Meal {

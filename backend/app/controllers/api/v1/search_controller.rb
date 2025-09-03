@@ -2,20 +2,45 @@
 module Api
   module V1
     class SearchController < Api::V1::BaseController
-      before_action :authenticate_user!, except: %i[departure_cities countries package_templates]
+      before_action :authenticate_user!, except: %i[
+        departure_cities 
+        countries 
+        package_templates 
+        hotel_categories 
+        locations 
+        hotels 
+        meals 
+        calendar_hints 
+        available_nights
+        search
+      ]
 
       # GET /api/v1/search/departure_cities
       def departure_cities
         begin
+          Rails.logger.info "Fetching departure cities from OBS API"
+          
           # Use site-level authentication for public endpoints
           obs_service = ObsApiService.new(
             base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
             access_token: ObsSiteAuthService.instance.access_token
           )
+          
+          Rails.logger.info "OBS service created, fetching cities..."
           cities = obs_service.departure_cities
-          render_success({ departure_cities: cities })
+          Rails.logger.info "Received cities from OBS API: #{cities.inspect}"
+          
+          response_data = { departure_cities: cities }
+          Rails.logger.info "Rendering response: #{response_data.inspect}"
+          
+          render_success(response_data)
         rescue ObsApiService::Error => e
+          Rails.logger.error "OBS API error in departure_cities: #{e.message}"
           render_error("Failed to fetch departure cities: #{e.message}", :bad_gateway)
+        rescue StandardError => e
+          Rails.logger.error "Unexpected error in departure_cities: #{e.class} - #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          render_error("Internal server error: #{e.message}", :internal_server_error)
         end
       end
 
@@ -23,7 +48,18 @@ module Api
       def countries
         airport_city_from = params[:airport_city_from]
 
+        Rails.logger.info "Countries request - airport_city_from: #{airport_city_from} (type: #{airport_city_from.class})"
+
         return render_error('airport_city_from parameter is required', :bad_request) if airport_city_from.blank?
+
+        # Преобразуем в целое число
+        begin
+          airport_city_from = Integer(airport_city_from)
+          Rails.logger.info "Converted airport_city_from to: #{airport_city_from} (type: #{airport_city_from.class})"
+        rescue ArgumentError, TypeError => e
+          Rails.logger.error "Failed to convert airport_city_from: #{e.message}"
+          return render_error('airport_city_from must be a valid integer', :bad_request)
+        end
 
         begin
           # Use site-level authentication for public endpoints
@@ -32,8 +68,10 @@ module Api
             access_token: ObsSiteAuthService.instance.access_token
           )
           countries = obs_service.countries(airport_city_from)
+          Rails.logger.info "Successfully fetched #{countries.length} countries"
           render_success({ countries: countries })
         rescue ObsApiService::Error => e
+          Rails.logger.error "OBS API error: #{e.message}"
           render_error("Failed to fetch countries: #{e.message}", :bad_gateway)
         end
       end
@@ -44,6 +82,14 @@ module Api
         airport_city_from = params[:airport_city_from]
 
         return render_error('Country ID is required', :bad_request) if country_id.blank?
+
+        # Преобразуем в целые числа
+        begin
+          country_id = Integer(country_id)
+          airport_city_from = Integer(airport_city_from) if airport_city_from.present?
+        rescue ArgumentError, TypeError
+          return render_error('Country ID and airport_city_from must be valid integers', :bad_request)
+        end
 
         begin
           # Use site-level authentication for public endpoints
@@ -62,29 +108,53 @@ module Api
       def search
         search_params = params[:search] || {}
 
+        Rails.logger.info "Search request received with params: #{search_params.inspect}"
+        Rails.logger.info "Search params type: #{search_params.class}"
+        Rails.logger.info "Search params keys: #{search_params.keys}"
+
         return render_error('Search parameters are required', :bad_request) if search_params.blank?
 
         begin
           # Perform search with OBS API
-          adapter = ObsAdapter.new(user_id: current_user.id)
+          adapter = ObsAdapter.new(user_id: nil) # No user required for public search
+          Rails.logger.info "Calling ObsAdapter.search_packages with: #{search_params.inspect}"
           obs_response = adapter.search_packages(search_params)
 
-          # Store search query for user
-          search_query = current_user.search_queries.create!(
-            search_params: search_params.to_json,
-            search_results: obs_response,
-            expires_at: 1.hour.from_now
-          )
+          # Generate temporary search ID for anonymous users
+          search_id = SecureRandom.uuid
 
-          render_success({
-                           search_id: search_query.obs_search_id,
-                           results: obs_response,
-                           total_results: obs_response&.dig('total') || 0
-                         })
+          # Handle empty response from OBS API
+          if obs_response.is_a?(Array) && obs_response.empty?
+            render_success({
+                             search_id: search_id,
+                             results: [],
+                             total_results: 0,
+                             message: "No tours found for the specified criteria"
+                           })
+          elsif obs_response.is_a?(Hash) && obs_response.any?
+            # OBS API returns object with tour keys, count them
+            total_results = obs_response.keys.count
+            render_success({
+                             search_id: search_id,
+                             results: obs_response,
+                             total_results: total_results,
+                             message: "Found #{total_results} tours"
+                           })
+          else
+            render_success({
+                             search_id: search_id,
+                             results: obs_response,
+                             total_results: 0,
+                             message: "No tours found for the specified criteria"
+                           })
+          end
         rescue ObsAdapter::Error => e
+          Rails.logger.error "ObsAdapter error: #{e.message}"
           render_error("Search failed: #{e.message}", :bad_gateway)
-        rescue ActiveRecord::RecordInvalid => e
-          render_error("Failed to save search: #{e.message}", :unprocessable_entity)
+        rescue StandardError => e
+          Rails.logger.error "Search error: #{e.message}"
+          Rails.logger.error "Error backtrace: #{e.backtrace.join("\n")}"
+          render_error("Search failed: #{e.message}", :internal_server_error)
         end
       end
 
@@ -133,7 +203,7 @@ module Api
             base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
             access_token: ObsSiteAuthService.instance.access_token
           )
-          hints = obs_service.calendar_hints(params.permit(:date_from, :date_to, :city_from, :city_to))
+          hints = obs_service.calendar_hints(params.permit(:date_from, :date_to, :city_from, :city_to).to_h)
           render_success({ calendar_hints: hints })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch calendar hints: #{e.message}", :bad_gateway)
@@ -147,7 +217,7 @@ module Api
             base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
             access_token: ObsSiteAuthService.instance.access_token
           )
-          nights = obs_service.available_nights(params.permit(:date_from, :date_to, :city_from, :city_to))
+          nights = obs_service.available_nights(params.permit(:date_from, :date_to, :city_from, :city_to).to_h)
           render_success({ available_nights: nights })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch available nights: #{e.message}", :bad_gateway)
@@ -196,7 +266,7 @@ module Api
             access_token: ObsSiteAuthService.instance.access_token
           )
           hotels = obs_service.hotels(package_template_id,
-                                            params.permit(:cities, :regions, :categories, :is_exclusive))
+                                            params.permit(:cities, :regions, :categories, :is_exclusive).to_h)
           render_success({ hotels: hotels })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch hotels: #{e.message}", :bad_gateway)

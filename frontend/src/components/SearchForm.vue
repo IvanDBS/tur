@@ -62,20 +62,11 @@
         <!-- Город прилета -->
         <div class="field-group">
           <label>Город прилета:</label>
-          <!-- Debug info -->
-          <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
-            Debug: arrivalCity = {{ searchForm.arrivalCity ? JSON.stringify(searchForm.arrivalCity) : 'null' }}
-          </div>
-          <Multiselect
-            v-model="searchForm.arrivalCity"
-            :options="arrivalCityOptions"
-            :searchable="false"
-            :canClear="false"
-            :canDeselect="false"
-            placeholder="Город будет выбран автоматически"
-            label="name"
-            valueProp="id"
+          <input 
+            type="text" 
+            :value="searchForm.arrivalCity ? searchForm.arrivalCity.name : 'Город будет выбран автоматически'"
             :disabled="true"
+            style="min-height: 38px; height: 38px; border: 1px solid #dddddd; border-radius: 4px; padding: 4px 8px; font-size: 14px; color: #222222; background: #f5f5f5; font-family: inherit; box-sizing: border-box;"
             title="Автоматически устанавливается на основе выбранного пакета"
           />
         </div>
@@ -315,23 +306,6 @@
     )
   })
 
-  // Опции для города прилета
-  const arrivalCityOptions = computed(() => {
-    console.log('arrivalCityOptions computed - searchForm.arrivalCity:', searchForm.value.arrivalCity)
-    if (searchForm.value.arrivalCity) {
-      // Создаем массив с одним элементом, но с правильной структурой для Multiselect
-      const options = [{
-        id: searchForm.value.arrivalCity.id,
-        name: searchForm.value.arrivalCity.name,
-        label: searchForm.value.arrivalCity.name // Добавляем label для совместимости
-      }]
-      console.log('arrivalCityOptions returning:', options)
-      return options
-    }
-    console.log('arrivalCityOptions returning empty array')
-    return []
-  })
-
   // Инициализация данных при монтировании
   onMounted(async () => {
     try {
@@ -474,6 +448,7 @@
         }
         
         // Загружаем связанные данные для поиска отелей
+        console.log('Starting to load hotel-related data...')
         await Promise.all([
           searchData.loadHotelCategories(newPackage.id),
           searchData.loadLocations(newPackage.id),
@@ -482,6 +457,21 @@
         ])
         
         console.log(`Loaded all data for package: ${newPackage.label || newPackage.name}`)
+        console.log('Hotels loaded:', searchData.hotels.value.length)
+        console.log('Categories loaded:', searchData.categories.value.length)
+        console.log('Regions loaded:', searchData.regions.value.length)
+        console.log('Meals loaded:', searchData.meals.value.length)
+        
+        // Автоматически выбираем все регионы и категории
+        if (searchData.regions.value.length > 0) {
+          selectedFilters.value.regions = [1, ...searchData.regions.value.map(r => r.id)]
+          console.log('Auto-selected all regions:', selectedFilters.value.regions)
+        }
+        
+        if (searchData.categories.value.length > 0) {
+          selectedFilters.value.categories = [1, ...searchData.categories.value.map(c => c.id)]
+          console.log('Auto-selected all categories:', selectedFilters.value.categories)
+        }
       } else {
         console.log('Package watch: missing package data', newPackage)
         // Очищаем город прилета при сбросе пакета
@@ -542,18 +532,92 @@
     console.log('Selected filters:', selectedFilters.value)
     console.log('Children ages:', searchForm.value.childrenAges)
 
+    // Проверяем обязательные поля
+    if (!searchForm.value.departureCity?.id) {
+      console.error('Departure city is required')
+      return
+    }
+    if (!searchForm.value.destination?.id) {
+      console.error('Destination country is required')
+      return
+    }
+    if (!searchForm.value.package?.id) {
+      console.error('Package is required')
+      return
+    }
+    if (!searchForm.value.arrivalCity?.id) {
+      console.error('Arrival city is required')
+      return
+    }
+    if (!searchForm.value.checkInDate) {
+      console.error('Check-in date is required')
+      return
+    }
+    if (!searchForm.value.checkOutDate) {
+      console.error('Check-out date is required')
+      return
+    }
+
+    // Форматируем даты в формат DD.MM.YYYY для API
+    const formatDate = (date: Date) => {
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}.${month}.${year}`
+    }
+
+    // Подготавливаем параметры для API
+    console.log('arrivalCity before formatting:', searchForm.value.arrivalCity)
+    console.log('arrivalCity.id type:', typeof searchForm.value.arrivalCity?.id)
+    console.log('arrivalCity.id value:', searchForm.value.arrivalCity?.id)
+    
+    const airportCityTo = searchForm.value.arrivalCity?.id ? [Number(searchForm.value.arrivalCity.id)] : []
+    console.log('airportCityTo array:', airportCityTo)
+    console.log('airportCityTo type:', typeof airportCityTo)
+    console.log('airportCityTo isArray:', Array.isArray(airportCityTo))
+    
+    const searchParams = {
+      country: Number(searchForm.value.destination.id),
+      package_template: Number(searchForm.value.package.id),
+      airport_city_from: Number(searchForm.value.departureCity.id),
+      airport_city_to: airportCityTo, // Используем подготовленный массив
+      date_from: formatDate(searchForm.value.checkInDate),
+      date_to: formatDate(searchForm.value.checkOutDate),
+      nights_from: Number(searchForm.value.nights),
+      nights_to: Number(searchForm.value.nights2),
+      adults: Number(searchForm.value.adults),
+      children: searchForm.value.children > 0 ? Number(searchForm.value.children) : undefined,
+      children_age: searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
+      selected_hotels: selectedFilters.value.hotels.length > 0 ? selectedFilters.value.hotels.map(id => Number(id)) : [1], // Добавляем selected_hotels, если не выбраны отели, используем [1] как fallback
+      meals: selectedFilters.value.meals.length > 0 ? selectedFilters.value.meals.map(mealId => {
+        const meal = searchData.meals.value.find(m => m.id === mealId)
+        return meal?.name || meal?.label || mealId.toString()
+      }) : undefined,
+      options: selectedFilters.value.options.length > 0 ? selectedFilters.value.options.map(optionId => {
+        return optionId.toString()
+      }) : undefined
+    }
+
+    console.log('Formatted search params for API:', searchParams)
+    console.log('airport_city_to before API call:', searchParams.airport_city_to)
+    console.log('airport_city_to type before API call:', typeof searchParams.airport_city_to)
+    console.log('airport_city_to isArray before API call:', Array.isArray(searchParams.airport_city_to))
+
     isLoading.value = true
-    setTimeout(() => {
-      isLoading.value = false
-      emit('search', {
-        ...searchForm.value,
-        selectedRegions: selectedFilters.value.regions,
-        selectedCategories: selectedFilters.value.categories,
-        selectedMeals: selectedFilters.value.meals,
-        selectedOptions: selectedFilters.value.options,
-        childrenAges: searchForm.value.childrenAges,
+    
+    // Вызываем API поиска
+    searchData.performSearch(searchParams)
+      .then((result) => {
+        console.log('Search result:', result)
+        isLoading.value = false
+        // Здесь можно обработать результат поиска
+        emit('search', searchParams)
       })
-    }, 1000)
+      .catch((error) => {
+        console.error('Search failed:', error)
+        isLoading.value = false
+        // Здесь можно показать ошибку пользователю
+      })
   }
 
   const handleReset = () => {

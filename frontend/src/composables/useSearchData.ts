@@ -110,46 +110,13 @@ export const useSearchData = () => {
     { id: 50006, name: 'BODRUM' },
   ])
 
-  const fallbackRegions = ref([
-    { id: 1, name: 'Любой' },
-    { id: 2, name: 'ALANYA' },
-    { id: 3, name: 'ANTALYA' },
-    { id: 4, name: 'BELEK' },
-    { id: 5, name: 'FETHIYE' },
-    { id: 6, name: 'KEMER' },
-    { id: 7, name: 'SIDE' },
-  ])
+  const fallbackRegions = ref<Region[]>([])
 
-  const fallbackCategories = ref([
-    { id: 1, name: 'Любая' },
-    { id: 2, name: 'Special' },
-    { id: 3, name: '2⭐' },
-    { id: 4, name: '3⭐' },
-    { id: 5, name: '4⭐' },
-    { id: 6, name: '5⭐' },
-    { id: 7, name: 'BOUTIQUE' },
-  ])
+  const fallbackCategories = ref<Category[]>([])
 
-  const fallbackHotels = ref([
-    { id: 1, name: 'ALBATROS AQUA BLU RESORT SHARM EL SHEKH' },
-    { id: 2, name: 'ALBATROS AQUA PARK' },
-    { id: 3, name: 'ALBATROS LAGUNA VISTA BEACH' },
-    { id: 4, name: 'ALBATROS PALACE' },
-    { id: 5, name: 'ALBATROS ROYAL GRAND SHARM RESORT (ADULT ONLY)' },
-    {
-      id: 6,
-      name: 'ALBATROS SHARM RESORT (EX.BEACH ALBATROS SHARM EL SHEIKH)',
-    },
-  ])
+  const fallbackHotels = ref<Hotel[]>([])
 
-  const fallbackMeals = ref([
-    { id: 1, name: 'Любое' },
-    { id: 2, name: 'AI и лучше' },
-    { id: 3, name: 'BB' },
-    { id: 4, name: 'FB' },
-    { id: 5, name: 'HB' },
-    { id: 6, name: 'RO' },
-  ])
+  const fallbackMeals = ref<Meal[]>([])
 
   const options = ref([
     { id: 1, name: 'Выбрать все' },
@@ -251,9 +218,13 @@ export const useSearchData = () => {
     is_exclusive?: boolean
   }) => {
     try {
+      console.log(`Loading hotels for package ${packageTemplateId} with filters:`, filters)
       await obsApi.fetchHotels(packageTemplateId, filters)
+      console.log(`Hotels loaded successfully. Total hotels: ${hotels.value.length}`)
+      console.log('Hotels data:', hotels.value)
     } catch (err) {
       console.warn('Using fallback hotels data')
+      console.error('Error loading hotels:', err)
     }
   }
 
@@ -357,21 +328,61 @@ export const useSearchData = () => {
     arrivalCities.value.length > 0 ? arrivalCities.value : fallbackArrivalCities.value
   )
 
-  const getRegions = computed(() => 
-    regions.value.length > 0 ? regions.value : fallbackRegions.value
-  )
+  const getCategories = computed(() => {
+    const localCategories = categories.value
+    const apiCategories = obsApi.categories.value
+    console.log('getCategories computed - local:', localCategories.length, 'api:', apiCategories.length)
+    
+    if (localCategories.length > 0) {
+      console.log('Using local categories:', localCategories)
+      return localCategories
+    } else {
+      console.log('Using API categories:', apiCategories)
+      return apiCategories
+    }
+  })
 
-  const getCategories = computed(() => 
-    categories.value.length > 0 ? categories.value : fallbackCategories.value
-  )
+  const getRegions = computed(() => {
+    const localRegions = regions.value
+    const apiRegions = obsApi.regions.value
+    console.log('getRegions computed - local:', localRegions.length, 'api:', apiRegions.length)
+    
+    if (localRegions.length > 0) {
+      console.log('Using local regions:', localRegions)
+      return localRegions
+    } else {
+      console.log('Using API regions:', apiRegions)
+      return apiRegions
+    }
+  })
 
-  const getHotels = computed(() => 
-    hotels.value.length > 0 ? hotels.value : fallbackHotels.value
-  )
+  const getHotels = computed(() => {
+    const localHotels = hotels.value
+    const apiHotels = obsApi.hotels.value
+    console.log('getHotels computed - local:', localHotels.length, 'api:', apiHotels.length)
+    
+    if (localHotels.length > 0) {
+      console.log('Using local hotels:', localHotels)
+      return localHotels
+    } else {
+      console.log('Using API hotels:', apiHotels)
+      return apiHotels
+    }
+  })
 
-  const getMeals = computed(() => 
-    meals.value.length > 0 ? meals.value : fallbackMeals.value
-  )
+  const getMeals = computed(() => {
+    const localMeals = meals.value
+    const apiMeals = obsApi.meals.value
+    console.log('getMeals computed - local:', localMeals.length, 'api:', apiMeals.length)
+    
+    if (localMeals.length > 0) {
+      console.log('Using local meals:', localMeals)
+      return localMeals
+    } else {
+      console.log('Using API meals:', apiMeals)
+      return apiMeals
+    }
+  })
 
   // Опции для Multiselect
   const departureCitiesOptions = ref<Array<{ value: any, label: string }>>([])

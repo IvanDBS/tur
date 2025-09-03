@@ -260,7 +260,9 @@ export const useObsApi = () => {
       if (response.success) {
         regions.value = response.data.locations.map(loc => ({
           id: loc.id,
-          name: loc.label
+          name: loc.label,
+          label: loc.label,
+          cities: loc.cities || []
         }))
         return regions.value
       } else {
@@ -306,20 +308,26 @@ export const useObsApi = () => {
         url += `?${params.toString()}`
       }
       
+      console.log(`Fetching hotels from: ${url}`)
       const response = await apiClient.get<ApiResponse<{ hotels: ObsHotel[] }>>(url)
       
       if (response.success) {
+        console.log('Hotels API response:', response.data)
         hotels.value = response.data.hotels.map(hotel => ({
           id: hotel.id,
           name: hotel.label,
-          category: hotel.category_id?.toString()
+          label: hotel.label,
+          category: hotel.category_id?.toString(),
+          city_id: hotel.city_id
         }))
+        console.log(`Mapped hotels: ${hotels.value.length} hotels loaded`)
         return hotels.value
       } else {
         throw new Error(response.message)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch hotels'
+      console.error('fetchHotels error:', err)
       setError(message)
       return []
     } finally {
@@ -443,7 +451,16 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      const response = await apiClient.post<ApiResponse<Record<string, any>>>('/search', searchParams)
+      console.log('performSearch called with params:', searchParams)
+      console.log('airport_city_to type:', typeof searchParams.airport_city_to)
+      console.log('airport_city_to isArray:', Array.isArray(searchParams.airport_city_to))
+      console.log('airport_city_to value:', searchParams.airport_city_to)
+      
+      const requestBody = { search: searchParams }
+      console.log('Request body:', requestBody)
+      console.log('Request body.airport_city_to:', requestBody.search.airport_city_to)
+      
+      const response = await apiClient.post<ApiResponse<Record<string, any>>>('/search', requestBody)
       
       if (response.success) {
         return response.data

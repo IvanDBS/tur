@@ -62,6 +62,10 @@
         <!-- Город прилета -->
         <div class="field-group">
           <label>Город прилета:</label>
+          <!-- Debug info -->
+          <div style="font-size: 10px; color: #666; margin-bottom: 4px;">
+            Debug: arrivalCity = {{ searchForm.arrivalCity ? JSON.stringify(searchForm.arrivalCity) : 'null' }}
+          </div>
           <Multiselect
             v-model="searchForm.arrivalCity"
             :options="arrivalCityOptions"
@@ -313,9 +317,13 @@
 
   // Опции для города прилета
   const arrivalCityOptions = computed(() => {
+    console.log('arrivalCityOptions computed - searchForm.arrivalCity:', searchForm.value.arrivalCity)
     if (searchForm.value.arrivalCity) {
-      return [searchForm.value.arrivalCity]
+      const options = [searchForm.value.arrivalCity]
+      console.log('arrivalCityOptions returning:', options)
+      return options
     }
+    console.log('arrivalCityOptions returning empty array')
     return []
   })
 
@@ -403,8 +411,10 @@
             name: airport.label || airport.name || `Airport ${airport.id}`
           }
           
-          searchForm.value.arrivalCity = arrivalCity
+          // Принудительно обновляем реактивность
+          searchForm.value.arrivalCity = { ...arrivalCity }
           console.log(`Set arrival city to:`, arrivalCity)
+          console.log('searchForm.arrivalCity after set:', searchForm.value.arrivalCity)
         } else {
           console.log('No airports found in package, checking if it\'s a specific destination package')
           
@@ -441,8 +451,10 @@
           }
           
           if (arrivalCity) {
-            searchForm.value.arrivalCity = arrivalCity
+            // Принудительно обновляем реактивность
+            searchForm.value.arrivalCity = { ...arrivalCity }
             console.log(`Set arrival city based on package name:`, arrivalCity)
+            console.log('searchForm.arrivalCity after fallback set:', searchForm.value.arrivalCity)
           } else {
             console.log('Could not determine arrival city from package name')
           }

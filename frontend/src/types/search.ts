@@ -66,55 +66,65 @@ export interface SearchItem {
 // Типы для данных поиска
 export interface DepartureCity {
   id: number
-  name: string
+  name?: string
+  label?: string
   code?: string
 }
 
 export interface Country {
   id: number
-  name: string
+  name?: string
+  label?: string
   code?: string
 }
 
 export interface Package {
   id: number
-  name: string
+  name?: string
+  label?: string
   code?: string
   airports?: Array<{
     id: number
-    name: string
+    name?: string
+    label?: string
   }>
 }
 
 export interface ArrivalCity {
   id: number
-  name: string
+  name?: string
+  label?: string
   code?: string
 }
 
 export interface Region {
   id: number
-  name: string
+  name?: string
+  label?: string
 }
 
 export interface Category {
   id: number
-  name: string
+  name?: string
+  label?: string
 }
 
 export interface Hotel {
   id: number
-  name: string
+  name?: string
+  label?: string
   category?: string
 }
 
 export interface Meal {
   id: number
-  name: string
+  name?: string
+  label?: string
   full_name?: string
 }
 
 export interface Option {
   id: number
-  name: string
+  name?: string
+  label?: string
 }

@@ -71,7 +71,9 @@
             placeholder="Выберите город"
             label="name"
             valueProp="id"
+            :disabled="true"
           />
+          <small class="field-hint">Автоматически устанавливается на основе выбранного пакета</small>
         </div>
       </div>
 
@@ -329,7 +331,7 @@
         searchForm.value.package = null
         // Загружаем страны для выбранного города через useSearchData
         await searchData.loadCountries(newCity.id)
-        console.log(`Loaded countries for departure city: ${newCity.name}`)
+        console.log(`Loaded countries for departure city: ${newCity.label || newCity.name}`)
       } else {
         console.log('Departure city watch: missing city data', newCity)
       }
@@ -351,11 +353,12 @@
         console.log(`Loading packages for country ${newCountry.id} and city ${searchForm.value.departureCity.id}`)
         // Очищаем предыдущий выбор
         searchForm.value.package = null
+        searchForm.value.arrivalCity = null
         
         // Загружаем пакеты для выбранной страны через useSearchData
         await searchData.loadPackageTemplates(newCountry.id, searchForm.value.departureCity.id)
         
-        console.log(`Loaded packages for country: ${newCountry.name}`)
+        console.log(`Loaded packages for country: ${newCountry.label || newCountry.name}`)
       } else {
         console.log('Destination watch: missing required data', {
           newCountry,
@@ -369,6 +372,47 @@
         stack: err instanceof Error ? err.stack : undefined,
         country: newCountry,
         departureCity: searchForm.value.departureCity
+      })
+    }
+  })
+
+  // Следим за изменениями пакета и загружаем связанные данные
+  watch(() => searchForm.value.package, async (newPackage) => {
+    console.log('Package watch triggered:', newPackage)
+    try {
+      if (newPackage && newPackage.id) {
+        console.log(`Loading data for package ${newPackage.id}: ${newPackage.label || newPackage.name}`)
+        
+        // Если у пакета есть аэропорты, устанавливаем город прилета
+        if (newPackage.airports && newPackage.airports.length > 0) {
+          const airport = newPackage.airports[0]
+          searchForm.value.arrivalCity = {
+            id: airport.id,
+            name: airport.label || airport.name || `Airport ${airport.id}`
+          }
+          console.log(`Set arrival city to: ${airport.label || airport.name} (${airport.id})`)
+        }
+        
+        // Загружаем связанные данные для поиска отелей
+        await Promise.all([
+          searchData.loadHotelCategories(newPackage.id),
+          searchData.loadLocations(newPackage.id),
+          searchData.loadHotels(newPackage.id),
+          searchData.loadMeals(newPackage.id)
+        ])
+        
+        console.log(`Loaded all data for package: ${newPackage.label || newPackage.name}`)
+      } else {
+        console.log('Package watch: missing package data', newPackage)
+        // Очищаем город прилета при сбросе пакета
+        searchForm.value.arrivalCity = null
+      }
+    } catch (err) {
+      console.error('Package watch error:', err)
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        package: newPackage
       })
     }
   })
@@ -544,6 +588,13 @@
     font-size: 11px;
     font-weight: 600;
     color: #222222;
+  }
+
+  .field-hint {
+    font-size: 10px;
+    color: #666666;
+    margin-top: 2px;
+    font-style: italic;
   }
 
   /* Стили для календаря */

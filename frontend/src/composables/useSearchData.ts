@@ -375,14 +375,14 @@ export const useSearchData = () => {
   const updateDepartureCitiesOptions = () => {
     departureCitiesOptions.value = getDepartureCities.value.map(city => ({
       value: city,
-      label: city.name
+      label: city.label || city.name || `City ${city.id}`
     }))
   }
 
   const updateCountriesOptions = () => {
     countriesOptions.value = getCountries.value.map(country => ({
       value: country,
-      label: country.name
+      label: country.label || country.name || `Country ${country.id}`
     }))
   }
 
@@ -392,7 +392,7 @@ export const useSearchData = () => {
     
     packagesOptions.value = packages.map(pkg => ({
       value: pkg,
-      label: pkg.name
+      label: pkg.label || pkg.name || `Package ${pkg.id}`
     }))
     
     console.log('updatePackagesOptions - options:', packagesOptions.value)

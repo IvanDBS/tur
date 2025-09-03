@@ -52,7 +52,7 @@
           <!-- Price -->
           <div class="price-info">
             <div class="price">{{ booking.total_amount }} EUR</div>
-            <div class="price-type">{{ getStatusText(booking.status) }}</div>
+            <div class="price-type">{{ getStatusLabel(booking.status) }}</div>
           </div>
 
           <!-- Details Button -->
@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import { formatDate, getNightWord } from '@/utils/dateUtils'
+  import { formatDate, getNightWord } from '../utils/dateUtils'
 
   interface Booking {
     id: number
@@ -143,11 +143,11 @@
     }
   }
 
-  const getStatusText = (status: string) => {
-    const statusMap = {
-      pending: 'Ожидает подтверждения',
-      confirmed: 'Подтвержден',
-      cancelled: 'Отменен',
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending: 'В ожидании',
+      confirmed: 'Подтверждено',
+      cancelled: 'Отменено',
     }
     return statusMap[status] || status
   }

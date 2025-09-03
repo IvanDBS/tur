@@ -20,6 +20,7 @@ export interface SearchForm {
 export interface CompactSearchForm {
   departureCity: DepartureCity | null
   destination: Country | null
+  package: Package | null
   date: string | null
   nights: number
   adults: number
@@ -79,6 +80,10 @@ export interface Package {
   id: number
   name: string
   code?: string
+  airports?: Array<{
+    id: number
+    name: string
+  }>
 }
 
 export interface ArrivalCity {

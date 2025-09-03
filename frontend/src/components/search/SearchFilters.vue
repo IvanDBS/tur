@@ -387,6 +387,9 @@
 
     emit('update:options', currentOptions)
   }
+
+  // Явный экспорт для TypeScript
+  defineExpose({})
 </script>
 
 <style scoped>

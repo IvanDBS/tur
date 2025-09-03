@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { formatDate, getNightWord } from '@/utils/dateUtils'
+  import { formatDate, getNightWord } from '../utils/dateUtils'
 
   interface SearchResult {
     unique_key: string
@@ -143,6 +143,9 @@
       isLoadingMore.value = false
     }, 1000)
   }
+
+  // Явный экспорт для TypeScript
+  defineExpose({})
 </script>
 
 <style scoped>

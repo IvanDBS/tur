@@ -1,18 +1,43 @@
 <template>
   <div class="search-compact">
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Загружаем данные...</p>
+      </div>
+    </div>
+
+    <!-- Error Display -->
+    <div v-if="false" class="error-message">
+      <!-- Ошибки отображаются в родительском компоненте -->
+    </div>
+
+    <!-- Тестовая кнопка -->
+    <div style="margin-bottom: 20px; text-align: center;">
+      <button 
+        @click="testLoadPackages" 
+        type="button"
+        style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;"
+      >
+        🧪 Тест: Загрузить пакеты
+      </button>
+    </div>
+
     <div class="search-row">
       <!-- Откуда -->
       <div class="field-group">
         <label>Откуда:</label>
         <Multiselect
           v-model="form.departureCity"
-          :options="departureCities"
+          :options="searchData.departureCitiesOptions.value"
           :searchable="true"
           :canClear="false"
           :canDeselect="false"
-          placeholder="Кишинёв"
-          label="name"
-          valueProp="id"
+          placeholder="Выберите город"
+          label="label"
+          valueProp="value"
+          :disabled="loading"
         />
       </div>
 
@@ -21,122 +46,154 @@
         <label>Куда:</label>
         <Multiselect
           v-model="form.destination"
-          :options="countries"
+          :options="searchData.countriesOptions.value"
           :searchable="true"
           :canClear="false"
           :canDeselect="false"
-          placeholder="Турция"
-          label="name"
-          valueProp="id"
+          placeholder="Выберите страну"
+          label="label"
+          valueProp="value"
+          :disabled="loading || !form.departureCity"
         />
       </div>
 
-      <!-- Дата вылета -->
+      <!-- Пакет -->
       <div class="field-group">
-        <label>Дата вылета:</label>
+        <label>Пакет:</label>
+        <Multiselect
+          v-model="form.package"
+          :options="searchData.packagesOptions.value"
+          :searchable="true"
+          :canClear="false"
+          :canDeselect="false"
+          placeholder="Выберите пакет"
+          label="label"
+          valueProp="value"
+          :disabled="loading || !form.destination"
+        />
+      </div>
+
+      <!-- Дата -->
+      <div class="field-group">
+        <label>Дата:</label>
         <VueDatePicker
           v-model="form.date"
+          :disabled="loading || !form.package"
+          placeholder="Выберите дату"
           :min-date="new Date()"
-          format="dd.MM.yyyy"
-          placeholder="29.08.2025"
-          :month-change-on-scroll="false"
+          :format="formatDate"
+          :text-input="true"
           :auto-apply="true"
-          :enable-time-picker="false"
-          :week-start="1"
-          weekday-format="long"
-          month-format="long"
-          locale="ru"
-          :title-format="{ month: 'long', year: 'numeric' }"
-          month-name-format="long"
         />
       </div>
 
-      <!-- Ночей в отеле -->
+      <!-- Ночи -->
       <div class="field-group">
-        <label>Ночей в отеле:</label>
+        <label>Ночи:</label>
         <Multiselect
           v-model="form.nights"
-          :options="nightsOptions"
+          :options="searchData.nightsOptions"
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="6"
+          placeholder="Выберите ночи"
           label="label"
           valueProp="value"
+          :disabled="loading || !form.date"
         />
       </div>
 
-      <!-- Взрослых -->
+      <!-- Взрослые -->
       <div class="field-group">
-        <label>Взрослых:</label>
+        <label>Взрослые:</label>
         <Multiselect
           v-model="form.adults"
-          :options="adultsOptions"
+          :options="searchData.adultsOptions"
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="2"
+          placeholder="Выберите количество"
           label="label"
           valueProp="value"
+          :disabled="loading"
         />
       </div>
 
-      <!-- Детей -->
+      <!-- Дети -->
       <div class="field-group">
-        <label>Детей (0-17.99):</label>
+        <label>Дети:</label>
         <Multiselect
           v-model="form.children"
-          :options="childrenOptions"
+          :options="searchData.childrenOptions"
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="0"
+          placeholder="Выберите количество"
           label="label"
           valueProp="value"
+          :disabled="loading || !form.adults"
         />
+      </div>
+
+      <!-- Возраст детей -->
+      <div v-if="form.children > 0" class="field-group">
+        <label>Возраст детей:</label>
+        <div class="children-ages">
+          <Multiselect
+            v-for="(age, index) in form.childrenAges"
+            :key="index"
+            v-model="form.childrenAges[index]"
+            :options="[
+              { label: '0-2 года', value: 0 },
+              { label: '3-12 лет', value: 3 },
+              { label: '13-17 лет', value: 13 }
+            ]"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="Возраст"
+            label="label"
+            valueProp="value"
+            :disabled="loading"
+          />
+        </div>
       </div>
 
       <!-- Search Button -->
-      <button type="button" @click="handleSearch" class="search-btn-compact">
-        Поиск тура
-      </button>
-    </div>
-
-    <!-- Селекторы возраста детей -->
-    <div v-if="form.children > 0" class="children-ages-row">
-      <div
-        v-for="(age, index) in form.childrenAges"
-        :key="index"
-        class="field-group children-age"
+      <button 
+        type="button" 
+        @click="handleSearch" 
+        class="search-btn"
+        :disabled="loading || !form.departureCity || !form.destination"
       >
-        <label>Возраст ребенка {{ index + 1 }}:</label>
-        <Multiselect
-          v-model="form.childrenAges[index]"
-          :options="childrenAgeOptions"
-          :searchable="false"
-          :canClear="false"
-          :canDeselect="false"
-          placeholder="0"
-          label="label"
-          valueProp="value"
-        />
-      </div>
-    </div>
-
-    <!-- Expand Link -->
-    <div class="expand-link-row">
-      <button type="button" @click="$emit('expand')" class="expand-link">
-        Расширенные параметры
         <svg
-          width="12"
-          height="12"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
-          class="expand-icon"
         >
-          <polyline points="6 9 12 15 18 9"></polyline>
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        Поиск тура
+      </button>
+    </div>
+
+    <!-- Expand Button -->
+    <div class="expand-section">
+      <button type="button" @click="handleExpand" class="expand-btn">
+        Расширенный поиск
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="6,9 12,15 18,9" />
         </svg>
       </button>
     </div>
@@ -144,70 +201,212 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import VueDatePicker from '@vuepic/vue-datepicker'
   import '@vuepic/vue-datepicker/dist/main.css'
   import Multiselect from '@vueform/multiselect'
   import '@vueform/multiselect/themes/default.css'
+  import { useSearchData } from '../../composables/useSearchData'
   import type {
     CompactSearchForm,
     DepartureCity,
     Country,
     SearchOption,
+    Package,
   } from '../../types/search'
 
+  // Props
   interface Props {
     modelValue: CompactSearchForm
-    departureCities: DepartureCity[]
-    countries: Country[]
-    nightsOptions: SearchOption[]
-    adultsOptions: SearchOption[]
-    childrenOptions: SearchOption[]
-    childrenAgeOptions: SearchOption[]
+    loading?: boolean
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    loading: false
+  })
+
+  // Emits
   const emit = defineEmits<{
     'update:modelValue': [value: CompactSearchForm]
     search: [form: CompactSearchForm]
     expand: []
   }>()
 
-  const form = ref<CompactSearchForm>({ ...props.modelValue })
+  // Use search data composable
+  const searchData = useSearchData()
 
-  // Следим за изменениями количества детей и обновляем массив возрастов
-  watch(
-    () => form.value.children,
-    newValue => {
-      if (newValue === 0) {
-        form.value.childrenAges = []
-      } else {
-        const currentAges = [...form.value.childrenAges]
-        form.value.childrenAges = Array(newValue)
-          .fill(0)
-          .map((_, index) => {
-            return index < currentAges.length ? currentAges[index] : 0
-          })
-      }
-    },
-    { immediate: true }
-  )
+  // Form data
+  const form = ref<CompactSearchForm>({
+    departureCity: null,
+    destination: null,
+    package: null,
+    date: null,
+    nights: 6,
+    adults: 2,
+    children: 0,
+    childrenAges: []
+  })
 
-  // Синхронизируем с родительским компонентом
-  watch(
-    form,
-    newValue => {
-      emit('update:modelValue', newValue)
-    },
-    { deep: true }
-  )
-
-  const handleSearch = () => {
-    emit('search', { ...form.value })
+  // Format date function
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
   }
+
+  // Watch for form changes and emit updates
+  watch(form, (newForm) => {
+    emit('update:modelValue', { ...newForm })
+  }, { deep: true })
+
+  // Watch for prop changes and update form
+  watch(() => props.modelValue, (newValue) => {
+    if (newValue) {
+      form.value = { ...newValue }
+    }
+  }, { deep: true })
+
+  // Watch for departure city changes and load countries
+  watch(() => form.value.departureCity, async (newCity) => {
+    console.log('Departure city watch triggered:', newCity)
+    try {
+      if (newCity && newCity.id) {
+        console.log(`Loading countries for city ${newCity.id}`)
+        form.value.destination = null
+        form.value.package = null
+        form.value.date = null
+        // Загружаем страны для выбранного города через useSearchData
+        await searchData.loadCountries(newCity.id)
+        console.log(`Loaded countries for departure city: ${newCity.name}`)
+      } else {
+        console.log('Departure city watch: missing city data', newCity)
+      }
+    } catch (err) {
+      console.error('Departure city watch error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        city: newCity
+      })
+    }
+  })
+
+  // Watch for destination changes and load packages
+  watch(() => form.value.destination, async (newCountry) => {
+    console.log('Destination watch triggered:', newCountry)
+    try {
+      if (newCountry && newCountry.id && form.value.departureCity?.id) {
+        console.log(`Loading packages for country ${newCountry.id} and city ${form.value.departureCity.id}`)
+        // Очищаем предыдущий выбор
+        form.value.package = null
+        form.value.date = null
+        
+        // Загружаем пакеты для выбранной страны через useSearchData
+        await searchData.loadPackageTemplates(newCountry.id, form.value.departureCity.id)
+        
+        console.log(`Loaded packages for country: ${newCountry.name}`)
+      } else {
+        console.log('Destination watch: missing required data', {
+          newCountry,
+          departureCity: form.value.departureCity
+        })
+      }
+    } catch (err) {
+      console.error('Destination watch error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        country: newCountry,
+        departureCity: form.value.departureCity
+      })
+    }
+  })
+
+  // Handle search
+  const handleSearch = () => {
+    emit('search', form.value)
+  }
+
+  // Handle expand
+  const handleExpand = () => {
+    emit('expand')
+  }
+
+  // Тестовая функция для загрузки пакетов
+  const testLoadPackages = async () => {
+    console.log('Тест: Загружаем пакеты для TÜRKIYE (ID: 223) и CHISINAU (ID: 48478)')
+    try {
+      await searchData.fetchPackageTemplates(223, 48478)
+      console.log('Тест: Пакеты загружены')
+    } catch (err) {
+      console.error('Тест: Ошибка загрузки пакетов:', err)
+    }
+  }
+
+  // Load departure cities on mount
+  onMounted(async () => {
+    try {
+      console.log('Component mounted, loading departure cities...')
+      // Загружаем города отправления при монтировании
+      await searchData.loadDepartureCities()
+      console.log('Departure cities loaded on mount')
+    } catch (err) {
+      console.error('Failed to load departure cities on mount:', err)
+    }
+  })
+
+  // Явный экспорт для TypeScript
+  defineExpose({})
 </script>
 
 <style scoped>
+  /* Loading Overlay */
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 8px;
+  }
+
+  .loading-spinner {
+    text-align: center;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Error Banner */
+  .error-banner {
+    background: #ffebee;
+    color: #c62828;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #f44336;
+    font-size: 0.9rem;
+  }
+
   /* Стили для календаря - коралловая рамка */
   :deep(.dp__active_date) {
     background: transparent !important;
@@ -296,73 +495,109 @@
     color: #222222;
   }
 
-  .search-btn-compact {
+  .search-btn {
     background: white;
-    color: var(--color-primary);
     border: 1px solid var(--color-primary);
-    border-radius: 4px;
-    padding: 0 14px;
-    height: 38px;
+    color: var(--color-primary);
+    border-radius: 6px;
+    padding: 8px 20px;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
     font-family: var(--font-family);
+    font-weight: 600;
     transition: all 0.2s ease;
-    white-space: nowrap;
-    margin-left: 8px;
+    min-width: 140px;
     display: flex;
     align-items: center;
+    gap: 8px;
     justify-content: center;
+    align-self: flex-end;
+    height: 38px;
+    box-sizing: border-box;
   }
 
-  .search-btn-compact:hover {
-    background: var(--color-primary-muted);
+  .search-btn:hover:not(:disabled) {
+    background: var(--color-primary);
+    color: white;
   }
 
-  .expand-link-row {
+  .search-btn:disabled {
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  .search-btn svg {
+    transition: transform 0.2s;
+  }
+
+  .search-btn:hover:not(:disabled) svg {
+    transform: scale(1.1);
+  }
+
+  .expand-section {
     text-align: center;
     margin-top: 12px;
   }
 
-  .expand-link {
+  .expand-btn {
     background: none;
     border: none;
     color: var(--color-secondary);
-    font-size: 12px;
     cursor: pointer;
-    text-decoration: none;
-    font-family: var(--font-family);
-    transition: all 0.2s ease;
-    display: flex;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    margin: 0 auto;
+    gap: 6px;
   }
 
-  .expand-link:hover {
+  .expand-btn:hover {
     color: var(--color-secondary-hover);
+    background: rgba(0, 0, 0, 0.05);
   }
 
-  .expand-icon {
-    margin-top: 2px;
+  .expand-btn svg {
+    transition: transform 0.2s;
   }
 
-  .children-ages-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    width: 100%;
-    margin-top: 12px;
+  .expand-btn:hover svg {
+    transform: translateY(1px);
   }
 
-  .children-ages-row .field-group {
-    flex: 0 0 25%;
-    min-width: 120px;
-    max-width: 200px;
-  }
-
-  /* Mobile Responsive */
+  /* Адаптивность */
   @media (max-width: 768px) {
+    .search-compact {
+      padding: 16px;
+    }
+
+    .search-row {
+      gap: 8px;
+    }
+
+    .field-group {
+      min-width: 80px;
+    }
+
+    .search-btn {
+      min-width: 120px;
+      padding: 8px 16px;
+      font-size: 13px;
+      height: 38px;
+    }
+
+    .expand-section {
+      margin-top: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .search-compact {
+      padding: 12px;
+    }
+
     .search-row {
       flex-direction: column;
       align-items: stretch;
@@ -372,14 +607,9 @@
       min-width: auto;
     }
 
-    .search-btn-compact {
-      margin-top: 16px;
-      margin-left: 0;
+    .search-btn {
+      min-width: auto;
       width: 100%;
-    }
-
-    .expand-link-row {
-      margin-top: 8px;
     }
   }
 </style>

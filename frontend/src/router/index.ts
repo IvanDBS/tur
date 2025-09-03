@@ -19,7 +19,11 @@ const router = createRouter({
       name: 'bookings',
       component: () => import('../views/BookingsView.vue'),
     },
-
+    {
+      path: '/obs-test',
+      name: 'obs-test',
+      component: () => import('../views/ObsTestView.vue'),
+    },
     {
       path: '/auth-test',
       name: 'auth-test',

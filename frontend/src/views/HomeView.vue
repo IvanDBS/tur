@@ -19,22 +19,54 @@
         </div>
       </div>
     </section>
+
+    <!-- OBS API Test Component -->
+    <ObsApiTest />
+
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Загружаем данные для поиска...</p>
+      </div>
+    </div>
+
+    <!-- Error Display -->
+    <div v-if="error" class="error-banner">
+      <p>⚠️ {{ error }}</p>
+      <button @click="retryLoad" class="retry-btn">Повторить</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import SearchForm from '@/components/SearchForm.vue'
+  import { ref, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
+  import SearchForm from '../components/SearchForm.vue'
+  import ObsApiTest from '../components/ObsApiTest.vue'
+  import { useSearchData } from '../composables/useSearchData'
+  import type { LocationQueryRaw } from 'vue-router'
 
   const router = useRouter()
+  const { loading, error, initializeData, clearError } = useSearchData()
 
   const handleSearch = (searchParams: Record<string, unknown>) => {
-    // Navigate to search page with params
-    router.push({
-      name: 'search',
-      query: searchParams,
-    })
+    console.log('Search params:', searchParams)
+    // TODO: Implement search functionality
   }
+
+  const retryLoad = async () => {
+    clearError()
+    await initializeData()
+  }
+
+  onMounted(async () => {
+    try {
+      await initializeData()
+    } catch (err) {
+      console.error('Failed to initialize search data:', err)
+    }
+  })
 </script>
 
 <style scoped>
@@ -102,6 +134,74 @@
     box-sizing: border-box;
   }
 
+  /* Loading Overlay */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .loading-spinner {
+    text-align: center;
+    color: white;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Error Banner */
+  .error-banner {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f44336;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-width: 300px;
+  }
+
+  .error-banner p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .retry-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+  }
+
+  .retry-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
   /* Адаптивность */
   @media (max-width: 768px) {
     .hero-title {
@@ -118,6 +218,13 @@
 
     .hero-section {
       min-height: 70vh;
+    }
+
+    .error-banner {
+      top: 10px;
+      right: 10px;
+      left: 10px;
+      max-width: none;
     }
   }
 

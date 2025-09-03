@@ -2,6 +2,7 @@
   <div class="search-expanded">
     <!-- Row 1 -->
     <div class="form-row">
+      <!-- Откуда -->
       <div class="field-group">
         <label>Откуда:</label>
         <Multiselect
@@ -11,11 +12,13 @@
           :canClear="false"
           :canDeselect="false"
           placeholder="CHISINAU"
-          label="name"
-          valueProp="id"
+          label="label"
+          valueProp="value"
+          :disabled="!form.departureCity"
         />
       </div>
 
+      <!-- Куда -->
       <div class="field-group">
         <label>Куда:</label>
         <Multiselect
@@ -24,12 +27,14 @@
           :searchable="true"
           :canClear="false"
           :canDeselect="false"
-          placeholder="TÜRKIYE"
-          label="name"
-          valueProp="id"
+          placeholder="Выберите страну"
+          label="label"
+          valueProp="value"
+          :disabled="!form.destination"
         />
       </div>
 
+      <!-- Пакет -->
       <div class="field-group">
         <label>Пакет:</label>
         <Multiselect
@@ -38,9 +43,10 @@
           :searchable="true"
           :canClear="false"
           :canDeselect="false"
-          placeholder="ANTALYA FULL"
-          label="name"
-          valueProp="id"
+          placeholder="Выберите пакет"
+          label="label"
+          valueProp="value"
+          :disabled="!form.destination"
         />
       </div>
 
@@ -53,8 +59,8 @@
           :canClear="false"
           :canDeselect="false"
           placeholder="ANTALYA"
-          label="name"
-          valueProp="id"
+          label="label"
+          valueProp="value"
         />
       </div>
     </div>
@@ -216,6 +222,17 @@
         Сбросить параметры
       </button>
       <button type="button" @click="handleSearch" class="search-btn">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
         Поиск тура
       </button>
     </div>
@@ -241,18 +258,17 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, defineAsyncComponent } from 'vue'
   import VueDatePicker from '@vuepic/vue-datepicker'
   import '@vuepic/vue-datepicker/dist/main.css'
   import Multiselect from '@vueform/multiselect'
+  import { useObsApi } from '../../composables/useObsApi'
 
-  import SearchFilters from './SearchFilters.vue'
+  // Динамический импорт для обхода проблемы с TypeScript
+  const SearchFilters = defineAsyncComponent(() => import('./SearchFilters.vue'))
   import type {
     ExpandedSearchForm,
     SelectedFilters,
-    DepartureCity,
-    Country,
-    Package,
     ArrivalCity,
     SearchOption,
     Region,
@@ -262,12 +278,18 @@
     Option,
   } from '../../types/search'
 
+  // Тип для форматированных опций
+  interface FormattedOption {
+    value: number
+    label: string
+  }
+
   interface Props {
     modelValue: ExpandedSearchForm
     selectedFilters: SelectedFilters
-    departureCities: DepartureCity[]
-    countries: Country[]
-    packages: Package[]
+    departureCities: FormattedOption[]
+    countries: FormattedOption[]
+    packages: FormattedOption[]
     arrivalCities: ArrivalCity[]
     nightsOptions: SearchOption[]
     adultsOptions: SearchOption[]
@@ -288,6 +310,16 @@
     reset: []
     collapse: []
   }>()
+
+  // Получаем методы API
+  const { 
+    fetchPackageTemplates, 
+    fetchHotelCategories, 
+    fetchLocations, 
+    fetchHotels, 
+    fetchMeals,
+    fetchCalendarHints
+  } = useObsApi()
 
   const form = ref<ExpandedSearchForm>({ ...props.modelValue })
   const selectedFilters = ref<SelectedFilters>({ ...props.selectedFilters })
@@ -346,6 +378,88 @@
     { immediate: true }
   )
 
+  // Следим за изменениями страны и загружаем package templates
+  watch(
+    () => form.value.destination,
+    async (newCountry) => {
+      if (newCountry && newCountry.id && form.value.departureCity?.id) {
+        try {
+          const countryId = parseInt(newCountry.id.toString(), 10)
+          const cityId = parseInt(form.value.departureCity.id.toString(), 10)
+          
+          if (isNaN(countryId) || isNaN(cityId)) {
+            console.error('Invalid country or city ID')
+            return
+          }
+          
+          // Загружаем package templates для выбранной страны
+          await fetchPackageTemplates(countryId, cityId)
+          
+          // Очищаем предыдущий выбор package
+          form.value.package = null
+          
+          console.log(`Loaded package templates for country: ${newCountry.name} (ID: ${countryId})`)
+        } catch (err) {
+          console.error('Failed to load package templates:', err)
+        }
+      }
+    }
+  )
+
+  // Следим за изменениями package template и загружаем связанные данные
+  watch(
+    () => form.value.package,
+    async (newPackage) => {
+      if (newPackage && newPackage.id) {
+        try {
+          const packageId = parseInt(newPackage.id.toString(), 10)
+          
+          if (isNaN(packageId)) {
+            console.error('Invalid package ID')
+            return
+          }
+          
+          // Загружаем все связанные данные параллельно
+          await Promise.all([
+            fetchHotelCategories(packageId),
+            fetchLocations(packageId),
+            fetchHotels(packageId),
+            fetchMeals(packageId)
+          ])
+          
+          console.log(`Loaded related data for package: ${newPackage.name} (ID: ${packageId})`)
+        } catch (err) {
+          console.error('Failed to load package related data:', err)
+        }
+      }
+    }
+  )
+
+  // Следим за изменениями дат и загружаем calendar hints
+  watch(
+    [() => form.value.checkInDate, () => form.value.checkOutDate],
+    async ([checkInDate, checkOutDate]) => {
+      if (checkInDate && form.value.destination && form.value.departureCity) {
+        try {
+          const cityId = parseInt(form.value.departureCity.id.toString(), 10)
+          const countryId = parseInt(form.value.destination.id.toString(), 10)
+          
+          // Загружаем calendar hints для умного выбора дат
+          const calendarHints = await fetchCalendarHints({
+            date_from: checkInDate || undefined,
+            date_to: checkOutDate || undefined,
+            city_from: cityId,
+            city_to: countryId.toString() // Пока используем country ID как city_to
+          })
+          
+          console.log('Calendar hints loaded:', calendarHints)
+        } catch (err) {
+          console.error('Failed to load calendar hints:', err)
+        }
+      }
+    }
+  )
+
   // Синхронизируем с родительским компонентом
   watch(
     form,
@@ -377,6 +491,9 @@
   const handleReset = () => {
     emit('reset')
   }
+
+  // Явный экспорт для TypeScript
+  defineExpose({})
 </script>
 
 <style scoped>
@@ -553,10 +670,23 @@
     font-weight: 600;
     transition: all 0.2s ease;
     min-width: 140px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
   }
 
   .search-btn:hover {
-    background: var(--color-primary-muted);
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .search-btn svg {
+    transition: transform 0.2s;
+  }
+
+  .search-btn:hover svg {
+    transform: scale(1.1);
   }
 
   .collapse-link-row {

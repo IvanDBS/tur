@@ -64,11 +64,11 @@
           <label>Город прилета:</label>
           <Multiselect
             v-model="searchForm.arrivalCity"
-            :options="searchData.arrivalCities.value"
-            :searchable="true"
+            :options="arrivalCityOptions"
+            :searchable="false"
             :canClear="false"
             :canDeselect="false"
-            placeholder="Выберите город"
+            placeholder="Город будет выбран автоматически"
             label="name"
             valueProp="id"
             :disabled="true"
@@ -309,6 +309,14 @@
     return searchData.nightsOptions.value.filter(
       (option: { value: number; label: string }) => option.value >= searchForm.value.nights
     )
+  })
+
+  // Опции для города прилета
+  const arrivalCityOptions = computed(() => {
+    if (searchForm.value.arrivalCity) {
+      return [searchForm.value.arrivalCity]
+    }
+    return []
   })
 
   // Инициализация данных при монтировании

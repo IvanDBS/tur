@@ -80,10 +80,18 @@
           </span>
         </div>
         <div class="buttons-group">
-          <button type="button" @click="handleReset" class="reset-btn">
+          <BaseButton 
+            variant="secondary" 
+            @click="handleReset"
+            :disabled="isLoading"
+          >
             Сбросить параметры
-          </button>
-          <button type="button" @click="handleSearch" class="search-btn">
+          </BaseButton>
+          <BaseButton 
+            variant="primary" 
+            @click="handleSearch"
+            :loading="isLoading"
+          >
             <svg
               width="18"
               height="18"
@@ -96,7 +104,7 @@
               <path d="m21 21-4.35-4.35" />
             </svg>
             Поиск тура
-          </button>
+          </BaseButton>
         </div>
       </div>
     </div>
@@ -128,6 +136,7 @@
 <script setup lang="ts">
   import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
   import { useNotifications } from '../composables/useNotifications'
+  import { BaseButton } from './ui'
   const NotificationToast = defineAsyncComponent(() => import('./NotificationToast.vue'))
   // Динамический импорт для обхода проблемы с TypeScript
   const SearchFilters = defineAsyncComponent(() => import('./search/SearchFilters.vue'))

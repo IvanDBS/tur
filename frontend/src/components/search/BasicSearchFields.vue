@@ -2,93 +2,65 @@
   <div class="form-row">
     <!-- Откуда -->
     <div class="field-group">
-      <label>
-        <span v-if="activeSelector === 'departureCity'" class="field-arrow"></span>
-        Откуда:
-      </label>
-      <Multiselect
+      <BaseSelect
         v-model="localForm.departureCity"
         :options="departureCitiesOptions"
-        :searchable="true"
-        :canClear="false"
-        :canDeselect="false"
+        label="Откуда:"
         placeholder="Выберите город"
-        label="label"
-        valueProp="value"
         :disabled="isLoading"
+        :can-clear="false"
+        :can-deselect="false"
+        :searchable="true"
       />
+      <span v-if="activeSelector === 'departureCity'" class="field-arrow"></span>
     </div>
 
     <!-- Куда -->
     <div class="field-group" :class="{ 'disabled-field': !localForm.departureCity }">
-      <label>
-        <span v-if="activeSelector === 'destination'" class="field-arrow"></span>
-        Куда:
-      </label>
-      <Multiselect
+      <BaseSelect
         v-model="localForm.destination"
         :options="countriesOptions"
-        :searchable="true"
-        :canClear="false"
-        :canDeselect="false"
+        label="Куда:"
         placeholder="Выберите страну"
-        label="label"
-        valueProp="value"
         :disabled="isLoading || !localForm.departureCity"
+        :can-clear="false"
+        :can-deselect="false"
+        :searchable="true"
       />
+      <span v-if="activeSelector === 'destination'" class="field-arrow"></span>
     </div>
 
     <!-- Пакет -->
     <div class="field-group" :class="{ 'disabled-field': !localForm.destination }">
-      <label>
-        <span v-if="activeSelector === 'package'" class="field-arrow"></span>
-        Пакет:
-      </label>
-      <Multiselect
+      <BaseSelect
         v-model="localForm.package"
         :options="packagesOptions"
-        :searchable="true"
-        :canClear="false"
-        :canDeselect="false"
+        label="Пакет:"
         placeholder="Выберите пакет"
-        label="label"
-        valueProp="value"
         :disabled="isLoading || !localForm.destination"
+        :can-clear="false"
+        :can-deselect="false"
+        :searchable="true"
       />
+      <span v-if="activeSelector === 'package'" class="field-arrow"></span>
     </div>
 
     <!-- Город прилета -->
     <div class="field-group" :class="{ 'disabled-field': !localForm.package }">
-      <label>
-        <span v-if="activeSelector === 'arrivalCity'" class="field-arrow"></span>
-        Город прилета:
-      </label>
-      <input 
-        type="text" 
-        :value="localForm.arrivalCity ? localForm.arrivalCity.name : 'Город будет выбран автоматически'"
+      <BaseInput
+        :model-value="localForm.arrivalCity ? localForm.arrivalCity.name : 'Город будет выбран автоматически'"
+        label="Город прилета:"
         :disabled="true"
-        :style="{
-          minHeight: '38px', 
-          height: '38px', 
-          border: '1px solid #dddddd', 
-          borderRadius: '4px', 
-          padding: '4px 8px', 
-          fontSize: '14px', 
-          color: localForm.arrivalCity ? '#222222' : '#999999',
-          background: '#f5f5f5', 
-          fontFamily: 'inherit', 
-          boxSizing: 'border-box'
-        }"
-        title="Автоматически устанавливается на основе выбранного пакета"
+        hint="Автоматически устанавливается на основе выбранного пакета"
       />
+      <span v-if="activeSelector === 'arrivalCity'" class="field-arrow"></span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import Multiselect from '@vueform/multiselect'
-import '@vueform/multiselect/themes/default.css'
+import { BaseSelect, BaseInput } from '../ui'
 import type { SearchForm, DepartureCity, Country, Package, ArrivalCity } from '../../types/search'
 
 interface Props {

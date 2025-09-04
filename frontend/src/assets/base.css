@@ -1,6 +1,11 @@
 /* Минималистичные базовые стили */
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
 
+/* Design System */
+@import '../styles/design-tokens.css';
+@import '../styles/components/base.css';
+
+/* Legacy styles */
 @import '../styles/animations.css';
 @import '../styles/spinner.css';
 @import '../styles/layout.css';

@@ -4,26 +4,34 @@
       <!-- Регион - 12.5% -->
       <div class="filters-column extra-small">
         <!-- Region -->
-        <div class="filter-group">
+        <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>Регион:</label>
           <div class="filter-options vertical">
-            <button
-              class="all-button"
-              :class="{ active: selectedRegions.includes(1) }"
-              @click="toggleRegion(1)"
-            >
-              Любой
-            </button>
-            <button
+            <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
+              <input 
+                type="checkbox" 
+                :checked="allRegionsSelected"
+                :disabled="props.disabled"
+                @change="toggleAllRegions"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">Любой</span>
+            </label>
+            <label 
+              class="checkbox-v9"
               v-for="region in regions"
               :key="region.id"
-              :class="{
-                active: selectedRegions.includes(region.id),
-              }"
-              @click="toggleRegion(region.id)"
+              :class="{ disabled: props.disabled }"
             >
-              {{ region.label || region.name }}
-            </button>
+              <input 
+                type="checkbox" 
+                :checked="selectedRegions.includes(region.id)"
+                :disabled="props.disabled"
+                @change="toggleRegion(region.id)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ region.label || region.name }}</span>
+            </label>
           </div>
         </div>
       </div>
@@ -31,26 +39,34 @@
       <!-- Категория - 12.5% -->
       <div class="filters-column extra-small">
         <!-- Category -->
-        <div class="filter-group">
+        <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>Категория:</label>
           <div class="filter-options vertical">
-            <button
-              class="all-button"
-              :class="{ active: selectedCategories.includes(1) }"
-              @click="toggleCategory(1)"
-            >
-              Любой
-            </button>
-            <button
+            <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
+              <input 
+                type="checkbox" 
+                :checked="allCategoriesSelected"
+                :disabled="props.disabled"
+                @change="toggleAllCategories"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">Любой</span>
+            </label>
+            <label 
+              class="checkbox-v9"
               v-for="category in categories"
               :key="category.id"
-              :class="{
-                active: selectedCategories.includes(category.id),
-              }"
-              @click="toggleCategory(category.id)"
+              :class="{ disabled: props.disabled }"
             >
-              {{ category.label || category.name }}
-            </button>
+              <input 
+                type="checkbox" 
+                :checked="selectedCategories.includes(category.id)"
+                :disabled="props.disabled"
+                @change="toggleCategory(category.id)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ category.label || category.name }}</span>
+            </label>
           </div>
         </div>
       </div>
@@ -58,49 +74,65 @@
       <!-- Отели - 50% -->
       <div class="filters-column medium">
         <!-- Hotels -->
-        <div class="filter-group">
+        <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>Отели:</label>
-          <div class="filter-options vertical hotel-list">
-            <div
-              class="hotel-item all-item"
-              @click="toggleAllHotels"
-              :class="{ active: allHotelsSelected }"
-            >
-              <span>Любой</span>
-            </div>
-            <div class="hotel-item hotel-search-item">
-              <div class="search-input-container">
-                <div class="search-icon">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Поиск отеля"
-                  class="hotel-search-input"
-                  v-model="hotelSearchQuery"
-                  @input="filterHotels"
+          <div class="hotel-container">
+            <!-- Закрепленная верхняя часть -->
+            <div class="hotel-header">
+              <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
+                <input 
+                  type="checkbox" 
+                  :checked="allHotelsSelected"
+                  :disabled="props.disabled"
+                  @change="toggleAllHotels"
                 />
+                <span class="checkmark"></span>
+                <span class="label-text">Любой</span>
+              </label>
+              <div class="hotel-item hotel-search-item">
+                <div class="search-input-container">
+                  <div class="search-icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Поиск отеля"
+                    class="hotel-search-input"
+                    v-model="hotelSearchQuery"
+                    :disabled="props.disabled"
+                    @input="filterHotels"
+                  />
+                </div>
               </div>
             </div>
-            <div
-              class="hotel-item"
-              v-for="hotel in filteredHotels"
-              :key="hotel.id"
-              @click="toggleHotel(hotel.id)"
-              :class="{ active: selectedHotels.includes(hotel.id) }"
-            >
-              <span>{{ hotel.label || hotel.name }}</span>
+            <!-- Скроллируемый список отелей -->
+            <div class="filter-options vertical hotel-list">
+              <label 
+                class="checkbox-v9"
+                v-for="hotel in filteredHotels"
+                :key="hotel.id"
+                :class="{ disabled: props.disabled }"
+              >
+                <input 
+                  type="checkbox" 
+                  :checked="selectedHotels.includes(hotel.id)"
+                  :disabled="props.disabled"
+                  @change="toggleHotel(hotel.id)"
+                />
+                <span class="checkmark"></span>
+                <span class="label-text">{{ hotel.label || hotel.name }}</span>
+              </label>
             </div>
           </div>
         </div>
@@ -109,26 +141,34 @@
       <!-- Питание - 10% -->
       <div class="filters-column meals">
         <!-- Meals -->
-        <div class="filter-group">
+        <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>Питание:</label>
           <div class="filter-options vertical">
-            <button
-              class="all-button"
-              :class="{ active: selectedMeals.includes(1) }"
-              @click="toggleMeal(1)"
-            >
-              Любой
-            </button>
-            <button
+            <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
+              <input 
+                type="checkbox" 
+                :checked="allMealsSelected"
+                :disabled="props.disabled"
+                @change="toggleAllMeals"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">Любой</span>
+            </label>
+            <label 
+              class="checkbox-v9"
               v-for="meal in meals"
               :key="meal.id"
-              :class="{
-                active: selectedMeals.includes(meal.id),
-              }"
-              @click="toggleMeal(meal.id)"
+              :class="{ disabled: props.disabled }"
             >
-              {{ meal.label || meal.name }}
-            </button>
+              <input 
+                type="checkbox" 
+                :checked="selectedMeals.includes(meal.id)"
+                :disabled="props.disabled"
+                @change="toggleMeal(meal.id)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ meal.label || meal.name }}</span>
+            </label>
           </div>
         </div>
       </div>
@@ -136,26 +176,34 @@
       <!-- Опции - 15% -->
       <div class="filters-column options">
         <!-- Options -->
-        <div class="filter-group">
+        <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>Опции:</label>
           <div class="filter-options vertical">
-            <button
-              class="all-button"
-              :class="{ active: selectedOptions.includes(1) }"
-              @click="toggleOption(1)"
-            >
-              Любой
-            </button>
-            <button
+            <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
+              <input 
+                type="checkbox" 
+                :checked="allOptionsSelected"
+                :disabled="props.disabled"
+                @change="toggleAllOptions"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">Любой</span>
+            </label>
+            <label 
+              class="checkbox-v9"
               v-for="option in options"
               :key="option.id"
-              :class="{
-                active: selectedOptions.includes(option.id),
-              }"
-              @click="toggleOption(option.id)"
+              :class="{ disabled: props.disabled }"
             >
-              {{ option.label || option.name }}
-            </button>
+              <input 
+                type="checkbox" 
+                :checked="selectedOptions.includes(option.id)"
+                :disabled="props.disabled"
+                @change="toggleOption(option.id)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ option.label || option.name }}</span>
+            </label>
           </div>
         </div>
       </div>
@@ -184,6 +232,7 @@
     selectedHotels: number[]
     selectedMeals: number[]
     selectedOptions: number[]
+    disabled?: boolean
   }
 
   const props = defineProps<Props>()
@@ -252,8 +301,25 @@
 
   // Поиск отелей
   const hotelSearchQuery = ref('')
+  
   const allHotelsSelected = computed(() => {
     return props.selectedHotels.length === filteredHotels.value.length && filteredHotels.value.length > 0
+  })
+
+  const allCategoriesSelected = computed(() => {
+    return props.selectedCategories.length === props.categories.length && props.categories.length > 0
+  })
+
+  const allRegionsSelected = computed(() => {
+    return props.selectedRegions.length === props.regions.length && props.regions.length > 0
+  })
+
+  const allMealsSelected = computed(() => {
+    return props.selectedMeals.length === props.meals.length && props.meals.length > 0
+  })
+
+  const allOptionsSelected = computed(() => {
+    return props.selectedOptions.length === props.options.length && props.options.length > 0
   })
 
   // Фильтрация отелей по поисковому запросу и выбранным регионам
@@ -337,6 +403,54 @@
     }
   }
 
+  // Выбор/отмена выбора всех категорий
+  const toggleAllCategories = () => {
+    if (allCategoriesSelected.value) {
+      emit('update:categories', [])
+    } else {
+      emit(
+        'update:categories',
+        props.categories.map(category => category.id)
+      )
+    }
+  }
+
+  // Выбор/отмена выбора всех регионов
+  const toggleAllRegions = () => {
+    if (allRegionsSelected.value) {
+      emit('update:regions', [])
+    } else {
+      emit(
+        'update:regions',
+        props.regions.map(region => region.id)
+      )
+    }
+  }
+
+  // Выбор/отмена выбора всех meals
+  const toggleAllMeals = () => {
+    if (allMealsSelected.value) {
+      emit('update:meals', [])
+    } else {
+      emit(
+        'update:meals',
+        props.meals.map(meal => meal.id)
+      )
+    }
+  }
+
+  // Выбор/отмена выбора всех options
+  const toggleAllOptions = () => {
+    if (allOptionsSelected.value) {
+      emit('update:options', [])
+    } else {
+      emit(
+        'update:options',
+        props.options.map(option => option.id)
+      )
+    }
+  }
+
   // Выбор/отмена выбора отдельного отеля
   const toggleHotel = (hotelId: number) => {
     const currentHotels = [...props.selectedHotels]
@@ -358,179 +472,49 @@
   // Filter toggle methods
   const toggleRegion = (regionId: number) => {
     const currentRegions = [...props.selectedRegions]
-    console.log('=== toggleRegion called ===')
-    console.log('regionId:', regionId)
-    console.log('Current selected regions:', currentRegions)
-    console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
-
-    // Если нажата кнопка "Все" (id: 1)
-    if (regionId === 1) {
-      // Если "Все" уже выбрано, снимаем все выделения
-      if (currentRegions.includes(1)) {
-        emit('update:regions', [])
-        console.log('Deselected all regions')
-      } else {
-        // Иначе выбираем все регионы
-        emit(
-          'update:regions',
-          [1, ...props.regions.map(r => r.id)] // Выбираем "Все" + все регионы
-        )
-        console.log('Selected all regions')
-      }
-      return
-    }
-
-    // Обычная логика переключения для других кнопок
     const index = currentRegions.indexOf(regionId)
     if (index > -1) {
       currentRegions.splice(index, 1)
-      // Если убрали какой-то регион, то убираем и "Все"
-      if (currentRegions.includes(1)) {
-        const allIndex = currentRegions.indexOf(1)
-        currentRegions.splice(allIndex, 1)
-      }
-      console.log('Removed region:', regionId, 'New selection:', currentRegions)
     } else {
       currentRegions.push(regionId)
-      // Если выбраны все регионы кроме "Все", добавляем и "Все"
-      const allRegionsSelected = props.regions
-        .filter(region => region.id !== 1)
-        .every(region => currentRegions.includes(region.id))
-
-      if (allRegionsSelected && !currentRegions.includes(1)) {
-        currentRegions.push(1)
-      }
-      console.log('Added region:', regionId, 'New selection:', currentRegions)
     }
-
-    console.log('About to emit regions:', currentRegions)
     emit('update:regions', currentRegions)
-    console.log('Emitted regions. Next tick should update filteredHotels')
   }
 
   const toggleCategory = (categoryId: number) => {
     const currentCategories = [...props.selectedCategories]
-
-    // Если нажата кнопка "Все" (id: 1)
-    if (categoryId === 1) {
-      // Если "Все" уже выбрано, снимаем все выделения
-      if (currentCategories.includes(1)) {
-        emit('update:categories', [])
-      } else {
-        // Иначе выбираем все категории
-        emit(
-          'update:categories',
-          [1, ...props.categories.map(c => c.id)] // Выбираем "Все" + все категории
-        )
-      }
-      return
-    }
-
-    // Обычная логика переключения для других кнопок
     const index = currentCategories.indexOf(categoryId)
     if (index > -1) {
       currentCategories.splice(index, 1)
-      // Если убрали какую-то категорию, то убираем и "Все"
-      if (currentCategories.includes(1)) {
-        const allIndex = currentCategories.indexOf(1)
-        currentCategories.splice(allIndex, 1)
-      }
     } else {
       currentCategories.push(categoryId)
-      // Если выбраны все категории кроме "Все", добавляем и "Все"
-      const allCategoriesSelected = props.categories
-        .filter(category => category.id !== 1)
-        .every(category => currentCategories.includes(category.id))
-
-      if (allCategoriesSelected && !currentCategories.includes(1)) {
-        currentCategories.push(1)
-      }
     }
-
     emit('update:categories', currentCategories)
   }
 
   const toggleMeal = (mealId: number) => {
     const currentMeals = [...props.selectedMeals]
-
-    // Если нажата кнопка "Все" (id: 1)
-    if (mealId === 1) {
-      // Если "Все" уже выбрано, снимаем все выделения
-      if (currentMeals.includes(1)) {
-        emit('update:meals', [])
-      } else {
-        // Иначе выбираем все типы питания
-        emit(
-          'update:meals',
-          props.meals.map(meal => meal.id)
-        )
-      }
-      return
-    }
-
-    // Обычная логика переключения для других кнопок
     const index = currentMeals.indexOf(mealId)
+    
     if (index > -1) {
       currentMeals.splice(index, 1)
-      // Если убрали какой-то тип питания, то убираем и "Все"
-      if (currentMeals.includes(1)) {
-        const allIndex = currentMeals.indexOf(1)
-        currentMeals.splice(allIndex, 1)
-      }
     } else {
       currentMeals.push(mealId)
-      // Если выбраны все типы питания кроме "Все", добавляем и "Все"
-      const allMealsSelected = props.meals
-        .filter(meal => meal.id !== 1)
-        .every(meal => currentMeals.includes(meal.id))
-
-      if (allMealsSelected && !currentMeals.includes(1)) {
-        currentMeals.push(1)
-      }
     }
-
+    
     emit('update:meals', currentMeals)
   }
 
   const toggleOption = (optionId: number) => {
     const currentOptions = [...props.selectedOptions]
-
-    // Если нажата кнопка "Все" (id: 1)
-    if (optionId === 1) {
-      // Если "Все" уже выбрано, снимаем все выделения
-      if (currentOptions.includes(1)) {
-        emit('update:options', [])
-      } else {
-        // Иначе выбираем все опции
-        emit(
-          'update:options',
-          props.options.map(option => option.id)
-        )
-      }
-      return
-    }
-
-    // Обычная логика переключения для других кнопок
     const index = currentOptions.indexOf(optionId)
+    
     if (index > -1) {
       currentOptions.splice(index, 1)
-      // Если убрали какую-то опцию, то убираем и "Все"
-      if (currentOptions.includes(1)) {
-        const allIndex = currentOptions.indexOf(1)
-        currentOptions.splice(allIndex, 1)
-      }
     } else {
       currentOptions.push(optionId)
-      // Если выбраны все опции кроме "Все", добавляем и "Все"
-      const allOptionsSelected = props.options
-        .filter(option => option.id !== 1)
-        .every(option => currentOptions.includes(option.id))
-
-      if (allOptionsSelected && !currentOptions.includes(1)) {
-        currentOptions.push(1)
-      }
     }
-
+    
     emit('update:options', currentOptions)
   }
 
@@ -540,17 +524,16 @@
 
 <style scoped>
   .filters-section {
-    border-top: 1px solid #ebebeb;
     padding-top: 16px;
     margin-top: 16px;
-    max-width: 100%;
+    width: 100%;
   }
 
   .filters-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 0.8fr 0.8fr 2.5fr 0.8fr 1.2fr;
     gap: 12px;
     width: 100%;
-    flex-wrap: nowrap;
   }
 
   .filters-column {
@@ -558,25 +541,14 @@
     flex-direction: column;
   }
 
-  .filters-column.extra-small {
-    flex: 1;
-    width: 12.5%; /* Ширина для блоков "Регион" и "Категория" */
-  }
-
+  /* Принудительно устанавливаем ширину для блока Отели */
   .filters-column.medium {
-    flex: 4;
-    width: 50%; /* Ширина для блока "Отели" */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
   }
 
-  .filters-column.meals {
-    flex: 0.8;
-    width: 10%; /* Ширина для блока "Питание" */
-  }
-
-  .filters-column.options {
-    flex: 1.2;
-    width: 15%; /* Ширина для блока "Опции" */
-  }
+  /* Ширина колонок теперь задается в grid-template-columns */
 
   .filter-group {
     margin-bottom: 0;
@@ -608,6 +580,14 @@
     border-radius: 4px;
     padding: 0;
     overflow-x: hidden;
+  }
+
+  /* Специальные стили для hotel-list */
+  .hotel-list.filter-options.vertical {
+    height: auto;
+    max-height: none;
+    border: none;
+    border-radius: 0;
   }
 
   .filter-options button {
@@ -662,47 +642,63 @@
     text-indent: 0;
   }
 
-  .hotel-list {
-    margin-top: 0;
+  .hotel-container {
+    display: flex;
+    flex-direction: column;
+    height: 210px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
   }
 
-  .hotel-item {
-    display: flex;
-    align-items: center;
+  .hotel-header {
+    flex-shrink: 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .hotel-header .checkbox-v9 {
     padding: 6px 10px;
     border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
     height: 32px;
     box-sizing: border-box;
+  }
+
+  .hotel-header .checkbox-v9 .checkmark {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 6px !important;
+  }
+
+  .hotel-header .checkbox-v9 input:checked + .checkmark::after {
+    left: 4px !important;
+    top: 2px !important;
+    width: 3px !important;
+    height: 6px !important;
+  }
+
+  .hotel-header .hotel-search-item {
+    border-bottom: none;
+  }
+
+  .hotel-list {
+    margin-top: 0;
+    flex: 1;
+    overflow-y: auto;
+    border: none;
+    border-radius: 0;
   }
 
   .all-button {
     border-bottom: 1px solid #dddddd;
   }
 
-  .all-item {
-    border-bottom: 1px solid #dddddd;
-  }
-
-  .hotel-item:hover {
-    background-color: var(--color-secondary-muted);
-  }
-
-  .hotel-item.active {
-    background-color: var(--color-secondary-muted);
-    color: var(--color-secondary);
-  }
-
-  .hotel-item span {
-    flex: 1;
-    font-size: 14px;
-    font-weight: normal;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #222222;
-    text-align: left;
+  .hotel-search-item {
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid #f0f0f0;
+    height: 28px;
+    box-sizing: border-box;
   }
 
   .filter-options.vertical button {
@@ -727,6 +723,136 @@
     color: var(--color-secondary);
   }
 
+  /* Variant 9: Rounded No Fill Thin Border - Dark Blue (Exact Copy) */
+  .filters-section .checkbox-v9 {
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+  }
+
+  .filters-section .checkbox-v9 input {
+    display: none !important;
+  }
+
+  .filters-section .checkbox-v9 .checkmark {
+    width: 18px !important;
+    height: 18px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    margin-right: 8px !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+    background: transparent !important;
+  }
+
+  .filters-section .checkbox-v9 input:checked + .checkmark {
+    border-color: #1e3a8a !important;
+    background: transparent !important;
+  }
+
+  .filters-section .checkbox-v9 input:checked + .checkmark::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 6px !important;
+    top: 3px !important;
+    width: 4px !important;
+    height: 8px !important;
+    border: solid #1e3a8a !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+  }
+
+  .filters-section .checkbox-v9 .label-text {
+    font-size: 14px !important;
+    color: #374151 !important;
+    font-weight: normal !important;
+  }
+
+  /* Additional styles for checkbox-v9 in hotel context */
+  .hotel-list .checkbox-v9 {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .hotel-list .checkbox-v9:hover {
+    background-color: var(--color-secondary-muted);
+  }
+
+  /* Disabled states */
+  .filter-group.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .filter-group.disabled label {
+    color: #999999 !important;
+  }
+
+  .checkbox-v9.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .checkbox-v9.disabled .label-text {
+    color: #999999 !important;
+  }
+
+  .hotel-search-input:disabled {
+    opacity: 0.5;
+    background-color: #f5f5f5;
+    color: #999999;
+  }
+
+  .hotel-list .checkbox-v9 .label-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: normal !important;
+    text-align: left;
+  }
+
+  .all-checkbox {
+    border-bottom: 1px solid #dddddd;
+    padding: 6px 10px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .all-checkbox .checkmark {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 6px !important;
+  }
+
+  .all-checkbox input:checked + .checkmark::after {
+    left: 4px !important;
+    top: 2px !important;
+    width: 3px !important;
+    height: 6px !important;
+  }
+
+  /* Стили для всех чекбоксов в категориях */
+  .filter-options.vertical .checkbox-v9 {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .filter-options.vertical .checkbox-v9:last-child {
+    border-bottom: none;
+  }
+
+  /* Уменьшаем отступы для чекбоксов в списке категорий */
+  .filter-options.vertical .checkbox-v9:not(.all-checkbox) {
+    padding: 4px 10px;
+    height: 28px;
+  }
+
   /* Mobile Responsive */
   @media (max-width: 768px) {
     .filters-row {
@@ -734,13 +860,10 @@
       gap: 16px;
     }
 
-    .filters-column.extra-small,
-    .filters-column.medium {
-      width: 100%;
-    }
 
     .filter-group {
       margin-bottom: 12px;
     }
   }
+
 </style>

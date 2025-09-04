@@ -59,18 +59,24 @@
       </div>
     </div>
 
-    <!-- Load More -->
-    <div v-if="hasMore" class="load-more">
-      <button @click="loadMore" :disabled="isLoadingMore" class="load-more-btn">
-        {{ isLoadingMore ? 'Загрузка...' : 'Показать еще' }}
-      </button>
-    </div>
+    <!-- Pagination -->
+    <Pagination
+      v-if="totalPages > 1"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :prev-page="prevPage"
+      :next-page="nextPage"
+      @page-change="(page) => { console.log('🔥 SearchResults received page-change:', page); emit('pageChanged', page) }"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, defineAsyncComponent, watch } from 'vue'
   import { formatDate, getNightWord } from '../utils/dateUtils'
+  
+  // Динамический импорт компонента пагинации
+  const Pagination = defineAsyncComponent(() => import('./Pagination.vue'))
 
   interface SearchResult {
     unique_key: string
@@ -107,18 +113,51 @@
     results?: SearchResult[]
     isLoading?: boolean
     hasMore?: boolean
+    currentPage?: number
+    totalPages?: number
+    prevPage?: number | null
+    nextPage?: number | null
   }
 
-  withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<Props>(), {
     results: () => [],
     isLoading: false,
     hasMore: false,
+    currentPage: 1,
+    totalPages: 1,
+    prevPage: null,
+    nextPage: null,
+  })
+
+  // Отладочная информация
+  console.log('🔥 SearchResults props:', {
+    resultsLength: props.results?.length || 0,
+    currentPage: props.currentPage,
+    totalPages: props.totalPages,
+    isLoading: props.isLoading
+  })
+
+  // Watcher для отслеживания изменений props
+  watch(() => props.results, (newResults) => {
+    console.log('🔥 SearchResults results changed:', {
+      newLength: newResults?.length || 0,
+      currentPage: props.currentPage,
+      totalPages: props.totalPages
+    })
+  }, { deep: true })
+
+  watch(() => props.currentPage, (newPage) => {
+    console.log('🔥 SearchResults currentPage changed:', {
+      newPage,
+      resultsLength: props.results?.length || 0
+    })
   })
 
   // Emits
   const emit = defineEmits<{
     book: [result: SearchResult]
     loadMore: []
+    pageChanged: [page: number]
   }>()
 
   // State
@@ -153,6 +192,15 @@
     width: 100%;
     margin: 2rem 0;
     box-sizing: border-box;
+  }
+
+  .pagination-debug {
+    background: #f0f0f0;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
   }
 
   .text-soft {

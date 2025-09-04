@@ -89,3 +89,5 @@ group :development do
   # Environment variables
   # gem 'dotenv-rails', '~> 2.8' # Moved to top
 end
+
+gem "pagy", "~> 9.4"

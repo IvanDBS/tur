@@ -9,41 +9,13 @@ export interface SearchForm {
   nights: number
   nights2?: number
   adults: number
-  children: number
+  children: number | null
   childrenAges: number[]
   priceFrom?: number | null
   priceTo?: number | null
   selectedHotels?: number[]
 }
 
-// Упрощенный интерфейс для компактной формы
-export interface CompactSearchForm {
-  departureCity: DepartureCity | null
-  destination: Country | null
-  package: Package | null
-  date: string | null
-  nights: number
-  adults: number
-  children: number
-  childrenAges: number[]
-}
-
-// Расширенный интерфейс для расширенной формы
-export interface ExpandedSearchForm {
-  departureCity: DepartureCity | null
-  destination: Country | null
-  package: Package | null
-  arrivalCity: ArrivalCity | null
-  checkInDate: string | null
-  checkOutDate: string | null
-  nights: number
-  nights2: number
-  adults: number
-  children: number
-  childrenAges: number[]
-  priceFrom: number | null
-  priceTo: number | null
-}
 
 export interface SelectedFilters {
   regions: number[]

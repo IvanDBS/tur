@@ -20,14 +20,12 @@
       </div>
     </section>
 
-    <!-- OBS API Test Component -->
-    <ObsApiTest />
 
     <!-- Loading Indicator -->
     <div v-if="loading" class="loading-overlay">
-      <div class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Загружаем данные для поиска...</p>
+      <div class="spinner-container">
+        <div class="blue-spinner spinner-medium"></div>
+        <p class="spinner-text">Загружаем данные для поиска...</p>
       </div>
     </div>
 
@@ -43,7 +41,6 @@
   import { ref, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import SearchForm from '../components/SearchForm.vue'
-  import ObsApiTest from '../components/ObsApiTest.vue'
   import { useSearchData } from '../composables/useSearchData'
   import type { LocationQueryRaw } from 'vue-router'
 
@@ -148,25 +145,6 @@
     z-index: 1000;
   }
 
-  .loading-spinner {
-    text-align: center;
-    color: white;
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
 
   /* Error Banner */
   .error-banner {

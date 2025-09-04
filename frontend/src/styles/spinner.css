@@ -151,3 +151,99 @@
   color: var(--color-text-soft);
   font-size: 0.9rem;
 }
+
+/* Анимированная стрелка для селекторов */
+@keyframes downarrow {
+  0% { 
+    transform: translateY(0); 
+    opacity: 0.4; 
+  }
+  100% { 
+    transform: translateY(0.4em); 
+    opacity: 1; 
+  }
+}
+
+.arrow {
+  border-color: transparent;
+  border-style: solid;
+  border-width: 0 0.5em;
+  display: inline-block;
+  height: 0;
+  margin-right: 0.5rem;
+  opacity: 0.8;
+  width: 0;
+  vertical-align: middle;
+}
+
+.down {
+  animation: downarrow 0.8s infinite alternate ease-in-out;
+  border-top: 0.5em solid #2ECC71; /* Зеленая стрелка */
+}
+
+/* Стрелка рядом с названием поля */
+.field-arrow {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: top;
+  margin-top: -0.4em;
+}
+
+.field-arrow::before {
+  content: '';
+  display: inline-block;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid #2ECC71; /* Зеленая стрелка */
+  animation: downarrow 0.8s infinite alternate ease-in-out;
+  margin-right: 0.25rem;
+}
+
+/* Стили для заблокированных полей - только поля, лейблы остаются обычными */
+.disabled-field input,
+.disabled-field .multiselect,
+.disabled-field .dp__input {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  border-color: #ddd !important;
+  opacity: 0.6;
+}
+
+/* Стили для заблокированных кнопок в фильтрах */
+.disabled-button {
+  opacity: 0.5 !important;
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  border-color: #ddd !important;
+}
+
+.disabled-button:hover {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+}
+
+/* Лейблы заблокированных полей - немного серые */
+.disabled-field label {
+  color: #999 !important;
+}
+
+/* Лейблы фильтров когда заблокированы */
+.filter-group.disabled label {
+  color: #999 !important;
+}
+
+/* Стили для заблокированных элементов отелей */
+.disabled-hotel-item {
+  opacity: 0.5 !important;
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  border-color: #ddd !important;
+}
+
+.disabled-hotel-item:hover {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+}

@@ -107,10 +107,25 @@ module Api
       # POST /api/v1/search
       def search
         search_params = params[:search] || {}
+        
+        # Pagination parameters
+        page = params[:page]&.to_i || 1
+        per_page = params[:per_page]&.to_i || 10
+        
+        Rails.logger.info "Raw per_page param: #{params[:per_page].inspect}"
+        Rails.logger.info "Raw search_params: #{search_params.inspect}"
+        Rails.logger.info "Converted per_page: #{per_page.inspect}"
+        Rails.logger.info "per_page > 500 check: #{per_page > 500}"
+        
+        # ИСПРАВЛЕНИЕ: Используем per_page из search_params, а не из params
+        if search_params[:per_page]
+          per_page = search_params[:per_page].to_i
+          Rails.logger.info "Using per_page from search_params: #{per_page}"
+        end
 
         Rails.logger.info "Search request received with params: #{search_params.inspect}"
-        Rails.logger.info "Search params type: #{search_params.class}"
-        Rails.logger.info "Search params keys: #{search_params.keys}"
+        Rails.logger.info "Pagination params - page: #{page}, per_page: #{per_page}"
+        Rails.logger.info "per_page > 500 check: #{per_page > 500}"
 
         return render_error('Search parameters are required', :bad_request) if search_params.blank?
 
@@ -129,22 +144,64 @@ module Api
                              search_id: search_id,
                              results: [],
                              total_results: 0,
+                             page: page,
+                             per_page: per_page,
+                             total_pages: 0,
                              message: "No tours found for the specified criteria"
                            })
           elsif obs_response.is_a?(Hash) && obs_response.any?
-            # OBS API returns object with tour keys, count them
-            total_results = obs_response.keys.count
-            render_success({
-                             search_id: search_id,
-                             results: obs_response,
-                             total_results: total_results,
-                             message: "Found #{total_results} tours"
-                           })
+            # Convert hash to array for pagination
+            results_array = obs_response.map { |key, value| { id: key, **value } }
+            total_results = results_array.count
+            
+            # Apply pagination using Pagy only if per_page is reasonable
+            if per_page > 500
+              # For large per_page, return all results without pagination
+              Rails.logger.info "Returning all results without pagination - total_results: #{total_results}"
+              Rails.logger.info "results_array length: #{results_array.length}"
+              
+              # Convert array back to hash for frontend compatibility
+              results_hash = results_array.each_with_index.map { |result, index| [index.to_s, result] }.to_h
+              Rails.logger.info "results_hash keys count: #{results_hash.keys.count}"
+              
+              render_success({
+                               search_id: search_id,
+                               results: results_hash,
+                               total_results: total_results,
+                               page: 1,
+                               per_page: total_results,
+                               total_pages: 1,
+                               prev_page: nil,
+                               next_page: nil,
+                               message: "Found #{total_results} tours"
+                             })
+            else
+              # Apply pagination using Pagy
+              pagy, paginated_results = pagy_array(results_array, page: page, items: per_page)
+              
+              # Convert paginated array to hash for frontend compatibility
+              paginated_hash = paginated_results.each_with_index.map { |result, index| [index.to_s, result] }.to_h
+              
+              render_success({
+                               search_id: search_id,
+                               results: paginated_hash,
+                               total_results: total_results,
+                               page: pagy.page,
+                               per_page: per_page,
+                               total_pages: pagy.pages,
+                               prev_page: pagy.prev,
+                               next_page: pagy.next,
+                               message: "Found #{total_results} tours"
+                             })
+            end
           else
             render_success({
                              search_id: search_id,
                              results: obs_response,
                              total_results: 0,
+                             page: page,
+                             per_page: per_page,
+                             total_pages: 0,
                              message: "No tours found for the specified criteria"
                            })
           end

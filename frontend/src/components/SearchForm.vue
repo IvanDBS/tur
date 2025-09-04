@@ -1075,50 +1075,53 @@
     gap: 12px;
   }
 
-  .reset-btn {
-    background: white;
-    border: 1px solid var(--color-dark-gray);
-    color: var(--color-dark-gray);
-    border-radius: 6px;
+  /* Переопределяем стили BaseButton для соответствия дизайну формы */
+  .buttons-group :deep(.btn) {
+    min-height: 40px;
     padding: 10px 20px;
-    cursor: pointer;
+    border-radius: 6px;
     font-family: var(--font-family);
     font-weight: 500;
     transition: all 0.2s ease;
-    min-width: 180px;
-  }
-
-  .reset-btn:hover {
-    background: var(--color-dark-gray-muted);
-  }
-
-  .search-btn {
-    background: white;
-    border: 1px solid var(--color-primary);
-    color: var(--color-primary);
-    border-radius: 6px;
-    padding: 10px 24px;
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-weight: 600;
-    transition: all 0.2s ease;
-    min-width: 140px;
     display: flex;
     align-items: center;
     gap: 8px;
     justify-content: center;
   }
 
-  .search-btn:hover {
-    background: var(--color-primary);
-    color: white;
+  .buttons-group :deep(.btn--secondary) {
+    background: white;
+    border: 1px solid var(--color-dark-gray);
+    color: var(--color-dark-gray);
+    min-width: 180px;
   }
 
-  .search-btn svg {
+  .buttons-group :deep(.btn--secondary:hover) {
+    background: var(--color-dark-gray-muted);
+    transform: none;
+    box-shadow: none;
+  }
+
+  .buttons-group :deep(.btn--primary) {
+    background: white;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+    min-width: 140px;
+  }
+
+  .buttons-group :deep(.btn--primary:hover) {
+    background: var(--color-primary);
+    color: white;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .buttons-group :deep(.btn svg) {
     transition: transform 0.2s;
   }
 
-  .search-btn:hover svg {
+  .buttons-group :deep(.btn:hover svg) {
     transform: scale(1.1);
   }
 

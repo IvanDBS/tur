@@ -51,7 +51,6 @@
         :model-value="localForm.arrivalCity ? localForm.arrivalCity.name : 'Город будет выбран автоматически'"
         label="Город прилета:"
         :disabled="true"
-        hint="Автоматически устанавливается на основе выбранного пакета"
       />
       <span v-if="activeSelector === 'arrivalCity'" class="field-arrow"></span>
     </div>
@@ -109,24 +108,65 @@ watch(() => props.modelValue, (newValue) => {
   gap: 2px;
 }
 
-.field-group label {
+/* Переопределяем стили BaseInput для соответствия дизайну формы */
+.field-group :deep(.form-field) {
+  margin-bottom: 0;
+}
+
+.field-group :deep(.form-field__label) {
   font-size: 11px;
   font-weight: 600;
   color: #222222;
+  margin-bottom: 2px;
+}
+
+.field-group :deep(.form-field__input) {
+  min-height: 38px;
+  height: 38px;
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #222222;
+}
+
+.field-group :deep(.form-field__input:hover) {
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
+}
+
+.field-group :deep(.form-field__input:focus) {
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
+  outline: none;
 }
 
 /* Стили для неактивных полей */
-.field-group.disabled-field label {
+.field-group.disabled-field :deep(.form-field__label) {
   color: #999999 !important;
 }
 
-.field-group.disabled-field :deep(.multiselect) {
+.field-group.disabled-field :deep(.form-field__input) {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #999999;
+}
+
+.field-group.disabled-field :deep(.form-field__select) {
   opacity: 0.6;
   background-color: #f5f5f5;
   border-color: #e0e0e0;
 }
 
-.field-group.disabled-field :deep(.multiselect .multiselect__placeholder) {
+.field-group.disabled-field :deep(.form-field__select .multiselect) {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+}
+
+.field-group.disabled-field :deep(.form-field__select .multiselect .multiselect__placeholder) {
   color: #999999;
 }
 

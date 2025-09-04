@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button onclick="testDepartureCities()">Test Departure Cities</button>
+    <button onclick="testCountries()">Test Countries</button>
+    <button onclick="testPackages()">Test Packages</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+
+        async function testDepartureCities() {
+            try {
+                const response = await fetch(`${API_BASE}/search/departure_cities`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testCountries() {
+            try {
+                const response = await fetch(`${API_BASE}/search/countries?airport_city_from=48478`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testPackages() {
+            try {
+                const response = await fetch(`${API_BASE}/search/countries/223/package_templates?airport_city_from=48478`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

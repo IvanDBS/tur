@@ -249,6 +249,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Результаты поиска -->
+    <div v-if="searchResults && Object.keys(searchResults).length > 0" class="search-results-section">
+      <h2 class="results-title">Найдено туров: {{ totalResults }}</h2>
+      <SearchResults 
+        :results="formattedResults" 
+        :is-loading="isLoading"
+        @book="handleBook"
+      />
+    </div>
   </div>
 </template>
 
@@ -260,8 +270,40 @@
   import '@vueform/multiselect/themes/default.css'
   // Динамический импорт для обхода проблемы с TypeScript
   const SearchFilters = defineAsyncComponent(() => import('./search/SearchFilters.vue'))
+  const SearchResults = defineAsyncComponent(() => import('./SearchResults.vue'))
   import { useSearchData } from '../composables/useSearchData'
   import type { SearchForm, SelectedFilters } from '../types/search'
+
+  // Интерфейс для результатов поиска от OBS API
+  interface ObsSearchResult {
+    unique_key: string
+    rid: string
+    accommodation: {
+      hotel: {
+        name: string
+        category: string
+        city: string
+      }
+      room: {
+        name: string
+      }
+      meal: {
+        full_name: string
+      }
+    }
+    dates: {
+      check_in: string
+      check_out: string
+    }
+    nights: {
+      total: number
+    }
+    price: {
+      amount: number
+      currency: string
+      type: string
+    }
+  }
 
   // Reactive data
   const searchForm = ref<SearchForm>({
@@ -291,6 +333,8 @@
   })
 
   const isLoading = ref(false)
+  const searchResults = ref<Record<string, ObsSearchResult> | null>(null)
+  const totalResults = ref(0)
 
   // Получаем данные из composable
   const searchData = useSearchData()
@@ -304,6 +348,44 @@
     return searchData.nightsOptions.value.filter(
       (option: { value: number; label: string }) => option.value >= searchForm.value.nights
     )
+  })
+
+  // Форматированные результаты для отображения
+  const formattedResults = computed(() => {
+    if (!searchResults.value || typeof searchResults.value !== 'object') {
+      return []
+    }
+    
+    // Преобразуем объект результатов в массив
+    return Object.values(searchResults.value).map((result: ObsSearchResult) => ({
+      unique_key: result.unique_key || '',
+      rid: result.rid || '',
+      accommodation: {
+        hotel: {
+          name: result.accommodation?.hotel?.name || 'Название отеля',
+          category: result.accommodation?.hotel?.category || '',
+          city: result.accommodation?.hotel?.city || ''
+        },
+        room: {
+          name: result.accommodation?.room?.name || ''
+        },
+        meal: {
+          full_name: result.accommodation?.meal?.full_name || ''
+        }
+      },
+      dates: {
+        check_in: result.dates?.check_in || '',
+        check_out: result.dates?.check_out || ''
+      },
+      nights: {
+        total: result.nights?.total || 0
+      },
+      price: {
+        amount: result.price?.amount || 0,
+        currency: result.price?.currency || 'EUR',
+        type: result.price?.type || ''
+      }
+    }))
   })
 
   // Инициализация данных при монтировании
@@ -610,7 +692,15 @@
       .then((result) => {
         console.log('Search result:', result)
         isLoading.value = false
-        // Здесь можно обработать результат поиска
+        
+        // Сохраняем результаты поиска
+        if (result && result.results) {
+          searchResults.value = result.results
+          totalResults.value = result.total_results || 0
+          console.log('Results saved:', searchResults.value)
+          console.log('Total results:', totalResults.value)
+        }
+        
         emit('search', searchParams)
       })
       .catch((error) => {
@@ -652,6 +742,13 @@
     if (!searchForm.value.nights2 || searchForm.value.nights2 < searchForm.value.nights) {
       searchForm.value.nights2 = searchForm.value.nights
     }
+  }
+
+  // Обработчик бронирования тура
+  const handleBook = (result: ObsSearchResult) => {
+    console.log('Booking tour:', result)
+    // Здесь можно добавить логику бронирования
+    alert(`Бронирование тура: ${result.accommodation.hotel.name} за ${result.price.amount} ${result.price.currency}`)
   }
 
   // Явный экспорт для TypeScript
@@ -849,6 +946,23 @@
 
   .search-btn:hover svg {
     transform: scale(1.1);
+  }
+
+  /* Search Results Section */
+  .search-results-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+  }
+
+  .results-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 1rem;
+    text-align: center;
   }
 
   /* Mobile Responsive */

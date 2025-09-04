@@ -38,22 +38,22 @@
       <!-- Цена от -->
       <div class="field-group" :class="{ 'disabled-field': !arePriceAndFiltersEnabled }">
         <label>Цена € от:</label>
-        <input 
-          type="number" 
-          v-model="localForm.priceFrom" 
-          placeholder="От" 
-          :disabled="!arePriceAndFiltersEnabled" 
+        <BaseInput
+          type="number"
+          v-model="localForm.priceFrom"
+          placeholder="От"
+          :disabled="!arePriceAndFiltersEnabled"
         />
       </div>
 
       <!-- Цена до -->
       <div class="field-group" :class="{ 'disabled-field': !arePriceAndFiltersEnabled }">
         <label>Цена € до:</label>
-        <input 
-          type="number" 
-          v-model="localForm.priceTo" 
-          placeholder="До" 
-          :disabled="!arePriceAndFiltersEnabled" 
+        <BaseInput
+          type="number"
+          v-model="localForm.priceTo"
+          placeholder="До"
+          :disabled="!arePriceAndFiltersEnabled"
         />
       </div>
     </div>
@@ -86,6 +86,7 @@ import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import '../../styles/spinner.css'
 import type { SearchForm, SearchOption } from '../../types/search'
+import BaseInput from '../ui/BaseInput.vue'
 
 interface Props {
   modelValue: SearchForm
@@ -154,6 +155,61 @@ watch(() => props.modelValue, (newValue) => {
   color: #222222;
 }
 
+/* Скрываем label в BaseInput, так как используем собственные */
+.field-group :deep(.form-field__label) {
+  display: none;
+}
+
+/* Переопределяем стили BaseInput для соответствия дизайну формы */
+.field-group :deep(.form-field) {
+  margin-bottom: 0;
+}
+
+.field-group :deep(.form-field__input) {
+  min-height: 40px;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  /* Убираем стрелочки у number input */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.field-group :deep(.form-field__input::-webkit-outer-spin-button),
+.field-group :deep(.form-field__input::-webkit-inner-spin-button) {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.field-group :deep(.form-field__input:hover) {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+.field-group :deep(.form-field__input:focus) {
+  outline: none;
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+.field-group :deep(.form-field__input:disabled) {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.field-group :deep(.form-field__input::placeholder) {
+  color: var(--color-text-muted);
+}
+
 /* Стили для неактивных полей */
 .field-group.disabled-field label {
   color: #999999 !important;
@@ -169,7 +225,7 @@ watch(() => props.modelValue, (newValue) => {
   color: #999999;
 }
 
-.field-group.disabled-field input {
+.field-group.disabled-field :deep(.form-field__input) {
   opacity: 0.6;
   background-color: #f5f5f5;
   border-color: #e0e0e0;
@@ -186,52 +242,6 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 
-/* Стили для input полей - точно как у Multiselect */
-.field-group input {
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  background-color: #fff;
-  min-height: 40px;
-  box-sizing: border-box;
-  color: var(--color-text);
-  /* Убираем стрелочки у number input */
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-.field-group input::-webkit-outer-spin-button,
-.field-group input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Наведение курсора - как у Multiselect */
-.field-group input:hover {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-}
-
-/* Фокус - как у Multiselect */
-.field-group input:focus {
-  outline: none;
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-}
-
-.field-group input:disabled {
-  opacity: 0.6;
-  background-color: #f5f5f5;
-  border-color: #e0e0e0;
-  color: #999999;
-  cursor: not-allowed;
-}
-
-.field-group input::placeholder {
-  color: var(--color-text-muted);
-}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

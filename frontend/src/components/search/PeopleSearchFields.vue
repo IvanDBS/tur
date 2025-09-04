@@ -181,6 +181,12 @@ watch(() => props.modelValue, (newValue) => {
   -moz-appearance: textfield;
 }
 
+/* Выравниваем BaseInput по высоте с Multiselect */
+.field-group :deep(.multiselect) {
+  min-height: 40px;
+  height: 40px;
+}
+
 .field-group :deep(.form-field__input::-webkit-outer-spin-button),
 .field-group :deep(.form-field__input::-webkit-inner-spin-button) {
   -webkit-appearance: none;

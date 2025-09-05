@@ -3,84 +3,43 @@
     <!-- Row 1 - Основные поля -->
     <div class="form-row">
       <!-- Откуда -->
-      <div class="field-group">
-        <label class="field-label">
-          <span v-if="activeSelector === 'departureCity'" class="field-arrow"></span>
-          Откуда:
-        </label>
-        <Multiselect
-          :model-value="searchForm.departureCity"
-          @update:model-value="updateField('departureCity', $event)"
-          :options="searchData.departureCitiesOptions.value"
-          :searchable="true"
-          :canClear="false"
-          :canDeselect="false"
-          placeholder="Выберите город"
-          label="label"
-          valueProp="value"
-          :disabled="isLoading"
-          @open="() => console.log('🏙️ Departure cities options:', searchData.departureCitiesOptions.value)"
-        />
-      </div>
+      <SearchFieldDeparture
+        :model-value="searchForm.departureCity"
+        @update:model-value="updateField('departureCity', $event)"
+        :options="searchData.departureCitiesOptions.value"
+        :active-selector="activeSelector"
+        :disabled="isLoading"
+      />
 
       <!-- Куда -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.departureCity }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'destination'" class="field-arrow"></span>
-          Куда:
-        </label>
-        <Multiselect
-          :model-value="searchForm.destination"
-          @update:model-value="updateField('destination', $event)"
-          :options="searchData.countriesOptions.value"
-          :searchable="true"
-          :canClear="false"
-          :canDeselect="false"
-          placeholder="Выберите страну"
-          label="label"
-          valueProp="value"
-          :disabled="isLoading || !searchForm.departureCity"
-        />
-      </div>
+      <SearchFieldDestination
+        :model-value="searchForm.destination"
+        @update:model-value="updateField('destination', $event)"
+        :options="searchData.countriesOptions.value"
+        :active-selector="activeSelector"
+        :disabled="isLoading || !searchForm.departureCity"
+      />
 
       <!-- Пакет -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.destination }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'package'" class="field-arrow"></span>
-          Пакет:
-        </label>
-        <Multiselect
-          :model-value="searchForm.package"
-          @update:model-value="updateField('package', $event)"
-          :options="searchData.packagesOptions.value"
-          :searchable="true"
-          :canClear="false"
-          :canDeselect="false"
-          placeholder="Выберите пакет"
-          label="label"
-          valueProp="value"
-          :disabled="isLoading || !searchForm.destination"
-        />
-      </div>
+      <SearchFieldPackage
+        :model-value="searchForm.package"
+        @update:model-value="updateField('package', $event)"
+        :options="searchData.packagesOptions.value"
+        :active-selector="activeSelector"
+        :disabled="isLoading || !searchForm.destination"
+      />
 
       <!-- Город прилета -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.package }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'arrivalCity'" class="field-arrow"></span>
-          Город прилета:
-        </label>
-        <input 
-          type="text" 
-          :value="searchForm.arrivalCity ? searchForm.arrivalCity.name : 'Город будет выбран автоматически'"
-          :disabled="true"
-          style="min-height: 38px; height: 38px; border: 1px solid #dddddd; border-radius: 4px; padding: 4px 8px; font-size: 14px; color: #222222; background: #f5f5f5; font-family: inherit; box-sizing: border-box;"
-          title="Автоматически устанавливается на основе выбранного пакета"
-        />
-      </div>
+      <SearchFieldArrival
+        :model-value="searchForm.arrivalCity"
+        :active-selector="activeSelector"
+        :disabled="!searchForm.package"
+      />
     </div>
 
     <!-- Row 2 - Даты и ночи -->
     <div class="form-row">
+      <!-- Период заезда от -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.arrivalCity }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkInDate'" class="field-arrow"></span>
@@ -105,6 +64,7 @@
         />
       </div>
 
+      <!-- Период заезда до -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkOutDate'" class="field-arrow"></span>
@@ -129,6 +89,7 @@
         />
       </div>
 
+      <!-- Ночей в отеле от -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'nights'" class="field-arrow"></span>
@@ -149,6 +110,7 @@
         />
       </div>
 
+      <!-- Ночей в отеле до -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'nights2'" class="field-arrow"></span>
@@ -171,107 +133,45 @@
 
     <!-- Row 3 - Люди и цены -->
     <div class="form-row">
-      <!-- Взрослые -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'adults'" class="field-arrow"></span>
-          Взрослых:
-        </label>
-        <Multiselect
-          :model-value="searchForm.adults"
-          @update:model-value="updateField('adults', $event)"
-          :options="searchData.adultsOptions.value"
-          :searchable="false"
-          :canClear="false"
-          :canDeselect="false"
-          placeholder="2"
-          label="label"
-          valueProp="value"
-          :disabled="!searchForm.checkInDate"
-        />
-      </div>
+      <SearchFieldPeople
+        :adults="searchForm.adults"
+        :children="searchForm.children"
+        :children-ages="searchForm.childrenAges"
+        :adults-options="searchData.adultsOptions.value"
+        :children-options="searchData.childrenOptions.value"
+        :active-selector="activeSelector"
+        :disabled="!searchForm.checkInDate"
+        @update:adults="updateField('adults', $event)"
+        @update:children="updateField('children', $event)"
+        @update:children-age="updateChildrenAge($event.index, $event.value)"
+      />
 
-      <!-- Дети -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'children'" class="field-arrow"></span>
-          Детей:
-        </label>
-        <Multiselect
-          :model-value="searchForm.children"
-          @update:model-value="updateField('children', $event)"
-          :options="searchData.childrenOptions.value"
-          :searchable="false"
-          :canClear="false"
-          :canDeselect="false"
-          label="label"
-          valueProp="value"
-          :disabled="!searchForm.checkInDate"
-        />
-      </div>
-
-      <!-- Возраст детей -->
-      <div v-if="searchForm.children !== null && searchForm.children > 0" class="field-group">
-        <label>Возраст детей:</label>
-        <div class="children-ages">
-          <Multiselect
-            v-for="(age, index) in searchForm.childrenAges"
-            :key="index"
-            :model-value="searchForm.childrenAges[index]"
-            @update:model-value="updateChildrenAge(index, $event)"
-            :options="[
-              { label: '0-2 года', value: 0 },
-              { label: '3-12 лет', value: 3 },
-              { label: '13-17 лет', value: 13 }
-            ]"
-            :searchable="false"
-            :canClear="false"
-            :canDeselect="false"
-            placeholder="Возраст"
-            label="label"
-            valueProp="value"
-          />
-        </div>
-      </div>
-
-      <!-- Цена -->
-      <div class="field-group" :class="{ 'disabled-field': searchForm.children === null }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'priceFrom'" class="field-arrow"></span>
-          Цена € от:
-        </label>
-        <input 
-          type="number" 
-          :value="searchForm.priceFrom"
-          @input="handlePriceFromInput"
-          placeholder="От" 
-          :disabled="searchForm.children === null" 
-        />
-      </div>
-
-      <div class="field-group" :class="{ 'disabled-field': searchForm.children === null }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'priceTo'" class="field-arrow"></span>
-          Цена € до:
-        </label>
-        <input 
-          type="number" 
-          :value="searchForm.priceTo"
-          @input="handlePriceToInput"
-          placeholder="До" 
-          :disabled="searchForm.children === null" 
-        />
-      </div>
+      <SearchFieldPrice
+        :price-from="searchForm.priceFrom"
+        :price-to="searchForm.priceTo"
+        :active-selector="activeSelector"
+        :disabled="searchForm.children === null"
+        @update:price-from="updateField('priceFrom', $event)"
+        @update:price-to="updateField('priceTo', $event)"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import type { SearchFormFieldsProps, SearchFormFieldsEmits } from '../../types/searchForm'
+
+const SearchFieldDeparture = defineAsyncComponent(() => import('./fields/SearchFieldDeparture.vue'))
+const SearchFieldDestination = defineAsyncComponent(() => import('./fields/SearchFieldDestination.vue'))
+const SearchFieldPackage = defineAsyncComponent(() => import('./fields/SearchFieldPackage.vue'))
+const SearchFieldArrival = defineAsyncComponent(() => import('./fields/SearchFieldArrival.vue'))
+const SearchFieldPeople = defineAsyncComponent(() => import('./fields/SearchFieldPeople.vue'))
+const SearchFieldPrice = defineAsyncComponent(() => import('./fields/SearchFieldPrice.vue'))
 
 // Props
 const props = defineProps<SearchFormFieldsProps>()
@@ -280,27 +180,18 @@ const props = defineProps<SearchFormFieldsProps>()
 const emit = defineEmits<SearchFormFieldsEmits>()
 
 // Methods
-const updateField = (field: keyof typeof props.searchForm, value: any) => {
+const updateField = (field: keyof typeof props.searchForm, value: unknown) => {
   const updatedForm = { ...props.searchForm, [field]: value }
   emit('update:searchForm', updatedForm)
 }
 
-const updateChildrenAge = (index: number, value: any) => {
+const updateChildrenAge = (index: number, value: unknown) => {
   const updatedAges = [...props.searchForm.childrenAges]
-  updatedAges[index] = value
+  updatedAges[index] = value as number
   const updatedForm = { ...props.searchForm, childrenAges: updatedAges }
   emit('update:searchForm', updatedForm)
 }
 
-const handlePriceFromInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  updateField('priceFrom', Number(target.value))
-}
-
-const handlePriceToInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  updateField('priceTo', Number(target.value))
-}
 </script>
 
 <style scoped>

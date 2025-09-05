@@ -77,13 +77,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { computed, watch } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import '../../styles/spinner.css'
-import type { SearchForm, SearchOption } from '../../types/search'
+import { useSearchFormState } from '../../composables/useSearchFormState'
+import type { SearchForm, NightsOption } from '../../types/search'
 
 interface Props {
   modelValue: SearchForm
@@ -91,7 +92,7 @@ interface Props {
   isCheckOutDateEnabled: boolean
   areNightsFieldsEnabled: boolean
   showDateIndicator: boolean
-  nightsOptions: SearchOption[]
+  nightsOptions: NightsOption[]
 }
 
 const props = defineProps<Props>()
@@ -100,8 +101,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: SearchForm]
 }>()
 
-// Локальная копия формы
-const localForm = ref<SearchForm>({ ...props.modelValue })
+// Используем composable для управления состоянием
+const { localForm, syncWithParent } = useSearchFormState(props.modelValue)
 
 // Фильтрованные опции для второго селектора ночей
 const filteredNights2Options = computed(() => {
@@ -110,7 +111,7 @@ const filteredNights2Options = computed(() => {
   }
 
   return props.nightsOptions.filter(
-    (option: SearchOption) => option.value >= localForm.value.nights
+    (option: NightsOption) => option.value >= localForm.value.nights
   )
 })
 
@@ -128,42 +129,32 @@ watch(localForm, (newValue) => {
 
 // Следим за изменениями props и обновляем локальную форму
 watch(() => props.modelValue, (newValue) => {
-  localForm.value = { ...newValue }
+  syncWithParent(newValue)
 }, { deep: true })
 </script>
 
 <style scoped>
+@import '../../styles/mixins.css';
+
 .form-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
-  align-items: end;
+  @include form-row;
 }
 
 .field-group {
-  flex: 1;
-  min-width: 100px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  @include field-group;
 }
 
 .field-group label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #222222;
+  @include field-label;
 }
 
 /* Стили для неактивных полей */
 .field-group.disabled-field label {
-  color: #999999 !important;
+  @include disabled-label;
 }
 
 .field-group.disabled-field :deep(.multiselect) {
-  opacity: 0.6;
-  background-color: #f5f5f5;
-  border-color: #e0e0e0;
+  @include disabled-field;
 }
 
 .field-group.disabled-field :deep(.multiselect .multiselect__placeholder) {
@@ -171,10 +162,7 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .field-group.disabled-field :deep(.dp__input) {
-  opacity: 0.6;
-  background-color: #f5f5f5;
-  border-color: #e0e0e0;
-  color: #999999;
+  @include disabled-field;
 }
 
 .field-group.disabled-field :deep(.dp__input::placeholder) {
@@ -189,30 +177,32 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 :deep(.dp__input) {
-  min-height: 38px !important;
-  height: 38px !important;
-  box-sizing: border-box !important;
+  @include form-field-base;
   border: 1px solid var(--color-border) !important;
-  transition: all 0.2s ease !important;
 }
 
 /* Наведение курсора на VueDatePicker - как у Multiselect */
 :deep(.dp__input:hover) {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+  @include form-field-hover;
 }
 
 /* Фокус на VueDatePicker - как у Multiselect */
 :deep(.dp__input:focus) {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+  @include form-field-focus;
+}
+
+/* Серый hover эффект для неактивных полей календаря */
+.field-group.disabled-field :deep(.dp__input:hover) {
+  border-color: #e0e0e0 !important;
+  box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2) !important;
+}
+
+.field-group.disabled-field :deep(.dp__input:focus) {
+  border-color: #e0e0e0 !important;
+  box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2) !important;
   outline: none !important;
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
+@include mobile-responsive;
 </style>

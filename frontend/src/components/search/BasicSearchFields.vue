@@ -66,17 +66,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import { BaseSelect, BaseInput } from '../ui'
-import type { SearchForm, DepartureCity, Country, Package, ArrivalCity } from '../../types/search'
+import { useSearchFormState } from '../../composables/useSearchFormState'
+import type { 
+  SearchForm, 
+  DepartureCityOption, 
+  CountryOption, 
+  PackageOption 
+} from '../../types/search'
 
 interface Props {
   modelValue: SearchForm
   activeSelector: string | null
   isLoading: boolean
-  departureCitiesOptions: any[]
-  countriesOptions: any[]
-  packagesOptions: any[]
+  departureCitiesOptions: DepartureCityOption[]
+  countriesOptions: CountryOption[]
+  packagesOptions: PackageOption[]
 }
 
 const props = defineProps<Props>()
@@ -85,8 +91,13 @@ const emit = defineEmits<{
   'update:modelValue': [value: SearchForm]
 }>()
 
-// Локальная копия формы
-const localForm = ref<SearchForm>({ ...props.modelValue })
+// Отладка
+watch(() => props.departureCitiesOptions, (newOptions) => {
+  console.log('BasicSearchFields: departureCitiesOptions changed:', newOptions)
+}, { immediate: true, deep: true })
+
+// Используем composable для управления состоянием
+const { localForm, syncWithParent } = useSearchFormState(props.modelValue)
 
 // Следим за изменениями локальной формы и эмитим обновления
 watch(localForm, (newValue) => {
@@ -95,7 +106,7 @@ watch(localForm, (newValue) => {
 
 // Следим за изменениями props и обновляем локальную форму
 watch(() => props.modelValue, (newValue) => {
-  localForm.value = { ...newValue }
+  syncWithParent(newValue)
 }, { deep: true })
 </script>
 
@@ -123,7 +134,9 @@ watch(() => props.modelValue, (newValue) => {
   margin-bottom: 2px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  text-align: center;
 }
 
 /* Переопределяем стили BaseInput для соответствия дизайну формы */
@@ -145,6 +158,9 @@ watch(() => props.modelValue, (newValue) => {
   border-radius: 4px;
   background: #ffffff;
   color: #222222;
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .field-group :deep(.form-field__input:hover) {

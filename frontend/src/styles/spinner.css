@@ -49,6 +49,13 @@
   height: 64px;
 }
 
+/* Исправляем позиционирование самолетика для большого размера */
+.spinner-large::before {
+  top: -22px;
+  left: 22px;
+  background-size: 35px;
+}
+
 /* Спиннер с точками */
 .dot-spinner {
   display: flex;

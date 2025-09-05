@@ -81,12 +81,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import '../../styles/spinner.css'
-import type { SearchForm, SearchOption } from '../../types/search'
-import BaseInput from '../ui/BaseInput.vue'
+import { useSearchFormState } from '../../composables/useSearchFormState'
+import type { SearchForm, AdultsOption, ChildrenOption } from '../../types/search'
+import { BaseInput } from '../ui'
 
 interface Props {
   modelValue: SearchForm
@@ -94,8 +95,8 @@ interface Props {
   areChildrenFieldsEnabled: boolean
   arePriceAndFiltersEnabled: boolean
   showChildrenIndicator: boolean
-  adultsOptions: SearchOption[]
-  childrenOptions: SearchOption[]
+  adultsOptions: AdultsOption[]
+  childrenOptions: ChildrenOption[]
 }
 
 const props = defineProps<Props>()
@@ -104,8 +105,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: SearchForm]
 }>()
 
-// Локальная копия формы
-const localForm = ref<SearchForm>({ ...props.modelValue })
+// Используем composable для управления состоянием
+const { localForm, syncWithParent } = useSearchFormState(props.modelValue)
 
 // Следим за изменениями количества детей и обновляем массив возрастов
 watch(() => localForm.value.children, (newValue) => {
@@ -128,7 +129,7 @@ watch(localForm, (newValue) => {
 
 // Следим за изменениями props и обновляем локальную форму
 watch(() => props.modelValue, (newValue) => {
-  localForm.value = { ...newValue }
+  syncWithParent(newValue)
 }, { deep: true })
 </script>
 
@@ -153,6 +154,12 @@ watch(() => props.modelValue, (newValue) => {
   font-size: 11px;
   font-weight: 600;
   color: #222222;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
 }
 
 /* Скрываем label в BaseInput, так как используем собственные */
@@ -169,13 +176,14 @@ watch(() => props.modelValue, (newValue) => {
   min-height: 40px;
   height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  font-size: 14px;
+  border: 1px solid #dddddd;
   border-radius: 4px;
   background: #ffffff;
-  color: var(--color-text);
-  font-size: 14px;
-  transition: all 0.2s ease;
+  color: #222222;
+  font-family: var(--font-family);
   box-sizing: border-box;
+  transition: all 0.2s ease;
   /* Убираем стрелочки у number input */
   appearance: textfield;
   -moz-appearance: textfield;
@@ -194,14 +202,26 @@ watch(() => props.modelValue, (newValue) => {
 }
 
 .field-group :deep(.form-field__input:hover) {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
 }
 
 .field-group :deep(.form-field__input:focus) {
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
   outline: none;
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+/* Серый hover эффект для неактивных полей цены */
+.field-group.disabled-field :deep(.form-field__input:hover) {
+  border-color: #e0e0e0 !important;
+  box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2) !important;
+}
+
+.field-group.disabled-field :deep(.form-field__input:focus) {
+  border-color: #e0e0e0 !important;
+  box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2) !important;
+  outline: none !important;
 }
 
 .field-group :deep(.form-field__input:disabled) {
@@ -246,8 +266,6 @@ watch(() => props.modelValue, (newValue) => {
   margin-bottom: 12px;
   align-items: end;
 }
-
-
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

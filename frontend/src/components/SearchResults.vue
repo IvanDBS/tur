@@ -1,11 +1,6 @@
 <template>
   <div class="search-results">
-    <div v-if="isLoading" class="loading">
-      <div class="blue-spinner"></div>
-      <p class="loading-text">Поиск лучших вариантов...</p>
-    </div>
-
-    <div v-else-if="results.length === 0" class="empty-state">
+    <div v-if="results.length === 0 && !isLoading" class="empty-state">
       <p>Туры не найдены</p>
       <p class="text-soft">Попробуйте изменить параметры поиска</p>
     </div>
@@ -66,7 +61,7 @@
       :total-pages="totalPages"
       :prev-page="prevPage"
       :next-page="nextPage"
-      @page-change="(page) => { console.log('🔥 SearchResults received page-change:', page); emit('pageChanged', page) }"
+      @page-change="(page) => { console.log('🔥 SearchResults received page-change:', page); emit('page-change', page) }"
     />
   </div>
 </template>
@@ -129,35 +124,13 @@
     nextPage: null,
   })
 
-  // Отладочная информация
-  console.log('🔥 SearchResults props:', {
-    resultsLength: props.results?.length || 0,
-    currentPage: props.currentPage,
-    totalPages: props.totalPages,
-    isLoading: props.isLoading
-  })
 
-  // Watcher для отслеживания изменений props
-  watch(() => props.results, (newResults) => {
-    console.log('🔥 SearchResults results changed:', {
-      newLength: newResults?.length || 0,
-      currentPage: props.currentPage,
-      totalPages: props.totalPages
-    })
-  }, { deep: true })
-
-  watch(() => props.currentPage, (newPage) => {
-    console.log('🔥 SearchResults currentPage changed:', {
-      newPage,
-      resultsLength: props.results?.length || 0
-    })
-  })
 
   // Emits
   const emit = defineEmits<{
     book: [result: SearchResult]
     loadMore: []
-    pageChanged: [page: number]
+    'page-change': [page: number]
   }>()
 
   // State

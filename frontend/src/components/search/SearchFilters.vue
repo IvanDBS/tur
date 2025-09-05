@@ -12,7 +12,7 @@
                 type="checkbox" 
                 :checked="allRegionsSelected"
                 :disabled="props.disabled"
-                @change="toggleAllRegions"
+                @change="handleToggleAllRegions"
               />
               <span class="checkmark"></span>
               <span class="label-text">Любой</span>
@@ -25,9 +25,9 @@
             >
               <input 
                 type="checkbox" 
-                :checked="selectedRegions.includes(region.id)"
+                :checked="selectedFilters.regions.includes(region.id)"
                 :disabled="props.disabled"
-                @change="toggleRegion(region.id)"
+                @change="handleToggleRegion(region.id)"
               />
               <span class="checkmark"></span>
               <span class="label-text">{{ region.label || region.name }}</span>
@@ -47,7 +47,7 @@
                 type="checkbox" 
                 :checked="allCategoriesSelected"
                 :disabled="props.disabled"
-                @change="toggleAllCategories"
+                @change="handleToggleAllCategories"
               />
               <span class="checkmark"></span>
               <span class="label-text">Любой</span>
@@ -60,9 +60,9 @@
             >
               <input 
                 type="checkbox" 
-                :checked="selectedCategories.includes(category.id)"
+                :checked="selectedFilters.categories.includes(category.id)"
                 :disabled="props.disabled"
-                @change="toggleCategory(category.id)"
+                @change="handleToggleCategory(category.id)"
               />
               <span class="checkmark"></span>
               <span class="label-text">{{ category.label || category.name }}</span>
@@ -84,7 +84,7 @@
                   type="checkbox" 
                   :checked="allHotelsSelected"
                   :disabled="props.disabled"
-                  @change="toggleAllHotels"
+                  @change="handleToggleAllHotels"
                 />
                 <span class="checkmark"></span>
                 <span class="label-text">Любой</span>
@@ -126,9 +126,9 @@
               >
                 <input 
                   type="checkbox" 
-                  :checked="selectedHotels.includes(hotel.id)"
+                  :checked="selectedFilters.hotels.includes(hotel.id)"
                   :disabled="props.disabled"
-                  @change="toggleHotel(hotel.id)"
+                  @change="handleToggleHotel(hotel.id)"
                 />
                 <span class="checkmark"></span>
                 <span class="label-text">{{ hotel.label || hotel.name }}</span>
@@ -149,7 +149,7 @@
                 type="checkbox" 
                 :checked="allMealsSelected"
                 :disabled="props.disabled"
-                @change="toggleAllMeals"
+                @change="handleToggleAllMeals"
               />
               <span class="checkmark"></span>
               <span class="label-text">Любой</span>
@@ -162,9 +162,9 @@
             >
               <input 
                 type="checkbox" 
-                :checked="selectedMeals.includes(meal.id)"
+                :checked="selectedFilters.meals.includes(meal.id) || selectedFilters.meals.includes(1)"
                 :disabled="props.disabled"
-                @change="toggleMeal(meal.id)"
+                @change="handleToggleMeal(meal.id)"
               />
               <span class="checkmark"></span>
               <span class="label-text">{{ meal.label || meal.name }}</span>
@@ -184,7 +184,7 @@
                 type="checkbox" 
                 :checked="allOptionsSelected"
                 :disabled="props.disabled"
-                @change="toggleAllOptions"
+                @change="handleToggleAllOptions"
               />
               <span class="checkmark"></span>
               <span class="label-text">Любой</span>
@@ -197,9 +197,9 @@
             >
               <input 
                 type="checkbox" 
-                :checked="selectedOptions.includes(option.id)"
+                :checked="selectedFilters.options.includes(option.id)"
                 :disabled="props.disabled"
-                @change="toggleOption(option.id)"
+                @change="handleToggleOption(option.id)"
               />
               <span class="checkmark"></span>
               <span class="label-text">{{ option.label || option.name }}</span>
@@ -212,7 +212,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch, toRef } from 'vue'
+  import { useSearchFilters } from '../../composables/useSearchFilters'
   import type {
     Region,
     Category,
@@ -244,6 +245,45 @@
     'update:options': [value: number[]]
   }>()
 
+  // Создаем реактивные ссылки на props
+  const selectedRegions = toRef(props, 'selectedRegions')
+  const selectedCategories = toRef(props, 'selectedCategories')
+  const selectedHotels = toRef(props, 'selectedHotels')
+  const selectedMeals = toRef(props, 'selectedMeals')
+  const selectedOptions = toRef(props, 'selectedOptions')
+
+  // Используем composable для управления фильтрами
+  const {
+    selectedFilters,
+    allRegionsSelected,
+    allCategoriesSelected,
+    allHotelsSelected,
+    allMealsSelected,
+    allOptionsSelected,
+    toggleRegion,
+    toggleAllRegions,
+    toggleCategory,
+    toggleAllCategories,
+    toggleHotel,
+    toggleAllHotels,
+    toggleMeal,
+    toggleAllMeals,
+    toggleOption,
+    toggleAllOptions
+  } = useSearchFilters({
+    regions: selectedRegions.value,
+    categories: selectedCategories.value,
+    hotels: selectedHotels.value,
+    meals: selectedMeals.value,
+    options: selectedOptions.value
+  }, {
+    regions: props.regions,
+    categories: props.categories,
+    hotels: props.hotels,
+    meals: props.meals,
+    options: props.options
+  })
+
   // Логирование при получении данных
   onMounted(() => {
     console.log('SearchFilters mounted with props:', {
@@ -274,7 +314,47 @@
   watch(() => props.regions, (newRegions) => {
     console.log('SearchFilters: regions prop changed:', newRegions.length)
     console.log('Regions data:', newRegions.map(r => ({ id: r.id, name: r.label || r.name })))
+    console.log('Selected regions:', props.selectedRegions)
+    console.log('All regions selected?', allRegionsSelected.value)
+    console.log('Selected filters regions:', selectedFilters.value.regions)
   }, { immediate: true })
+
+  // Следим за изменениями selectedRegions props и синхронизируем с composable
+  watch(() => props.selectedRegions, (newSelectedRegions) => {
+    console.log('SearchFilters: selectedRegions prop changed:', newSelectedRegions)
+    console.log('Current selectedFilters.regions:', selectedFilters.value.regions)
+    
+    // Синхронизируем с composable
+    if (JSON.stringify(selectedFilters.value.regions) !== JSON.stringify(newSelectedRegions)) {
+      selectedFilters.value.regions = [...newSelectedRegions]
+      console.log('SearchFilters: synchronized selectedFilters.regions:', selectedFilters.value.regions)
+    }
+  }, { immediate: true, deep: true })
+
+  // Следим за изменениями других фильтров
+  watch(() => props.selectedCategories, (newSelectedCategories) => {
+    if (JSON.stringify(selectedFilters.value.categories) !== JSON.stringify(newSelectedCategories)) {
+      selectedFilters.value.categories = [...newSelectedCategories]
+    }
+  }, { immediate: true, deep: true })
+
+  watch(() => props.selectedHotels, (newSelectedHotels) => {
+    if (JSON.stringify(selectedFilters.value.hotels) !== JSON.stringify(newSelectedHotels)) {
+      selectedFilters.value.hotels = [...newSelectedHotels]
+    }
+  }, { immediate: true, deep: true })
+
+  watch(() => props.selectedMeals, (newSelectedMeals) => {
+    if (JSON.stringify(selectedFilters.value.meals) !== JSON.stringify(newSelectedMeals)) {
+      selectedFilters.value.meals = [...newSelectedMeals]
+    }
+  }, { immediate: true, deep: true })
+
+  watch(() => props.selectedOptions, (newSelectedOptions) => {
+    if (JSON.stringify(selectedFilters.value.options) !== JSON.stringify(newSelectedOptions)) {
+      selectedFilters.value.options = [...newSelectedOptions]
+    }
+  }, { immediate: true, deep: true })
 
   // Создаем динамический маппинг регионов к городам на основе props.regions
   const regionCitiesMap = computed(() => {
@@ -301,42 +381,22 @@
 
   // Поиск отелей
   const hotelSearchQuery = ref('')
-  
-  const allHotelsSelected = computed(() => {
-    return props.selectedHotels.length === filteredHotels.value.length && filteredHotels.value.length > 0
-  })
-
-  const allCategoriesSelected = computed(() => {
-    return props.selectedCategories.length === props.categories.length && props.categories.length > 0
-  })
-
-  const allRegionsSelected = computed(() => {
-    return props.selectedRegions.length === props.regions.length && props.regions.length > 0
-  })
-
-  const allMealsSelected = computed(() => {
-    return props.selectedMeals.length === props.meals.length && props.meals.length > 0
-  })
-
-  const allOptionsSelected = computed(() => {
-    return props.selectedOptions.length === props.options.length && props.options.length > 0
-  })
 
   // Фильтрация отелей по поисковому запросу и выбранным регионам
   const filteredHotels = computed(() => {
     console.log('=== filteredHotels computed triggered ===')
-    console.log('props.selectedRegions changed to:', props.selectedRegions)
+    console.log('selectedFilters.regions changed to:', selectedFilters.value.regions)
     console.log('props.hotels count:', props.hotels.length)
     
     let hotels = props.hotels
     console.log('filteredHotels computed - total hotels:', hotels.length)
-    console.log('Selected regions:', props.selectedRegions)
+    console.log('Selected regions:', selectedFilters.value.regions)
     console.log('Sample hotels with city_id:', hotels.slice(0, 5).map(h => ({ id: h.id, name: h.label || h.name, city_id: h.city_id })))
 
     // Фильтрация по выбранным регионам
-    if (props.selectedRegions.length > 0) {
+    if (selectedFilters.value.regions.length > 0) {
       // Если выбран "Все" (id: 1), показываем все отели
-      if (props.selectedRegions.includes(1)) {
+      if (selectedFilters.value.regions.includes(1)) {
         console.log('All regions selected, showing all hotels')
         // Показываем все отели
       } else {
@@ -345,7 +405,7 @@
         
         // Получаем все города для выбранных регионов
         const selectedCities = new Set<number>()
-        props.selectedRegions.forEach(regionId => {
+        selectedFilters.value.regions.forEach(regionId => {
           const cities = regionCitiesMap.value.get(regionId)
           if (cities) {
             cities.forEach(cityId => selectedCities.add(cityId))
@@ -391,76 +451,43 @@
     return hotels
   })
 
-  // Выбор/отмена выбора всех отелей
-  const toggleAllHotels = () => {
-    if (allHotelsSelected.value) {
-      emit('update:hotels', [])
-    } else {
-      emit(
-        'update:hotels',
-        filteredHotels.value.map(hotel => hotel.id)
-      )
-    }
+  // Обертки для методов composable с emit
+  const handleToggleAllHotels = () => {
+    toggleAllHotels(props.hotels)
+    emit('update:hotels', selectedFilters.value.hotels)
   }
 
-  // Выбор/отмена выбора всех категорий
-  const toggleAllCategories = () => {
-    if (allCategoriesSelected.value) {
-      emit('update:categories', [])
-    } else {
-      emit(
-        'update:categories',
-        props.categories.map(category => category.id)
-      )
-    }
+  const handleToggleAllCategories = () => {
+    toggleAllCategories(props.categories)
+    emit('update:categories', selectedFilters.value.categories)
   }
 
-  // Выбор/отмена выбора всех регионов
-  const toggleAllRegions = () => {
-    if (allRegionsSelected.value) {
-      emit('update:regions', [])
-    } else {
-      emit(
-        'update:regions',
-        props.regions.map(region => region.id)
-      )
-    }
+  const handleToggleAllRegions = () => {
+    console.log('handleToggleAllRegions called')
+    console.log('Before toggle - selectedFilters.regions:', selectedFilters.value.regions)
+    console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
+    
+    toggleAllRegions(props.regions)
+    
+    console.log('After toggle - selectedFilters.regions:', selectedFilters.value.regions)
+    console.log('Emitting update:regions with:', selectedFilters.value.regions)
+    
+    emit('update:regions', selectedFilters.value.regions)
   }
 
-  // Выбор/отмена выбора всех meals
-  const toggleAllMeals = () => {
-    if (allMealsSelected.value) {
-      emit('update:meals', [])
-    } else {
-      emit(
-        'update:meals',
-        props.meals.map(meal => meal.id)
-      )
-    }
+  const handleToggleAllMeals = () => {
+    toggleAllMeals(props.meals)
+    emit('update:meals', selectedFilters.value.meals)
   }
 
-  // Выбор/отмена выбора всех options
-  const toggleAllOptions = () => {
-    if (allOptionsSelected.value) {
-      emit('update:options', [])
-    } else {
-      emit(
-        'update:options',
-        props.options.map(option => option.id)
-      )
-    }
+  const handleToggleAllOptions = () => {
+    toggleAllOptions(props.options)
+    emit('update:options', selectedFilters.value.options)
   }
 
-  // Выбор/отмена выбора отдельного отеля
-  const toggleHotel = (hotelId: number) => {
-    const currentHotels = [...props.selectedHotels]
-    const index = currentHotels.indexOf(hotelId)
-    if (index > -1) {
-      currentHotels.splice(index, 1)
-    } else {
-      currentHotels.push(hotelId)
-    }
-    emit('update:hotels', currentHotels)
+  const handleToggleHotel = (hotelId: number) => {
+    toggleHotel(hotelId)
+    emit('update:hotels', selectedFilters.value.hotels)
   }
 
   // Фильтрация отелей
@@ -469,53 +496,25 @@
     // Фильтрация происходит автоматически через computed свойство filteredHotels
   }
 
-  // Filter toggle methods
-  const toggleRegion = (regionId: number) => {
-    const currentRegions = [...props.selectedRegions]
-    const index = currentRegions.indexOf(regionId)
-    if (index > -1) {
-      currentRegions.splice(index, 1)
-    } else {
-      currentRegions.push(regionId)
-    }
-    emit('update:regions', currentRegions)
+  // Обертки для остальных методов
+  const handleToggleRegion = (regionId: number) => {
+    toggleRegion(regionId)
+    emit('update:regions', selectedFilters.value.regions)
   }
 
-  const toggleCategory = (categoryId: number) => {
-    const currentCategories = [...props.selectedCategories]
-    const index = currentCategories.indexOf(categoryId)
-    if (index > -1) {
-      currentCategories.splice(index, 1)
-    } else {
-      currentCategories.push(categoryId)
-    }
-    emit('update:categories', currentCategories)
+  const handleToggleCategory = (categoryId: number) => {
+    toggleCategory(categoryId)
+    emit('update:categories', selectedFilters.value.categories)
   }
 
-  const toggleMeal = (mealId: number) => {
-    const currentMeals = [...props.selectedMeals]
-    const index = currentMeals.indexOf(mealId)
-    
-    if (index > -1) {
-      currentMeals.splice(index, 1)
-    } else {
-      currentMeals.push(mealId)
-    }
-    
-    emit('update:meals', currentMeals)
+  const handleToggleMeal = (mealId: number) => {
+    toggleMeal(mealId)
+    emit('update:meals', selectedFilters.value.meals)
   }
 
-  const toggleOption = (optionId: number) => {
-    const currentOptions = [...props.selectedOptions]
-    const index = currentOptions.indexOf(optionId)
-    
-    if (index > -1) {
-      currentOptions.splice(index, 1)
-    } else {
-      currentOptions.push(optionId)
-    }
-    
-    emit('update:options', currentOptions)
+  const handleToggleOption = (optionId: number) => {
+    toggleOption(optionId)
+    emit('update:options', selectedFilters.value.options)
   }
 
   // Явный экспорт для TypeScript

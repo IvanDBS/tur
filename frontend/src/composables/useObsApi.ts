@@ -446,6 +446,8 @@ export const useObsApi = () => {
     options?: string[]
     price_from?: number
     price_to?: number
+    page?: number
+    per_page?: number
   }) => {
     try {
       loading.value = true
@@ -456,11 +458,22 @@ export const useObsApi = () => {
       console.log('airport_city_to isArray:', Array.isArray(searchParams.airport_city_to))
       console.log('airport_city_to value:', searchParams.airport_city_to)
       
-      const requestBody = { search: searchParams }
+      // Separate search params from pagination params
+      const { page, per_page, ...searchParamsOnly } = searchParams
+      
+      const requestBody = { search: searchParamsOnly }
       console.log('Request body:', requestBody)
       console.log('Request body.airport_city_to:', requestBody.search.airport_city_to)
       
-      const response = await apiClient.post<ApiResponse<Record<string, any>>>('/search', requestBody)
+      // Add pagination parameters as query params
+      const queryParams = new URLSearchParams()
+      if (page) queryParams.append('page', page.toString())
+      if (per_page) queryParams.append('per_page', per_page.toString())
+      
+      const url = queryParams.toString() ? `/search?${queryParams.toString()}` : '/search'
+      console.log('Search URL:', url)
+      
+      const response = await apiClient.post<ApiResponse<Record<string, any>>>(url, requestBody)
       
       if (response.success) {
         return response.data

@@ -1,154 +1,332 @@
 <template>
   <div class="search-container">
-    <!-- Notifications -->
-    <NotificationToast
-      v-for="notification in notifications"
-      :key="notification.id"
-      :type="notification.type"
-      :title="notification.title"
-      :message="notification.message"
-      :duration="notification.duration"
-      @close="removeNotification(notification.id)"
-    />
-    
     <div class="search-form">
       <!-- Loading Indicator -->
       <div v-if="isLoading" class="loading-overlay">
         <div class="spinner-container">
           <div class="blue-spinner spinner-medium"></div>
-          <p class="spinner-text">Загружаем данные для поиска...</p>
+          <p class="spinner-text">Ищем лучшие туры для вас...</p>
         </div>
       </div>
 
       <!-- Row 1 - Основные поля -->
-      <BasicSearchFields
-        v-model="searchForm"
-        :active-selector="activeSelector"
-        :is-loading="isLoading"
-        :departure-cities-options="searchData.departureCitiesOptions.value"
-        :countries-options="searchData.countriesOptions.value"
-        :packages-options="searchData.packagesOptions.value"
-      />
+      <div class="form-row">
+        <!-- Откуда -->
+        <div class="field-group">
+          <label class="field-label">
+            <span v-if="activeSelector === 'departureCity'" class="field-arrow"></span>
+            Откуда:
+          </label>
+          <Multiselect
+            v-model="searchForm.departureCity"
+            :options="searchData.departureCitiesOptions.value"
+            :searchable="true"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="Выберите город"
+            label="label"
+            valueProp="value"
+            :disabled="isLoading"
+          />
+        </div>
+
+        <!-- Куда -->
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.departureCity }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'destination'" class="field-arrow"></span>
+            Куда:
+          </label>
+          <Multiselect
+            v-model="searchForm.destination"
+            :options="searchData.countriesOptions.value"
+            :searchable="true"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="Выберите страну"
+            label="label"
+            valueProp="value"
+            :disabled="isLoading || !searchForm.departureCity"
+          />
+        </div>
+
+        <!-- Пакет -->
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.destination }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'package'" class="field-arrow"></span>
+            Пакет:
+          </label>
+          <Multiselect
+            v-model="searchForm.package"
+            :options="searchData.packagesOptions.value"
+            :searchable="true"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="Выберите пакет"
+            label="label"
+            valueProp="value"
+            :disabled="isLoading || !searchForm.destination"
+          />
+        </div>
+
+        <!-- Город прилета -->
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.package }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'arrivalCity'" class="field-arrow"></span>
+            Город прилета:
+          </label>
+          <input 
+            type="text" 
+            :value="searchForm.arrivalCity ? searchForm.arrivalCity.name : 'Город будет выбран автоматически'"
+            :disabled="true"
+            style="min-height: 38px; height: 38px; border: 1px solid #dddddd; border-radius: 4px; padding: 4px 8px; font-size: 14px; color: #222222; background: #f5f5f5; font-family: inherit; box-sizing: border-box;"
+            title="Автоматически устанавливается на основе выбранного пакета"
+          />
+        </div>
+      </div>
 
       <!-- Row 2 - Даты и ночи -->
-      <DateSearchFields
-        v-model="searchForm"
-        :is-check-in-date-enabled="!!isCheckInDateEnabled"
-        :is-check-out-date-enabled="!!isCheckOutDateEnabled"
-        :are-nights-fields-enabled="!!areNightsFieldsEnabled"
-        :show-date-indicator="!!showDateIndicator"
-        :nights-options="searchData.nightsOptions.value"
-      />
+      <div class="form-row">
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.arrivalCity }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'checkInDate'" class="field-arrow"></span>
+            Период заезда от:
+          </label>
+          <VueDatePicker
+            v-model="searchForm.checkInDate"
+            :min-date="new Date()"
+            format="dd.MM.yyyy"
+            placeholder="Выберите дату"
+            :month-change-on-scroll="false"
+            :auto-apply="true"
+            :enable-time-picker="false"
+            :week-start="1"
+            weekday-format="long"
+            month-format="long"
+            locale="ru"
+            :title-format="{ month: 'long', year: 'numeric' }"
+            month-name-format="long"
+            :disabled="!searchForm.arrivalCity"
+          />
+        </div>
+
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'checkOutDate'" class="field-arrow"></span>
+            Период заезда до:
+          </label>
+          <VueDatePicker
+            v-model="searchForm.checkOutDate"
+            :min-date="searchForm.checkInDate || new Date()"
+            format="dd.MM.yyyy"
+            placeholder="Выберите дату"
+            :month-change-on-scroll="false"
+            :auto-apply="true"
+            :enable-time-picker="false"
+            :week-start="1"
+            weekday-format="long"
+            month-format="long"
+            locale="ru"
+            :title-format="{ month: 'long', year: 'numeric' }"
+            month-name-format="long"
+            :disabled="!searchForm.checkInDate"
+          />
+        </div>
+
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'nights'" class="field-arrow"></span>
+            Ночей в отеле от:
+          </label>
+          <Multiselect
+            v-model="searchForm.nights"
+            :options="searchData.nightsOptions.value"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="6"
+            label="label"
+            valueProp="value"
+            :disabled="!searchForm.checkInDate"
+            @change="updateNights2Min"
+          />
+        </div>
+
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'nights2'" class="field-arrow"></span>
+            Ночей в отеле до:
+          </label>
+          <Multiselect
+            v-model="searchForm.nights2"
+            :options="filteredNights2Options"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="6"
+            label="label"
+            valueProp="value"
+            :disabled="!searchForm.checkInDate"
+          />
+        </div>
+      </div>
 
       <!-- Row 3 - Люди и цены -->
-      <PeopleSearchFields
-        v-model="searchForm"
-        :are-people-fields-enabled="!!arePeopleFieldsEnabled"
-        :are-children-fields-enabled="!!areChildrenFieldsEnabled"
-        :are-price-and-filters-enabled="!!arePriceAndFiltersEnabled"
-        :show-children-indicator="!!showChildrenIndicator"
-        :adults-options="searchData.adultsOptions.value"
-        :children-options="searchData.childrenOptions.value"
-      />
+      <div class="form-row">
+        <!-- Взрослые -->
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'adults'" class="field-arrow"></span>
+            Взрослых:
+          </label>
+          <Multiselect
+            v-model="searchForm.adults"
+            :options="searchData.adultsOptions.value"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            placeholder="2"
+            label="label"
+            valueProp="value"
+            :disabled="!searchForm.checkInDate"
+          />
+        </div>
+
+        <!-- Дети -->
+        <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'children'" class="field-arrow"></span>
+            Детей:
+          </label>
+          <Multiselect
+            v-model="searchForm.children"
+            :options="searchData.childrenOptions.value"
+            :searchable="false"
+            :canClear="false"
+            :canDeselect="false"
+            label="label"
+            valueProp="value"
+            :disabled="!searchForm.checkInDate"
+          />
+        </div>
+
+        <!-- Возраст детей -->
+        <div v-if="searchForm.children !== null && searchForm.children > 0" class="field-group">
+          <label>Возраст детей:</label>
+          <div class="children-ages">
+            <Multiselect
+              v-for="(age, index) in searchForm.childrenAges"
+              :key="index"
+              v-model="searchForm.childrenAges[index]"
+              :options="[
+                { label: '0-2 года', value: 0 },
+                { label: '3-12 лет', value: 3 },
+                { label: '13-17 лет', value: 13 }
+              ]"
+              :searchable="false"
+              :canClear="false"
+              :canDeselect="false"
+              placeholder="Возраст"
+              label="label"
+              valueProp="value"
+            />
+          </div>
+        </div>
+
+        <!-- Цена -->
+        <div class="field-group" :class="{ 'disabled-field': searchForm.children === null }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'priceFrom'" class="field-arrow"></span>
+            Цена € от:
+          </label>
+          <input type="number" v-model="searchForm.priceFrom" placeholder="От" :disabled="searchForm.children === null" />
+        </div>
+
+        <div class="field-group" :class="{ 'disabled-field': searchForm.children === null }">
+          <label class="field-label">
+            <span v-if="activeSelector === 'priceTo'" class="field-arrow"></span>
+            Цена € до:
+          </label>
+          <input type="number" v-model="searchForm.priceTo" placeholder="До" :disabled="searchForm.children === null" />
+        </div>
+      </div>
 
       <!-- Filters Section -->
-      <SearchFilters
-        :regions="searchData.regions.value"
-        :categories="searchData.categories.value"
-        :hotels="searchData.hotels.value"
-        :meals="searchData.meals.value"
-        :options="searchData.options.value"
-        :selected-regions="selectedFilters.regions"
-        :selected-categories="selectedFilters.categories"
-        :selected-hotels="selectedFilters.hotels"
-        :selected-meals="selectedFilters.meals"
-        :selected-options="selectedFilters.options"
-        :disabled="!arePriceAndFiltersEnabled"
-        @update:regions="selectedFilters.regions = $event"
-        @update:categories="selectedFilters.categories = $event"
-        @update:hotels="selectedFilters.hotels = $event"
-        @update:meals="selectedFilters.meals = $event"
-        @update:options="selectedFilters.options = $event"
-      />
-
+      <div :class="{ 'disabled-field': searchForm.children === null }">
+        <SearchFilters
+          :regions="searchData.regions.value"
+          :categories="searchData.categories.value"
+          :hotels="searchData.hotels.value"
+          :meals="searchData.meals.value"
+          :options="searchData.options.value"
+          :selected-regions="selectedFilters.regions"
+          :selected-categories="selectedFilters.categories"
+          :selected-hotels="selectedFilters.hotels"
+          :selected-meals="selectedFilters.meals"
+          :selected-options="selectedFilters.options"
+          :disabled="searchForm.children === null"
+          @update:regions="selectedFilters.regions = $event"
+          @update:categories="selectedFilters.categories = $event"
+          @update:hotels="selectedFilters.hotels = $event"
+          @update:meals="selectedFilters.meals = $event"
+          @update:options="selectedFilters.options = $event"
+        />
+      </div>
 
       <!-- Action Buttons -->
       <div class="action-buttons">
-        <div class="results-info">
-          <span v-if="searchResults !== null" class="results-count">
+        <div class="results-count">
+          <span v-if="searchResults && Object.keys(searchResults).length > 0">
             Найдено туров: {{ totalResults }}
           </span>
         </div>
-        <div class="buttons-group">
-          <BaseButton 
-            variant="secondary" 
-            @click="handleReset"
-            :disabled="isLoading"
+        <button type="button" @click="handleReset" class="reset-btn">
+          Сбросить параметры
+        </button>
+        <button type="button" @click="handleSearch" class="search-btn">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            Сбросить параметры
-          </BaseButton>
-          <BaseButton 
-            variant="primary" 
-            @click="handleSearch"
-            :loading="isLoading"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            Поиск тура
-          </BaseButton>
-        </div>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          Поиск тура
+        </button>
       </div>
     </div>
 
     <!-- Результаты поиска -->
-    <div v-if="searchResults !== null && totalResults > 0" class="search-results-section">
+    <div v-if="searchResults && Object.keys(searchResults).length > 0" class="search-results-section">
       <SearchResults 
         :results="formattedResults" 
         :is-loading="isLoading"
         :current-page="currentPage"
         :total-pages="totalPages"
-        :prev-page="prevPage"
-        :next-page="nextPage"
+        :prev-page="currentPage > 1 ? currentPage - 1 : null"
+        :next-page="currentPage < totalPages ? currentPage + 1 : null"
         @book="handleBook"
-        @pageChanged="handlePageChange"
+        @page-change="handlePageChange"
       />
-    </div>
-    
-    <!-- Сообщение о том, что туры не найдены -->
-    <div v-else-if="searchResults !== null && totalResults === 0" class="search-results-section">
-      <div class="no-results-message">
-        <p>Туры не найдены</p>
-        <p>Попробуйте изменить параметры поиска</p>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, computed, defineAsyncComponent, watch } from 'vue'
-  import { useNotifications } from '../composables/useNotifications'
-  import { BaseButton } from './ui'
-  const NotificationToast = defineAsyncComponent(() => import('./NotificationToast.vue'))
+  import { ref, onMounted, computed, defineAsyncComponent, watch, nextTick } from 'vue'
+  import VueDatePicker from '@vuepic/vue-datepicker'
+  import '@vuepic/vue-datepicker/dist/main.css'
+  import Multiselect from '@vueform/multiselect'
+  import '@vueform/multiselect/themes/default.css'
   // Динамический импорт для обхода проблемы с TypeScript
   const SearchFilters = defineAsyncComponent(() => import('./search/SearchFilters.vue'))
   const SearchResults = defineAsyncComponent(() => import('./SearchResults.vue'))
-  const BasicSearchFields = defineAsyncComponent(() => import('./search/BasicSearchFields.vue'))
-  const DateSearchFields = defineAsyncComponent(() => import('./search/DateSearchFields.vue'))
-  const PeopleSearchFields = defineAsyncComponent(() => import('./search/PeopleSearchFields.vue'))
   import { useSearchData } from '../composables/useSearchData'
   import type { SearchForm, SelectedFilters } from '../types/search'
-  
-  // Notifications
-  const { notifications, removeNotification, showError } = useNotifications()
+  import '../styles/spinner.css'
 
   // Интерфейс для результатов поиска от OBS API
   interface ObsSearchResult {
@@ -188,11 +366,11 @@
     package: null,
     arrivalCity: null,
     date: null,
-    checkInDate: new Date(), // Сегодня
-    checkOutDate: new Date(), // Сегодняшняя дата по умолчанию
-    nights: 6,
-    nights2: 6,
-    adults: 2,
+    checkInDate: null,
+    checkOutDate: null,
+    nights: null,
+    nights2: null,
+    adults: null,
     children: null,
     childrenAges: [],
     priceFrom: null,
@@ -212,23 +390,60 @@
   const searchResults = ref<Record<string, ObsSearchResult> | null>(null)
   const totalResults = ref(0)
   
-  
-  // Состояние пагинации
+  // Пагинация
   const currentPage = ref(1)
-  const totalPages = ref(1)
-  const perPage = ref(20)
-  const prevPage = ref<number | null>(null)
-  const nextPage = ref<number | null>(null)
+  const itemsPerPage = 20 // Показываем по 20 на странице
+  const serverPageSize = 501 // Загружаем все результаты сразу (бэкенд возвращает все если per_page > 500)
+  const lastSearchParams = ref<Record<string, unknown> | null>(null)
+  const allLoadedResults = ref<Record<string, ObsSearchResult> | null>(null) // Все загруженные результаты
+  
+  // Server-side pagination - no client-side pagination needed
+  const totalPages = computed(() => Math.ceil(totalResults.value / itemsPerPage))
+  
+  // Hybrid pagination: server loads 100, frontend shows 20
+  const paginatedResults = computed(() => {
+    console.log('🔥 paginatedResults computed triggered')
+    console.log('🔥 currentPage.value:', currentPage.value)
+    console.log('🔥 totalResults.value:', totalResults.value)
+    console.log('🔥 allLoadedResults.value:', allLoadedResults.value)
+    
+    if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') {
+      console.log('🔥 No allLoadedResults, returning empty array')
+      return []
+    }
+    
+    // Get all loaded results as array
+    const allResults = Object.values(allLoadedResults.value)
+    console.log('🔥 allLoadedResults length:', allResults.length)
+    console.log('🔥 allLoadedResults keys:', Object.keys(allLoadedResults.value))
+    
+    // Calculate pagination for current page (20 items per page)
+    const startIndex = (currentPage.value - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    console.log('🔥 startIndex:', startIndex, 'endIndex:', endIndex)
+    
+    const paginated = allResults.slice(startIndex, endIndex)
+    console.log('🔥 paginated results length:', paginated.length)
+    console.log('🔥 paginated results:', paginated)
+    
+    return paginated
+  })
 
   // Получаем данные из composable
   const searchData = useSearchData()
 
   // Определяем активный селектор для показа стрелки
-  const activeSelector = computed(() => {
+  const activeSelector = computed((): string | null => {
     if (!searchForm.value.departureCity) return 'departureCity'
     if (!searchForm.value.destination) return 'destination'
     if (!searchForm.value.package) return 'package'
     if (!searchForm.value.arrivalCity) return 'arrivalCity'
+    if (!searchForm.value.checkInDate) return 'checkInDate'
+    if (!searchForm.value.checkOutDate) return 'checkOutDate'
+    // После выбора даты заезда активируются все поля одновременно
+    // Показываем стрелочку на поле "Детей" после выбора даты заезда
+    if (searchForm.value.checkInDate && searchForm.value.children === null) return 'children'
+    // После выбора детей (включая 0 - "Без детей") все поля активируются, стрелочка исчезает
     return null // Все селекторы заполнены
   })
 
@@ -237,64 +452,46 @@
     console.log('activeSelector changed:', newValue)
   }, { immediate: true })
 
-
-  // Флаги для отслеживания реального выбора пользователем
-  const userSelectedCheckInDate = ref(false)
-  const userSelectedCheckOutDate = ref(false)
-  const userSelectedNights = ref(false)
-  const userSelectedAdults = ref(false)
-  
-  // Флаг для показа мигающей стрелочки на поле детей
-  const showChildrenIndicator = ref(false)
-  
-  // Флаг для показа мигающей стрелочки на поле "Период поиска от"
-  const showDateIndicator = ref(false)
-
-  // Определяем, когда поле "Период От" должно быть активным
-  const isCheckInDateEnabled = computed(() => {
-    return searchForm.value.departureCity && 
-           searchForm.value.destination && 
-           searchForm.value.package
+  // Автоматическое заполнение полей значениями по умолчанию после выбора даты заезда
+  watch(() => searchForm.value.checkInDate, (newDate) => {
+    if (newDate) {
+      // Заполняем поля значениями по умолчанию
+      if (!searchForm.value.nights) {
+        searchForm.value.nights = 6
+      }
+      if (!searchForm.value.nights2) {
+        searchForm.value.nights2 = 6
+      }
+      if (!searchForm.value.adults) {
+        searchForm.value.adults = 2
+      }
+      // Поле children остается null для выбора пользователем
+    }
   })
 
-  // Определяем, когда поле "Период До" должно быть активным
-  const isCheckOutDateEnabled = computed(() => {
-    return isCheckInDateEnabled.value && userSelectedCheckInDate.value
+  // Фильтрованные опции для второго селектора ночей
+  const filteredNights2Options = computed(() => {
+    if (!searchForm.value.nights) {
+      return []
+    }
+
+    return searchData.nightsOptions.value.filter(
+      (option: { value: number; label: string }) => option.value >= (searchForm.value.nights || 0)
+    )
   })
 
-  // Определяем, когда поля ночей должны быть активными
-  const areNightsFieldsEnabled = computed(() => {
-    return isCheckInDateEnabled.value && userSelectedCheckInDate.value
-  })
-
-  // Определяем, когда поля людей должны быть активными
-  const arePeopleFieldsEnabled = computed(() => {
-    return isCheckInDateEnabled.value && userSelectedCheckInDate.value
-  })
-
-  // Определяем, когда поля цен и фильтров должны быть активными
-  const arePriceAndFiltersEnabled = computed(() => {
-    return arePeopleFieldsEnabled.value && (userSelectedAdults.value || searchForm.value.children !== null)
-  })
-
-  // Определяем, когда поля детей должны быть активными (только после выбора даты)
-  const areChildrenFieldsEnabled = computed(() => {
-    return isCheckInDateEnabled.value && userSelectedCheckInDate.value
-  })
-
-
-  // Форматированные результаты для отображения (с клиентской пагинацией)
+  // Форматированные результаты для отображения
   const formattedResults = computed(() => {
+    console.log('🔥 formattedResults computed triggered')
+    console.log('🔥 paginatedResults.value length:', paginatedResults.value.length)
+    
     if (!searchResults.value || typeof searchResults.value !== 'object') {
+      console.log('🔥 No searchResults in formattedResults, returning empty array')
       return []
     }
     
-    // Преобразуем объект результатов в массив
-    console.log('🔥 formattedResults - searchResults.value:', searchResults.value)
-    console.log('🔥 formattedResults - Object.keys length:', Object.keys(searchResults.value).length)
-    console.log('🔥 formattedResults - Object.values length:', Object.values(searchResults.value).length)
-    
-    const allResults = Object.values(searchResults.value).map((result: ObsSearchResult) => ({
+    // Используем пагинированные результаты
+    const formatted = paginatedResults.value.map((result: ObsSearchResult) => ({
       unique_key: result.unique_key || '',
       rid: result.rid || '',
       accommodation: {
@@ -324,40 +521,8 @@
       }
     }))
     
-    // Клиентская пагинация - показываем только результаты для текущей страницы
-    const startIndex = (currentPage.value - 1) * perPage.value
-    const endIndex = startIndex + perPage.value
-    console.log('🔥 Slice calculation:', {
-      currentPage: currentPage.value,
-      perPage: perPage.value,
-      startIndex,
-      endIndex,
-      allResultsLength: allResults.length
-    })
-    console.log('🔥 perPage.value in formattedResults:', perPage.value)
-    const pageResults = allResults.slice(startIndex, endIndex)
-    console.log('🔥 Slice result length:', pageResults.length)
-    console.log('🔥 First few pageResults:', pageResults.slice(0, 3))
-    
-    console.log('🔥 Client pagination:', {
-      totalResults: allResults.length,
-      currentPage: currentPage.value,
-      perPage: perPage.value,
-      startIndex,
-      endIndex,
-      pageResults: pageResults.length,
-      totalPages: totalPages.value
-    })
-    
-    // Проверяем, что возвращаем
-    if (pageResults.length === 0) {
-      console.log('🔥 WARNING: pageResults is empty!')
-      console.log('🔥 allResults length:', allResults.length)
-      console.log('🔥 startIndex:', startIndex, 'endIndex:', endIndex)
-      console.log('🔥 allResults slice test:', allResults.slice(0, 5))
-    }
-    
-    return pageResults
+    console.log('🔥 formatted results length:', formatted.length)
+    return formatted
   })
 
   // Инициализация данных при монтировании
@@ -427,58 +592,114 @@
 
   // Следим за изменениями пакета и загружаем связанные данные
   watch(() => searchForm.value.package, async (newPackage) => {
-    console.log('Package watch triggered:', newPackage?.id, newPackage?.label)
+    console.log('Package watch triggered:', newPackage)
     try {
       if (newPackage && newPackage.id) {
-        console.log(`Loading data for package ${newPackage.id}`)
+        console.log(`Loading data for package ${newPackage.id}: ${newPackage.label || newPackage.name}`)
+        console.log('Package full data:', JSON.stringify(newPackage, null, 2))
         
-        // Устанавливаем город прилета
+        // Если у пакета есть аэропорты, устанавливаем город прилета
         if (newPackage.airports && newPackage.airports.length > 0) {
           const airport = newPackage.airports[0]
-          searchForm.value.arrivalCity = {
+          console.log('Found airport in package:', airport)
+          
+          // Создаем объект города прилета
+          const arrivalCity = {
             id: airport.id,
             name: airport.label || airport.name || `Airport ${airport.id}`
           }
-          console.log('Set arrival city:', searchForm.value.arrivalCity)
+          
+          // Принудительно обновляем реактивность
+          searchForm.value.arrivalCity = { ...arrivalCity }
+          console.log(`Set arrival city to:`, arrivalCity)
+          console.log('searchForm.arrivalCity after set:', searchForm.value.arrivalCity)
+          
+          // Ждем обновления DOM и принудительно обновляем Multiselect
+          await nextTick()
+          console.log('DOM updated, arrival city should now be visible')
         } else {
-          // Устанавливаем город по умолчанию
-          searchForm.value.arrivalCity = {
-            id: 50004,
-            name: 'ANTALYA'
+          console.log('No airports found in package, checking if it\'s a specific destination package')
+          
+          // Если это пакет для конкретного направления, 
+          // попробуем определить город по названию пакета
+          const packageName = (newPackage.label || newPackage.name || '').toLowerCase()
+          let arrivalCity = null
+          
+          if (packageName.includes('antalya')) {
+            arrivalCity = {
+              id: 50004, // ID аэропорта ANTALYA из документации
+              name: 'ANTALYA'
+            }
+          } else if (packageName.includes('istanbul')) {
+            arrivalCity = {
+              id: 50005, // ID аэропорта ISTANBUL
+              name: 'ISTANBUL'
+            }
+          } else if (packageName.includes('bodrum')) {
+            arrivalCity = {
+              id: 50006, // ID аэропорта BODRUM
+              name: 'BODRUM'
+            }
+          } else if (packageName.includes('kemer')) {
+            arrivalCity = {
+              id: 50007, // ID аэропорта KEMER
+              name: 'KEMER'
+            }
+          } else if (packageName.includes('alanya')) {
+            arrivalCity = {
+              id: 50008, // ID аэропорта ALANYA
+              name: 'ALANYA'
+            }
           }
-          console.log('Set default arrival city: ANTALYA')
+          
+          if (arrivalCity) {
+            // Принудительно обновляем реактивность
+            searchForm.value.arrivalCity = { ...arrivalCity }
+            console.log(`Set arrival city based on package name:`, arrivalCity)
+            console.log('searchForm.arrivalCity after fallback set:', searchForm.value.arrivalCity)
+            
+            // Ждем обновления DOM
+            await nextTick()
+            console.log('DOM updated for fallback city')
+          } else {
+            console.log('Could not determine arrival city from package name')
+          }
         }
         
-        // Загружаем связанные данные для поиска отелей (кроме отелей - они загружаются при выборе детей)
-        console.log('Loading hotel-related data...')
+        // Загружаем связанные данные для поиска отелей
+        console.log('Starting to load hotel-related data...')
         await Promise.all([
           searchData.loadHotelCategories(newPackage.id),
           searchData.loadLocations(newPackage.id),
+          searchData.loadHotels(newPackage.id),
           searchData.loadMeals(newPackage.id)
         ])
         
-        console.log('Hotel-related data loaded successfully')
+        console.log(`Loaded all data for package: ${newPackage.label || newPackage.name}`)
+        console.log('Hotels loaded:', searchData.hotels.value.length)
+        console.log('Categories loaded:', searchData.categories.value.length)
+        console.log('Regions loaded:', searchData.regions.value.length)
+        console.log('Meals loaded:', searchData.meals.value.length)
         
-        // Загружаем отели после выбора пакета
-        try {
-          console.log('Loading hotels after package selection...')
-          await searchData.loadHotels(newPackage.id)
-          console.log('Hotels loaded:', searchData.hotels.value.length)
-        } catch (error) {
-          console.error('Error loading hotels:', error)
-        }
-        
-        // Автоматически выбираем все регионы, категории и питания
+        // Автоматически выбираем все регионы, категории и отели
         if (searchData.regions.value.length > 0) {
           selectedFilters.value.regions = [1, ...searchData.regions.value.map(r => r.id)]
+          console.log('Auto-selected all regions:', selectedFilters.value.regions)
         }
         
         if (searchData.categories.value.length > 0) {
           selectedFilters.value.categories = [1, ...searchData.categories.value.map(c => c.id)]
+          console.log('Auto-selected all categories:', selectedFilters.value.categories)
+        }
+        
+        if (searchData.hotels.value.length > 0) {
+          selectedFilters.value.hotels = [1, ...searchData.hotels.value.map(h => h.id)]
+          console.log('Auto-selected all hotels:', selectedFilters.value.hotels)
         }
         
         if (searchData.meals.value.length > 0) {
-          selectedFilters.value.meals = searchData.meals.value.map(m => m.id)
+          selectedFilters.value.meals = [1, ...searchData.meals.value.map(m => m.id)]
+          console.log('Auto-selected all meals:', selectedFilters.value.meals)
         }
       } else {
         console.log('Package watch: missing package data', newPackage)
@@ -487,138 +708,44 @@
       }
     } catch (err) {
       console.error('Package watch error:', err)
-    }
-  })
-  
-  // Сбрасываем флаги выбора для всех последующих полей при изменении пакета
-  watch(() => searchForm.value.package, () => {
-    userSelectedCheckInDate.value = false
-    userSelectedCheckOutDate.value = false
-    userSelectedNights.value = false
-    userSelectedAdults.value = false
-    showChildrenIndicator.value = false
-    showDateIndicator.value = false
-  })
-  
-  // Показываем стрелочку у поля "Период поиска от" после выбора пакета
-  watch(() => searchForm.value.package, (newPackage) => {
-    if (newPackage && newPackage.id) {
-      showDateIndicator.value = true
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        package: newPackage
+      })
     }
   })
 
+  // Следим за изменениями количества детей и обновляем массив возрастов
+  watch(() => searchForm.value.children, (newValue) => {
+    if (newValue === null || newValue === 0) {
+      searchForm.value.childrenAges = []
+    } else {
+      const currentAges = [...searchForm.value.childrenAges]
+      searchForm.value.childrenAges = Array(newValue)
+        .fill(0)
+        .map((_, index) => {
+          return index < currentAges.length ? currentAges[index] : 0
+        })
+    }
+  }, { immediate: true })
 
   // Следим за изменениями nights и обновляем nights2
   watch(() => searchForm.value.nights, (newValue) => {
     if (newValue && (!searchForm.value.nights2 || searchForm.value.nights2 < newValue)) {
       searchForm.value.nights2 = newValue
     }
-    // Устанавливаем флаг, что пользователь выбрал ночи
-    if (newValue) {
-      userSelectedNights.value = true
-    }
   }, { immediate: true })
 
-  // Следим за изменениями adults и устанавливаем флаг
-  watch(() => searchForm.value.adults, (newValue) => {
-    if (newValue) {
-      userSelectedAdults.value = true
+  // Следим за изменениями даты заезда и устанавливаем дату выезда
+  watch(() => searchForm.value.checkInDate, (newValue) => {
+    if (
+      newValue &&
+      (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newValue)
+    ) {
+      searchForm.value.checkOutDate = newValue
     }
   }, { immediate: true })
-
-  // Следим за изменениями children
-  watch(() => searchForm.value.children, (newValue) => {
-    if (newValue !== null && newValue !== undefined) {
-      // Скрываем мигающую стрелочку
-      showChildrenIndicator.value = false
-      console.log('Children selected, hotels should now be enabled')
-    }
-  }, { immediate: true })
-
-  // Следим за изменениями даты начала периода и устанавливаем дату конца периода
-  watch(() => searchForm.value.checkInDate, (newValue, oldValue) => {
-    if (newValue) {
-      // Убеждаемся, что дата начала >= сегодня
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      if (newValue < today) {
-        // Если дата в прошлом, устанавливаем сегодня (только если это не тот же день)
-        if (!oldValue || oldValue.getTime() !== today.getTime()) {
-          searchForm.value.checkInDate = today
-        }
-        return
-      }
-      
-      // Устанавливаем дату конца периода равной дате начала (сегодняшняя дата)
-      if (!searchForm.value.checkOutDate || searchForm.value.checkOutDate <= newValue) {
-        searchForm.value.checkOutDate = new Date(newValue)
-      }
-      
-      // Устанавливаем флаг, что пользователь выбрал дату начала
-      userSelectedCheckInDate.value = true
-      
-      // Скрываем стрелочку у поля даты и показываем у поля детей
-      showDateIndicator.value = false
-      showChildrenIndicator.value = true
-    }
-  }, { immediate: true })
-
-  // Следим за изменениями даты конца периода и устанавливаем флаг
-  watch(() => searchForm.value.checkOutDate, (newValue) => {
-    if (newValue) {
-      userSelectedCheckOutDate.value = true
-    }
-  }, { immediate: true })
-
-  // Форматируем даты в формат YYYY-MM-DD для Calendar Hints API
-  const formatDateForApi = (date: Date) => {
-    const year = date.getFullYear()
-    const month = (date.getMonth() + 1).toString().padStart(2, '0')
-    const day = date.getDate().toString().padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  // Загружаем Calendar Hints при изменении основных параметров
-  let calendarHintsTimeout: number | null = null
-  const loadCalendarHints = async () => {
-    if (!searchForm.value.departureCity?.id || !searchForm.value.arrivalCity?.id) {
-      return
-    }
-
-    // Debounce запросы, чтобы избежать бесконечных циклов
-    if (calendarHintsTimeout) {
-      clearTimeout(calendarHintsTimeout)
-    }
-    
-    calendarHintsTimeout = setTimeout(async () => {
-      try {
-        const params = {
-          city_from: searchForm.value.departureCity!.id,
-          city_to: searchForm.value.arrivalCity!.id.toString(),
-          date_from: searchForm.value.checkInDate ? formatDateForApi(searchForm.value.checkInDate) : undefined,
-          date_to: searchForm.value.checkOutDate ? formatDateForApi(searchForm.value.checkOutDate) : undefined
-        }
-        
-        console.log('Loading calendar hints with params:', params)
-        const hints = await searchData.loadCalendarHints(params)
-        console.log('Calendar hints loaded:', hints)
-      } catch (err) {
-        console.warn('Failed to load calendar hints:', err)
-      }
-    }, 500) // 500ms debounce
-  }
-
-  // Следим за изменениями для загрузки Calendar Hints
-  watch([() => searchForm.value.departureCity, () => searchForm.value.arrivalCity], 
-    (newValues, oldValues) => {
-      // Проверяем, что значения действительно изменились, чтобы избежать бесконечного цикла
-      if (newValues[0]?.id !== oldValues?.[0]?.id || newValues[1]?.id !== oldValues?.[1]?.id) {
-        loadCalendarHints()
-      }
-    }, 
-    { deep: true }
-  )
 
   // Emits
   const emit = defineEmits<{
@@ -627,10 +754,6 @@
 
   // Methods
   const handleSearch = () => {
-    // Сбрасываем предыдущие результаты поиска
-    searchResults.value = null
-    totalResults.value = 0
-    
     // Добавляем выбранные отели в форму поиска
     searchForm.value.selectedHotels = [...selectedFilters.value.hotels]
 
@@ -640,40 +763,36 @@
 
     // Проверяем обязательные поля
     if (!searchForm.value.departureCity?.id) {
-      showError('Выберите город отправления', 'Пожалуйста, выберите город отправления в поле "Откуда"')
+      console.error('Departure city is required')
       return
     }
     if (!searchForm.value.destination?.id) {
-      showError('Выберите страну назначения', 'Пожалуйста, выберите страну назначения в поле "Куда"')
+      console.error('Destination country is required')
       return
     }
     if (!searchForm.value.package?.id) {
-      showError('Выберите пакет', 'Пожалуйста, выберите пакет тура')
+      console.error('Package is required')
       return
     }
     if (!searchForm.value.arrivalCity?.id) {
-      showError('Выберите город прилета', 'Пожалуйста, выберите город прилета')
+      console.error('Arrival city is required')
       return
     }
     if (!searchForm.value.checkInDate) {
-      showError('Выберите дату заезда', 'Пожалуйста, выберите дату заезда в поле "Период поиска от"')
+      console.error('Check-in date is required')
       return
     }
     if (!searchForm.value.checkOutDate) {
-      showError('Выберите дату выезда', 'Пожалуйста, выберите дату выезда в поле "Период поиска до"')
-      return
-    }
-    if (selectedFilters.value.hotels.length === 0) {
-      showError('Выберите отель', 'Пожалуйста, выберите хотя бы один отель для поиска туров')
+      console.error('Check-out date is required')
       return
     }
 
-    // Форматируем даты в формат YYYY-MM-DD для OBS API
-    const formatDateForSearch = (date: Date) => {
-      const year = date.getFullYear()
-      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    // Форматируем даты в формат DD.MM.YYYY для API
+    const formatDate = (date: Date) => {
       const day = date.getDate().toString().padStart(2, '0')
-      return `${year}-${month}-${day}`
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}.${month}.${year}`
     }
 
     // Подготавливаем параметры для API
@@ -686,97 +805,69 @@
     console.log('airportCityTo type:', typeof airportCityTo)
     console.log('airportCityTo isArray:', Array.isArray(airportCityTo))
     
-
     const searchParams = {
-      country: Number(searchForm.value.destination.id), // Используем ID страны как number
+      country: Number(searchForm.value.destination.id),
       package_template: Number(searchForm.value.package.id),
       airport_city_from: Number(searchForm.value.departureCity.id),
       airport_city_to: airportCityTo, // Используем подготовленный массив
-      date_from: formatDateForSearch(searchForm.value.checkInDate),
-      date_to: formatDateForSearch(searchForm.value.checkOutDate),
+      date_from: formatDate(searchForm.value.checkInDate),
+      date_to: formatDate(searchForm.value.checkOutDate),
       nights_from: Number(searchForm.value.nights),
       nights_to: Number(searchForm.value.nights2),
       adults: Number(searchForm.value.adults),
-      children: searchForm.value.children && searchForm.value.children > 0 ? Number(searchForm.value.children) : undefined,
-      children_age: searchForm.value.children && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
-      price_from: searchForm.value.priceFrom ? Number(searchForm.value.priceFrom) : undefined,
-      price_to: searchForm.value.priceTo ? Number(searchForm.value.priceTo) : undefined,
-      selected_hotels: selectedFilters.value.hotels.length > 0 ? selectedFilters.value.hotels.map(id => Number(id)) : [1], // Добавляем selected_hotels, если не выбраны отели, используем [1] как fallback
+      children: searchForm.value.children !== null ? Number(searchForm.value.children) : undefined,
+      children_age: searchForm.value.children !== null && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
+      selected_hotels: selectedFilters.value.hotels.length > 0 ? selectedFilters.value.hotels.map(id => Number(id)) : [1], // Если выбраны отели, используем их; иначе используем [1] как fallback
       meals: selectedFilters.value.meals.length > 0 ? selectedFilters.value.meals.map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
         return meal?.name || meal?.label || mealId.toString()
-      }) : undefined,
+      }) : searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean), // Fallback: используем все доступные типы питания
       options: selectedFilters.value.options.length > 0 ? selectedFilters.value.options.map(optionId => {
         return optionId.toString()
-      }) : undefined,
-      // Pagination parameters - загружаем все результаты для клиентской пагинации
-      page: 1,
-      per_page: 1000  // Загружаем много результатов сразу
+      }) : undefined
     }
 
     console.log('Formatted search params for API:', searchParams)
-    console.log('🔥 Pagination params:', { page: searchParams.page, per_page: searchParams.per_page })
-    console.log('🔥 Requesting all results with per_page=1000')
-    console.log('🔥 perPage.value:', perPage.value)
     console.log('airport_city_to before API call:', searchParams.airport_city_to)
     console.log('airport_city_to type before API call:', typeof searchParams.airport_city_to)
     console.log('airport_city_to isArray before API call:', Array.isArray(searchParams.airport_city_to))
 
     isLoading.value = true
     
+    // Сбрасываем предыдущие результаты и пагинацию
+    searchResults.value = null
+    totalResults.value = 0
+    currentPage.value = 1
+    
+    // Добавляем параметры пагинации (загружаем по 100 туров)
+    const searchParamsWithPagination = {
+      ...searchParams,
+      page: 1, // Всегда начинаем с первой страницы
+      per_page: serverPageSize // Загружаем по 100 туров
+    }
+    
+    // Сохраняем параметры поиска для пагинации
+    lastSearchParams.value = searchParams
+    
+    // Сбрасываем загруженные результаты
+    allLoadedResults.value = null
+    
     // Вызываем API поиска
-    searchData.performSearch(searchParams)
+    searchData.performSearch(searchParamsWithPagination)
       .then((result) => {
         console.log('Search result:', result)
         isLoading.value = false
         
-                  // Сохраняем результаты поиска и данные пагинации
-          if (result) {
-            console.log('🔥 API result structure:', result)
-            console.log('🔥 API result.results type:', typeof result.results)
-            console.log('🔥 API result.results isArray:', Array.isArray(result.results))
-            console.log('🔥 API result.results length:', result.results ? Object.keys(result.results).length : 0)
-            
-            searchResults.value = result.results || {}
-            totalResults.value = result.total_results || 0
-            
-            // При клиентской пагинации рассчитываем totalPages на основе общего количества результатов
-            const allResultsCount = Object.keys(result.results || {}).length
-            console.log('🔥 All results count from API:', allResultsCount)
-            console.log('🔥 Total results from API:', result.total_results)
-            console.log('🔥 Per page before API response:', perPage.value)
-            console.log('🔥 API returned per_page:', result.per_page)
-            console.log('🔥 API returned total_pages:', result.total_pages)
-            
-            // НЕ перезаписываем perPage.value из API - используем наш фиксированный размер страницы
-            // perPage.value = result.per_page || 10  // УБРАЛИ ЭТУ СТРОКУ
-            
-            // Если API вернул все результаты (total_pages = 1), используем их для клиентской пагинации
-            if (result.total_pages === 1 && result.per_page > 500) {
-              console.log('🔥 API returned all results, using client-side pagination')
-              totalPages.value = Math.ceil(allResultsCount / perPage.value)
-            } else {
-              console.log('🔥 API returned paginated results, using server pagination')
-              totalPages.value = result.total_pages || 1
-            }
-            
-            console.log('🔥 Final totalPages:', totalPages.value)
-            console.log('🔥 Final perPage:', perPage.value)
-            
-            // Обновляем prevPage и nextPage для клиентской пагинации
-            prevPage.value = currentPage.value > 1 ? currentPage.value - 1 : null
-            nextPage.value = currentPage.value < totalPages.value ? currentPage.value + 1 : null
-          console.log('Results saved:', searchResults.value)
-          console.log('Total results:', totalResults.value)
-          console.log('🔥 API returned page:', result.page)
-          console.log('🔥 Our currentPage:', currentPage.value)
-          console.log('Pagination data:', { 
-            currentPage: currentPage.value, 
-            totalPages: totalPages.value, 
-            perPage: perPage.value,
-            prevPage: prevPage.value,
-            nextPage: nextPage.value
-          })
+        // Сохраняем результаты поиска
+        if (result && result.results) {
+          searchResults.value = result.results
+          totalResults.value = result.total_results || 0
+          allLoadedResults.value = result.results // Сохраняем все загруженные результаты
+          console.log('🔥 Results saved:', searchResults.value)
+          console.log('🔥 Total results:', totalResults.value)
+          console.log('🔥 All loaded results:', allLoadedResults.value)
+          console.log('🔥 All loaded results keys:', allLoadedResults.value ? Object.keys(allLoadedResults.value) : 'null')
+          console.log('🔥 All loaded results length:', allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0)
         }
         
         emit('search', searchParams)
@@ -795,11 +886,11 @@
       package: null,
       arrivalCity: null,
       date: null,
-      checkInDate: new Date(), // Сегодня
-      checkOutDate: new Date(), // Сегодняшняя дата по умолчанию
-      nights: 6,
-      nights2: 6,
-      adults: 2,
+      checkInDate: null,
+      checkOutDate: null,
+      nights: null,
+      nights2: null,
+      adults: null,
       children: null,
       childrenAges: [],
       priceFrom: null,
@@ -814,64 +905,48 @@
       options: [],
     }
     
-    // Сбрасываем результаты поиска
+    // Очищаем результаты поиска
     searchResults.value = null
+    allLoadedResults.value = null
     totalResults.value = 0
-    
-    // Сбрасываем пагинацию
     currentPage.value = 1
-    totalPages.value = 1
-    perPage.value = 20  // Устанавливаем правильный размер страницы
-    prevPage.value = null
-    nextPage.value = null
-    
-    // Сбрасываем флаги выбора пользователем
-    userSelectedCheckInDate.value = false
-    userSelectedCheckOutDate.value = false
-    userSelectedNights.value = false
-    userSelectedAdults.value = false
-    showChildrenIndicator.value = false
-    showDateIndicator.value = false
+    lastSearchParams.value = null
   }
 
+  // Метод для обновления минимального значения для nights2
+  const updateNights2Min = () => {
+    if (searchForm.value.nights && (!searchForm.value.nights2 || searchForm.value.nights2 < searchForm.value.nights)) {
+      searchForm.value.nights2 = searchForm.value.nights
+    }
+  }
 
-  // Обработчик смены страницы (клиентская пагинация)
+  // Метод для обработки смены страницы
   const handlePageChange = (page: number) => {
-    console.log('🔥 handlePageChange called with page:', page)
+    console.log('🔥 SearchForm handlePageChange called with:', page)
     console.log('🔥 Current page before change:', currentPage.value)
-    console.log('🔥 Total pages:', totalPages.value)
-    console.log('🔥 searchResults.value before change:', searchResults.value)
-    console.log('🔥 searchResults.value keys length:', searchResults.value ? Object.keys(searchResults.value).length : 0)
+    
+    // Don't change page if it's the same
+    if (page === currentPage.value) {
+      console.log('🔥 Same page, no need to change')
+      return
+    }
     
     currentPage.value = page
     
-    // Обновляем prevPage и nextPage для клиентской пагинации
-    prevPage.value = currentPage.value > 1 ? currentPage.value - 1 : null
-    nextPage.value = currentPage.value < totalPages.value ? currentPage.value + 1 : null
+    // Since we load all results at once (per_page > 500), no need to make additional API calls
+    console.log('🔥 Data already loaded, just changing page')
     
-    console.log('🔥 Current page after change:', currentPage.value)
-    console.log('🔥 Updated prevPage:', prevPage.value, 'nextPage:', nextPage.value)
-    console.log('🔥 searchResults.value after change:', searchResults.value)
-    // При клиентской пагинации не нужно вызывать API - просто меняем страницу
-    console.log('🔥 Client-side pagination - no API call needed')
-    
-    // Прокручиваем к началу списка отелей
-    scrollToResults()
-  }
-  
-  // Функция для прокрутки к секции результатов
-  const scrollToResults = () => {
-    // Ищем секцию результатов
+    // Прокручиваем к началу результатов с отступом сверху
     const resultsSection = document.querySelector('.search-results-section')
-    
     if (resultsSection) {
-      // Прокручиваем с отступом сверху, чтобы секция была лучше видна
-      const elementRect = resultsSection.getBoundingClientRect()
-      const absoluteElementTop = elementRect.top + window.pageYOffset
-      const offset = 100 // Отступ сверху в пикселях
+      const elementTop = resultsSection.getBoundingClientRect().top + window.pageYOffset
+      // Адаптивный отступ: больше на мобильных, меньше на десктопе
+      const isMobile = window.innerWidth <= 768
+      const offset = isMobile ? 80 : 100
+      const offsetPosition = elementTop - offset
       
       window.scrollTo({
-        top: absoluteElementTop - offset,
+        top: offsetPosition,
         behavior: 'smooth'
       })
     }
@@ -913,24 +988,6 @@
     border-radius: 8px;
   }
 
-  .loading-spinner {
-    text-align: center;
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
 
   /* Search Form */
   .search-form {
@@ -947,7 +1004,7 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 12px;
-    align-items: end;
+    align-items: center;
   }
 
   .field-group {
@@ -964,30 +1021,15 @@
     color: #222222;
   }
 
-  /* Стили для неактивных полей */
-  .field-group.disabled-field label {
-    color: #999999 !important;
-  }
-
-  .field-group.disabled-field :deep(.multiselect) {
-    opacity: 0.6;
-    background-color: #f5f5f5;
-    border-color: #e0e0e0;
-  }
-
-  .field-group.disabled-field :deep(.multiselect .multiselect__placeholder) {
-    color: #999999;
-  }
-
-  .field-group.disabled-field :deep(.dp__input) {
-    opacity: 0.6;
-    background-color: #f5f5f5;
-    border-color: #e0e0e0;
-    color: #999999;
-  }
-
-  .field-group.disabled-field :deep(.dp__input::placeholder) {
-    color: #999999;
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
 
   .field-hint {
@@ -1055,73 +1097,63 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid #ebebeb;
   }
 
-  .results-info {
-    flex: 1;
-  }
-
   .results-count {
     font-size: 12px;
-    color: #666666;
+    color: #9ca3af;
     font-weight: 400;
+    margin-right: auto;
   }
 
-  .buttons-group {
-    display: flex;
-    gap: 12px;
-  }
-
-  /* Переопределяем стили BaseButton для соответствия дизайну формы */
-  .buttons-group :deep(.btn) {
-    min-height: 40px;
-    padding: 10px 20px;
+  .reset-btn {
+    background: white;
+    border: 1px solid var(--color-dark-gray);
+    color: var(--color-dark-gray);
     border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
     font-family: var(--font-family);
     font-weight: 500;
     transition: all 0.2s ease;
+    min-width: 180px;
+  }
+
+  .reset-btn:hover {
+    background: var(--color-dark-gray-muted);
+  }
+
+  .search-btn {
+    background: white;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    border-radius: 6px;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    min-width: 140px;
     display: flex;
     align-items: center;
     gap: 8px;
     justify-content: center;
   }
 
-  .buttons-group :deep(.btn--secondary) {
-    background: white;
-    border: 1px solid var(--color-dark-gray);
-    color: var(--color-dark-gray);
-    min-width: 180px;
-  }
-
-  .buttons-group :deep(.btn--secondary:hover) {
-    background: var(--color-dark-gray-muted);
-    transform: none;
-    box-shadow: none;
-  }
-
-  .buttons-group :deep(.btn--primary) {
-    background: white;
-    border: 1px solid var(--color-primary);
-    color: var(--color-primary);
-    font-weight: 600;
-    min-width: 140px;
-  }
-
-  .buttons-group :deep(.btn--primary:hover) {
+  .search-btn:hover {
     background: var(--color-primary);
     color: white;
-    transform: none;
-    box-shadow: none;
   }
 
-  .buttons-group :deep(.btn svg) {
+  .search-btn svg {
     transition: transform 0.2s;
   }
 
-  .buttons-group :deep(.btn:hover svg) {
+  .search-btn:hover svg {
     transform: scale(1.1);
   }
 
@@ -1134,32 +1166,6 @@
     border: 1px solid var(--color-border);
   }
 
-  .results-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-text);
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-
-
-  .no-results-message {
-    text-align: center;
-    padding: 2rem;
-    color: #666666;
-  }
-
-  .no-results-message p {
-    margin: 0.5rem 0;
-    font-size: 1.1rem;
-  }
-
-  .no-results-message p:first-child {
-    font-weight: 600;
-    color: #333333;
-  }
-
-  /* Test Checkbox Section */
 
   /* Mobile Responsive */
   @media (max-width: 768px) {
@@ -1177,18 +1183,13 @@
 
     .action-buttons {
       flex-direction: column;
-      gap: 12px;
+      align-items: stretch;
     }
 
-    .results-info {
-      order: 2;
+    .results-count {
       text-align: center;
-    }
-
-    .buttons-group {
-      order: 1;
-      flex-direction: column;
-      width: 100%;
+      margin-right: 0;
+      margin-bottom: 8px;
     }
 
     .reset-btn,
@@ -1196,6 +1197,82 @@
       min-width: auto;
       width: 100%;
     }
+  }
 
+  /* Анимированная стрелка для селекторов */
+  @keyframes downarrow {
+    0% { 
+      transform: translateY(0); 
+      opacity: 0.4; 
+    }
+    100% { 
+      transform: translateY(0.4em); 
+      opacity: 1; 
+    }
+  }
+
+  /* Стрелка рядом с названием поля */
+  .field-arrow {
+    display: inline-block;
+    margin-right: 0.5rem;
+    vertical-align: top;
+    margin-top: -0.4em;
+  }
+
+  .field-arrow::before {
+    content: '';
+    display: inline-block;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid #2ECC71; /* Зеленая стрелка */
+    animation: downarrow 0.8s infinite alternate ease-in-out;
+    margin-right: 0.25rem;
+  }
+
+  /* Стили для заблокированных полей */
+  .disabled-field .field-label {
+    color: #999999 !important;
+  }
+
+  .disabled-field input,
+  .disabled-field .multiselect,
+  .disabled-field .dp__input {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    border-color: #ddd !important;
+    opacity: 0.6;
+  }
+
+  /* Стили для отключенных VueDatePicker */
+  .disabled-field :deep(.dp__input) {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    border-color: #ddd !important;
+    opacity: 0.6;
+  }
+
+  .disabled-field :deep(.dp__input_wrap) {
+    opacity: 0.6;
+  }
+
+  /* Стили для отключенных фильтров */
+  .disabled-field :deep(.filter-group) {
+    opacity: 0.6;
+  }
+
+  .disabled-field :deep(.filter-group label) {
+    color: #999999 !important;
+  }
+
+  .disabled-field :deep(.filter-group input),
+  .disabled-field :deep(.filter-group select),
+  .disabled-field :deep(.filter-group .multiselect) {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    border-color: #ddd !important;
+    opacity: 0.6;
   }
 </style>

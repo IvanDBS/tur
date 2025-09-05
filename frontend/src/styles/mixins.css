@@ -1,0 +1,210 @@
+/* CSS Mixins для унификации стилей */
+
+/* Миксин для disabled состояний полей */
+@mixin disabled-field {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+/* Миксин для disabled состояний лейблов */
+@mixin disabled-label {
+  color: #999999 !important;
+}
+
+/* Миксин для базовых стилей полей формы */
+@mixin form-field-base {
+  min-height: 38px;
+  height: 38px;
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #222222;
+  font-family: 'Onest', var(--font-family);
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+/* Миксин для hover состояний полей */
+@mixin form-field-hover {
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
+}
+
+/* Миксин для focus состояний полей */
+@mixin form-field-focus {
+  border-color: #1d3557;
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2);
+  outline: none;
+}
+
+/* Миксин для стилей лейблов полей */
+@mixin field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #222222;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Миксин для стилей строк форм */
+@mixin form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+  align-items: end;
+}
+
+/* Миксин для стилей групп полей */
+@mixin field-group {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Миксин для стилей кнопок */
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Onest', var(--font-family);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+/* Миксин для стилей кнопок вторичного типа */
+@mixin button-secondary {
+  @include button-base;
+  background: white;
+  border: 1px solid var(--color-dark-gray);
+  color: var(--color-dark-gray);
+  min-width: 180px;
+}
+
+/* Миксин для стилей кнопок первичного типа */
+@mixin button-primary {
+  @include button-base;
+  background: white;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+  min-width: 140px;
+}
+
+/* Миксин для hover состояний кнопок */
+@mixin button-hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Миксин для стилей чекбоксов */
+@mixin checkbox-base {
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+/* Миксин для стилей чекбоксов в списках */
+@mixin checkbox-list {
+  @include checkbox-base;
+  
+  &:hover {
+    background-color: var(--color-secondary-muted);
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Миксин для стилей контейнеров фильтров */
+@mixin filter-container {
+  display: flex;
+  flex-direction: column;
+  height: 210px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+}
+
+/* Миксин для стилей заголовков фильтров */
+@mixin filter-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Миксин для стилей списков фильтров */
+@mixin filter-list {
+  flex: 1;
+  overflow-y: auto;
+  border: none;
+  border-radius: 0;
+}
+
+/* Миксин для стилей поиска в фильтрах */
+@mixin filter-search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-left: 10px;
+  
+  .search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 5px 0 0;
+    color: #888888;
+    width: 10%;
+    flex: 0 0 10%;
+    max-width: 25px;
+  }
+  
+  .search-input {
+    flex: 1 1 90%;
+    width: 90%;
+    padding: 6px 0 6px 0;
+    margin: 0;
+    border: none;
+    font-size: 14px;
+    font-family: 'Onest', var(--font-family);
+    background: transparent;
+    height: 32px;
+    outline: none;
+    text-align: left;
+    text-indent: 0;
+  }
+}
+
+/* Миксин для мобильной адаптивности */
+@mixin mobile-responsive {
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .field-group {
+      min-width: 80px;
+    }
+  }
+}

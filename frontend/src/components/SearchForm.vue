@@ -327,6 +327,7 @@
   import { useSearchData } from '../composables/useSearchData'
   import type { SearchForm, SelectedFilters } from '../types/search'
   import '../styles/spinner.css'
+  import '../styles/components/search-form.css'
 
   // Интерфейс для результатов поиска от OBS API
   interface ObsSearchResult {
@@ -402,29 +403,29 @@
   
   // Hybrid pagination: server loads 100, frontend shows 20
   const paginatedResults = computed(() => {
-    console.log('🔥 paginatedResults computed triggered')
-    console.log('🔥 currentPage.value:', currentPage.value)
-    console.log('🔥 totalResults.value:', totalResults.value)
-    console.log('🔥 allLoadedResults.value:', allLoadedResults.value)
+    // console.log('🔥 paginatedResults computed triggered')
+    // console.log('🔥 currentPage.value:', currentPage.value)
+    // console.log('🔥 totalResults.value:', totalResults.value)
+    // console.log('🔥 allLoadedResults.value:', allLoadedResults.value)
     
     if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') {
-      console.log('🔥 No allLoadedResults, returning empty array')
+      // console.log('🔥 No allLoadedResults, returning empty array')
       return []
     }
     
     // Get all loaded results as array
     const allResults = Object.values(allLoadedResults.value)
-    console.log('🔥 allLoadedResults length:', allResults.length)
-    console.log('🔥 allLoadedResults keys:', Object.keys(allLoadedResults.value))
+    // console.log('🔥 allLoadedResults length:', allResults.length)
+    // console.log('🔥 allLoadedResults keys:', Object.keys(allLoadedResults.value))
     
     // Calculate pagination for current page (20 items per page)
     const startIndex = (currentPage.value - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
-    console.log('🔥 startIndex:', startIndex, 'endIndex:', endIndex)
+    // console.log('🔥 startIndex:', startIndex, 'endIndex:', endIndex)
     
     const paginated = allResults.slice(startIndex, endIndex)
-    console.log('🔥 paginated results length:', paginated.length)
-    console.log('🔥 paginated results:', paginated)
+    // console.log('🔥 paginated results length:', paginated.length)
+    // console.log('🔥 paginated results:', paginated)
     
     return paginated
   })
@@ -448,8 +449,8 @@
   })
 
   // Отладка activeSelector
-  watch(activeSelector, (newValue) => {
-    console.log('activeSelector changed:', newValue)
+  watch(activeSelector, () => {
+    // console.log('activeSelector changed:', newValue)
   }, { immediate: true })
 
   // Автоматическое заполнение полей значениями по умолчанию после выбора даты заезда
@@ -482,11 +483,11 @@
 
   // Форматированные результаты для отображения
   const formattedResults = computed(() => {
-    console.log('🔥 formattedResults computed triggered')
-    console.log('🔥 paginatedResults.value length:', paginatedResults.value.length)
+    // console.log('🔥 formattedResults computed triggered')
+    // console.log('🔥 paginatedResults.value length:', paginatedResults.value.length)
     
     if (!searchResults.value || typeof searchResults.value !== 'object') {
-      console.log('🔥 No searchResults in formattedResults, returning empty array')
+      // console.log('🔥 No searchResults in formattedResults, returning empty array')
       return []
     }
     
@@ -521,7 +522,7 @@
       }
     }))
     
-    console.log('🔥 formatted results length:', formatted.length)
+    // console.log('🔥 formatted results length:', formatted.length)
     return formatted
   })
 
@@ -529,7 +530,7 @@
   onMounted(async () => {
     try {
       await searchData.initializeData()
-      console.log('Search data initialized')
+      // console.log('Search data initialized')
     } catch (err) {
       console.error('Failed to initialize search data:', err)
     }
@@ -537,34 +538,34 @@
 
   // Следим за изменениями города отправления и загружаем страны
   watch(() => searchForm.value.departureCity, async (newCity) => {
-    console.log('Departure city watch triggered:', newCity)
+    // console.log('Departure city watch triggered:', newCity)
     try {
       if (newCity && newCity.id) {
-        console.log(`Loading countries for city ${newCity.id}`)
+        // console.log(`Loading countries for city ${newCity.id}`)
         searchForm.value.destination = null
         searchForm.value.package = null
         // Загружаем страны для выбранного города через useSearchData
         await searchData.loadCountries(newCity.id)
-        console.log(`Loaded countries for departure city: ${newCity.label || newCity.name}`)
+        // console.log(`Loaded countries for departure city: ${newCity.label || newCity.name}`)
       } else {
-        console.log('Departure city watch: missing city data', newCity)
+        // console.log('Departure city watch: missing city data', newCity)
       }
     } catch (err) {
       console.error('Departure city watch error:', err)
-      console.error('Error details:', {
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-        city: newCity
-      })
+      // console.error('Error details:', {
+      //   message: err instanceof Error ? err.message : String(err),
+      //   stack: err instanceof Error ? err.stack : undefined,
+      //   city: newCity
+      // })
     }
   })
 
   // Следим за изменениями страны и загружаем пакеты
   watch(() => searchForm.value.destination, async (newCountry) => {
-    console.log('Destination watch triggered:', newCountry)
+    // console.log('Destination watch triggered:', newCountry)
     try {
       if (newCountry && newCountry.id && searchForm.value.departureCity?.id) {
-        console.log(`Loading packages for country ${newCountry.id} and city ${searchForm.value.departureCity.id}`)
+        // console.log(`Loading packages for country ${newCountry.id} and city ${searchForm.value.departureCity.id}`)
         // Очищаем предыдущий выбор
         searchForm.value.package = null
         searchForm.value.arrivalCity = null
@@ -572,36 +573,36 @@
         // Загружаем пакеты для выбранной страны через useSearchData
         await searchData.loadPackageTemplates(newCountry.id, searchForm.value.departureCity.id)
         
-        console.log(`Loaded packages for country: ${newCountry.label || newCountry.name}`)
+        // console.log(`Loaded packages for country: ${newCountry.label || newCountry.name}`)
       } else {
-        console.log('Destination watch: missing required data', {
-          newCountry,
-          departureCity: searchForm.value.departureCity
-        })
+        // console.log('Destination watch: missing required data', {
+        //   newCountry,
+        //   departureCity: searchForm.value.departureCity
+        // })
       }
     } catch (err) {
       console.error('Destination watch error:', err)
-      console.error('Error details:', {
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-        country: newCountry,
-        departureCity: searchForm.value.departureCity
-      })
+      // console.error('Error details:', {
+      //   message: err instanceof Error ? err.message : String(err),
+      //   stack: err instanceof Error ? err.stack : undefined,
+      //   country: newCountry,
+      //   departureCity: searchForm.value.departureCity
+      // })
     }
   })
 
   // Следим за изменениями пакета и загружаем связанные данные
   watch(() => searchForm.value.package, async (newPackage) => {
-    console.log('Package watch triggered:', newPackage)
+    // console.log('Package watch triggered:', newPackage)
     try {
       if (newPackage && newPackage.id) {
-        console.log(`Loading data for package ${newPackage.id}: ${newPackage.label || newPackage.name}`)
-        console.log('Package full data:', JSON.stringify(newPackage, null, 2))
+        // console.log(`Loading data for package ${newPackage.id}: ${newPackage.label || newPackage.name}`)
+        // console.log('Package full data:', JSON.stringify(newPackage, null, 2))
         
         // Если у пакета есть аэропорты, устанавливаем город прилета
         if (newPackage.airports && newPackage.airports.length > 0) {
           const airport = newPackage.airports[0]
-          console.log('Found airport in package:', airport)
+          // console.log('Found airport in package:', airport)
           
           // Создаем объект города прилета
           const arrivalCity = {
@@ -611,14 +612,14 @@
           
           // Принудительно обновляем реактивность
           searchForm.value.arrivalCity = { ...arrivalCity }
-          console.log(`Set arrival city to:`, arrivalCity)
-          console.log('searchForm.arrivalCity after set:', searchForm.value.arrivalCity)
+          // console.log(`Set arrival city to:`, arrivalCity)
+          // console.log('searchForm.arrivalCity after set:', searchForm.value.arrivalCity)
           
           // Ждем обновления DOM и принудительно обновляем Multiselect
           await nextTick()
-          console.log('DOM updated, arrival city should now be visible')
+          // console.log('DOM updated, arrival city should now be visible')
         } else {
-          console.log('No airports found in package, checking if it\'s a specific destination package')
+          // console.log('No airports found in package, checking if it\'s a specific destination package')
           
           // Если это пакет для конкретного направления, 
           // попробуем определить город по названию пакета
@@ -655,19 +656,19 @@
           if (arrivalCity) {
             // Принудительно обновляем реактивность
             searchForm.value.arrivalCity = { ...arrivalCity }
-            console.log(`Set arrival city based on package name:`, arrivalCity)
-            console.log('searchForm.arrivalCity after fallback set:', searchForm.value.arrivalCity)
+            // console.log(`Set arrival city based on package name:`, arrivalCity)
+            // console.log('searchForm.arrivalCity after fallback set:', searchForm.value.arrivalCity)
             
             // Ждем обновления DOM
             await nextTick()
-            console.log('DOM updated for fallback city')
+            // console.log('DOM updated for fallback city')
           } else {
-            console.log('Could not determine arrival city from package name')
+            // console.log('Could not determine arrival city from package name')
           }
         }
         
         // Загружаем связанные данные для поиска отелей
-        console.log('Starting to load hotel-related data...')
+        // console.log('Starting to load hotel-related data...')
         await Promise.all([
           searchData.loadHotelCategories(newPackage.id),
           searchData.loadLocations(newPackage.id),
@@ -675,44 +676,44 @@
           searchData.loadMeals(newPackage.id)
         ])
         
-        console.log(`Loaded all data for package: ${newPackage.label || newPackage.name}`)
-        console.log('Hotels loaded:', searchData.hotels.value.length)
-        console.log('Categories loaded:', searchData.categories.value.length)
-        console.log('Regions loaded:', searchData.regions.value.length)
-        console.log('Meals loaded:', searchData.meals.value.length)
+        // console.log(`Loaded all data for package: ${newPackage.label || newPackage.name}`)
+        // console.log('Hotels loaded:', searchData.hotels.value.length)
+        // console.log('Categories loaded:', searchData.categories.value.length)
+        // console.log('Regions loaded:', searchData.regions.value.length)
+        // console.log('Meals loaded:', searchData.meals.value.length)
         
         // Автоматически выбираем все регионы, категории и отели
         if (searchData.regions.value.length > 0) {
           selectedFilters.value.regions = [1, ...searchData.regions.value.map(r => r.id)]
-          console.log('Auto-selected all regions:', selectedFilters.value.regions)
+          // console.log('Auto-selected all regions:', selectedFilters.value.regions)
         }
         
         if (searchData.categories.value.length > 0) {
           selectedFilters.value.categories = [1, ...searchData.categories.value.map(c => c.id)]
-          console.log('Auto-selected all categories:', selectedFilters.value.categories)
+          // console.log('Auto-selected all categories:', selectedFilters.value.categories)
         }
         
         if (searchData.hotels.value.length > 0) {
           selectedFilters.value.hotels = [1, ...searchData.hotels.value.map(h => h.id)]
-          console.log('Auto-selected all hotels:', selectedFilters.value.hotels)
+          // console.log('Auto-selected all hotels:', selectedFilters.value.hotels)
         }
         
         if (searchData.meals.value.length > 0) {
           selectedFilters.value.meals = [1, ...searchData.meals.value.map(m => m.id)]
-          console.log('Auto-selected all meals:', selectedFilters.value.meals)
+          // console.log('Auto-selected all meals:', selectedFilters.value.meals)
         }
       } else {
-        console.log('Package watch: missing package data', newPackage)
+        // console.log('Package watch: missing package data', newPackage)
         // Очищаем город прилета при сбросе пакета
         searchForm.value.arrivalCity = null
       }
     } catch (err) {
       console.error('Package watch error:', err)
-      console.error('Error details:', {
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-        package: newPackage
-      })
+      // console.error('Error details:', {
+      //   message: err instanceof Error ? err.message : String(err),
+      //   stack: err instanceof Error ? err.stack : undefined,
+      //   package: newPackage
+      // })
     }
   })
 
@@ -757,33 +758,33 @@
     // Добавляем выбранные отели в форму поиска
     searchForm.value.selectedHotels = [...selectedFilters.value.hotels]
 
-    console.log('Searching with params:', searchForm.value)
-    console.log('Selected filters:', selectedFilters.value)
-    console.log('Children ages:', searchForm.value.childrenAges)
+    // console.log('Searching with params:', searchForm.value)
+    // console.log('Selected filters:', selectedFilters.value)
+    // console.log('Children ages:', searchForm.value.childrenAges)
 
     // Проверяем обязательные поля
     if (!searchForm.value.departureCity?.id) {
-      console.error('Departure city is required')
+      // console.error('Departure city is required')
       return
     }
     if (!searchForm.value.destination?.id) {
-      console.error('Destination country is required')
+      // console.error('Destination country is required')
       return
     }
     if (!searchForm.value.package?.id) {
-      console.error('Package is required')
+      // console.error('Package is required')
       return
     }
     if (!searchForm.value.arrivalCity?.id) {
-      console.error('Arrival city is required')
+      // console.error('Arrival city is required')
       return
     }
     if (!searchForm.value.checkInDate) {
-      console.error('Check-in date is required')
+      // console.error('Check-in date is required')
       return
     }
     if (!searchForm.value.checkOutDate) {
-      console.error('Check-out date is required')
+      // console.error('Check-out date is required')
       return
     }
 
@@ -796,14 +797,14 @@
     }
 
     // Подготавливаем параметры для API
-    console.log('arrivalCity before formatting:', searchForm.value.arrivalCity)
-    console.log('arrivalCity.id type:', typeof searchForm.value.arrivalCity?.id)
-    console.log('arrivalCity.id value:', searchForm.value.arrivalCity?.id)
+    // console.log('arrivalCity before formatting:', searchForm.value.arrivalCity)
+    // console.log('arrivalCity.id type:', typeof searchForm.value.arrivalCity?.id)
+    // console.log('arrivalCity.id value:', searchForm.value.arrivalCity?.id)
     
     const airportCityTo = searchForm.value.arrivalCity?.id ? [Number(searchForm.value.arrivalCity.id)] : []
-    console.log('airportCityTo array:', airportCityTo)
-    console.log('airportCityTo type:', typeof airportCityTo)
-    console.log('airportCityTo isArray:', Array.isArray(airportCityTo))
+    // console.log('airportCityTo array:', airportCityTo)
+    // console.log('airportCityTo type:', typeof airportCityTo)
+    // console.log('airportCityTo isArray:', Array.isArray(airportCityTo))
     
     const searchParams = {
       country: Number(searchForm.value.destination.id),
@@ -827,10 +828,10 @@
       }) : undefined
     }
 
-    console.log('Formatted search params for API:', searchParams)
-    console.log('airport_city_to before API call:', searchParams.airport_city_to)
-    console.log('airport_city_to type before API call:', typeof searchParams.airport_city_to)
-    console.log('airport_city_to isArray before API call:', Array.isArray(searchParams.airport_city_to))
+    // console.log('Formatted search params for API:', searchParams)
+    // console.log('airport_city_to before API call:', searchParams.airport_city_to)
+    // console.log('airport_city_to type before API call:', typeof searchParams.airport_city_to)
+    // console.log('airport_city_to isArray before API call:', Array.isArray(searchParams.airport_city_to))
 
     isLoading.value = true
     
@@ -855,7 +856,7 @@
     // Вызываем API поиска
     searchData.performSearch(searchParamsWithPagination)
       .then((result) => {
-        console.log('Search result:', result)
+        // console.log('Search result:', result)
         isLoading.value = false
         
         // Сохраняем результаты поиска
@@ -863,11 +864,11 @@
           searchResults.value = result.results
           totalResults.value = result.total_results || 0
           allLoadedResults.value = result.results // Сохраняем все загруженные результаты
-          console.log('🔥 Results saved:', searchResults.value)
-          console.log('🔥 Total results:', totalResults.value)
-          console.log('🔥 All loaded results:', allLoadedResults.value)
-          console.log('🔥 All loaded results keys:', allLoadedResults.value ? Object.keys(allLoadedResults.value) : 'null')
-          console.log('🔥 All loaded results length:', allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0)
+          // console.log('🔥 Results saved:', searchResults.value)
+          // console.log('🔥 Total results:', totalResults.value)
+          // console.log('🔥 All loaded results:', allLoadedResults.value)
+          // console.log('🔥 All loaded results keys:', allLoadedResults.value ? Object.keys(allLoadedResults.value) : 'null')
+          // console.log('🔥 All loaded results length:', allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0)
         }
         
         emit('search', searchParams)
@@ -922,19 +923,19 @@
 
   // Метод для обработки смены страницы
   const handlePageChange = (page: number) => {
-    console.log('🔥 SearchForm handlePageChange called with:', page)
-    console.log('🔥 Current page before change:', currentPage.value)
+    // console.log('🔥 SearchForm handlePageChange called with:', page)
+    // console.log('🔥 Current page before change:', currentPage.value)
     
     // Don't change page if it's the same
     if (page === currentPage.value) {
-      console.log('🔥 Same page, no need to change')
+      // console.log('🔥 Same page, no need to change')
       return
     }
     
     currentPage.value = page
     
     // Since we load all results at once (per_page > 500), no need to make additional API calls
-    console.log('🔥 Data already loaded, just changing page')
+    // console.log('🔥 Data already loaded, just changing page')
     
     // Прокручиваем к началу результатов с отступом сверху
     const resultsSection = document.querySelector('.search-results-section')
@@ -954,7 +955,7 @@
 
   // Обработчик бронирования тура
   const handleBook = (result: ObsSearchResult) => {
-    console.log('Booking tour:', result)
+    // console.log('Booking tour:', result)
     // Здесь можно добавить логику бронирования
     alert(`Бронирование тура: ${result.accommodation.hotel.name} за ${result.price.amount} ${result.price.currency}`)
   }
@@ -999,280 +1000,5 @@
     position: relative;
   }
 
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 12px;
-    align-items: center;
-  }
-
-  .field-group {
-    flex: 1;
-    min-width: 100px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .field-group label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #222222;
-  }
-
-  .field-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #222222;
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-
-  .field-hint {
-    font-size: 10px;
-    color: #666666;
-    margin-top: 2px;
-    font-style: italic;
-  }
-
-  /* Стили для календаря */
-  :deep(.dp__active_date) {
-    background: transparent !important;
-    border: 2px solid var(--color-primary) !important;
-    color: var(--color-primary) !important;
-  }
-
-  :deep(.dp__input) {
-    min-height: 38px !important;
-    height: 38px !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Стили для input полей */
-  .field-group input[type='number'] {
-    border: 1px solid #dddddd !important;
-    border-radius: 4px !important;
-    padding: 4px 8px !important;
-    font-size: 14px !important;
-    color: #222222 !important;
-    background: #ffffff !important;
-    font-family: var(--font-family) !important;
-    min-height: 38px !important;
-    height: 38px !important;
-    box-sizing: border-box !important;
-  }
-
-  .field-group input[type='number']:hover,
-  .field-group input[type='number']:focus {
-    border-color: #1d3557 !important;
-    box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2) !important;
-    outline: none !important;
-  }
-
-  /* Убираем стрелочки у number input */
-  .field-group input[type='number']::-webkit-outer-spin-button,
-  .field-group input[type='number']::-webkit-inner-spin-button {
-    -webkit-appearance: none !important;
-    margin: 0 !important;
-  }
-
-  .field-group input[type='number'] {
-    appearance: textfield !important;
-    -moz-appearance: textfield !important;
-  }
-
-  /* Стили для селекторов возраста детей */
-  .children-ages {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  /* Action Buttons */
-  .action-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid #ebebeb;
-  }
-
-  .results-count {
-    font-size: 12px;
-    color: #9ca3af;
-    font-weight: 400;
-    margin-right: auto;
-  }
-
-  .reset-btn {
-    background: white;
-    border: 1px solid var(--color-dark-gray);
-    color: var(--color-dark-gray);
-    border-radius: 6px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-weight: 500;
-    transition: all 0.2s ease;
-    min-width: 180px;
-  }
-
-  .reset-btn:hover {
-    background: var(--color-dark-gray-muted);
-  }
-
-  .search-btn {
-    background: white;
-    border: 1px solid var(--color-primary);
-    color: var(--color-primary);
-    border-radius: 6px;
-    padding: 10px 24px;
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-weight: 600;
-    transition: all 0.2s ease;
-    min-width: 140px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
-  }
-
-  .search-btn:hover {
-    background: var(--color-primary);
-    color: white;
-  }
-
-  .search-btn svg {
-    transition: transform 0.2s;
-  }
-
-  .search-btn:hover svg {
-    transform: scale(1.1);
-  }
-
-  /* Search Results Section */
-  .search-results-section {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid var(--color-border);
-  }
-
-
-  /* Mobile Responsive */
-  @media (max-width: 768px) {
-    .search-form {
-      padding: 16px;
-    }
-
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-
-    .field-group {
-      min-width: 80px;
-    }
-
-    .action-buttons {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .results-count {
-      text-align: center;
-      margin-right: 0;
-      margin-bottom: 8px;
-    }
-
-    .reset-btn,
-    .search-btn {
-      min-width: auto;
-      width: 100%;
-    }
-  }
-
-  /* Анимированная стрелка для селекторов */
-  @keyframes downarrow {
-    0% { 
-      transform: translateY(0); 
-      opacity: 0.4; 
-    }
-    100% { 
-      transform: translateY(0.4em); 
-      opacity: 1; 
-    }
-  }
-
-  /* Стрелка рядом с названием поля */
-  .field-arrow {
-    display: inline-block;
-    margin-right: 0.5rem;
-    vertical-align: top;
-    margin-top: -0.4em;
-  }
-
-  .field-arrow::before {
-    content: '';
-    display: inline-block;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 6px solid #2ECC71; /* Зеленая стрелка */
-    animation: downarrow 0.8s infinite alternate ease-in-out;
-    margin-right: 0.25rem;
-  }
-
-  /* Стили для заблокированных полей */
-  .disabled-field .field-label {
-    color: #999999 !important;
-  }
-
-  .disabled-field input,
-  .disabled-field .multiselect,
-  .disabled-field .dp__input {
-    background-color: #f5f5f5 !important;
-    color: #999 !important;
-    cursor: not-allowed !important;
-    border-color: #ddd !important;
-    opacity: 0.6;
-  }
-
-  /* Стили для отключенных VueDatePicker */
-  .disabled-field :deep(.dp__input) {
-    background-color: #f5f5f5 !important;
-    color: #999 !important;
-    cursor: not-allowed !important;
-    border-color: #ddd !important;
-    opacity: 0.6;
-  }
-
-  .disabled-field :deep(.dp__input_wrap) {
-    opacity: 0.6;
-  }
-
-  /* Стили для отключенных фильтров */
-  .disabled-field :deep(.filter-group) {
-    opacity: 0.6;
-  }
-
-  .disabled-field :deep(.filter-group label) {
-    color: #999999 !important;
-  }
-
-  .disabled-field :deep(.filter-group input),
-  .disabled-field :deep(.filter-group select),
-  .disabled-field :deep(.filter-group .multiselect) {
-    background-color: #f5f5f5 !important;
-    color: #999 !important;
-    cursor: not-allowed !important;
-    border-color: #ddd !important;
-    opacity: 0.6;
-  }
+  /* Стили перенесены в search-form.css */
 </style>

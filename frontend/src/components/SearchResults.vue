@@ -61,7 +61,7 @@
       :total-pages="totalPages"
       :prev-page="prevPage"
       :next-page="nextPage"
-      @page-change="(page) => { console.log('🔥 SearchResults received page-change:', page); emit('page-change', page) }"
+      @page-change="(page) => { emit('page-change', page) }"
     />
   </div>
 </template>
@@ -140,7 +140,7 @@
 
   const selectResult = (result: SearchResult) => {
     // Could navigate to hotel details or expand card
-    console.log('Selected result:', result)
+    // console.log('Selected result:', result)
   }
 
   const book = (result: SearchResult) => {

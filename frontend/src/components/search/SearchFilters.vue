@@ -286,48 +286,48 @@
 
   // Логирование при получении данных
   onMounted(() => {
-    console.log('SearchFilters mounted with props:', {
-      regions: props.regions.length,
-      categories: props.categories.length,
-      hotels: props.hotels.length,
-      meals: props.meals.length,
-      options: props.options.length
-    })
+    // console.log('SearchFilters mounted with props:', {
+    //   regions: props.regions.length,
+    //   categories: props.categories.length,
+    //   hotels: props.hotels.length,
+    //   meals: props.meals.length,
+    //   options: props.options.length
+    // })
   })
 
   // Следим за изменениями данных
   watch(() => props.hotels, (newHotels) => {
-    console.log('SearchFilters: hotels prop changed:', newHotels.length)
-    console.log('Hotels data:', newHotels)
-    console.log('Sample hotels with city_id:', newHotels.slice(0, 10).map(h => ({ 
-      id: h.id, 
-      name: h.label || h.name, 
-      city_id: h.city_id 
-    })))
+    // console.log('SearchFilters: hotels prop changed:', newHotels.length)
+    // console.log('Hotels data:', newHotels)
+    // console.log('Sample hotels with city_id:', newHotels.slice(0, 10).map(h => ({ 
+    //   id: h.id, 
+    //   name: h.label || h.name, 
+    //   city_id: h.city_id 
+    // })))
   }, { immediate: true })
 
   watch(() => props.categories, (newCategories) => {
-    console.log('SearchFilters: categories prop changed:', newCategories.length)
-    console.log('Categories data:', newCategories.map(c => ({ id: c.id, name: c.label || c.name })))
+    // console.log('SearchFilters: categories prop changed:', newCategories.length)
+    // console.log('Categories data:', newCategories.map(c => ({ id: c.id, name: c.label || c.name })))
   }, { immediate: true })
 
   watch(() => props.regions, (newRegions) => {
-    console.log('SearchFilters: regions prop changed:', newRegions.length)
-    console.log('Regions data:', newRegions.map(r => ({ id: r.id, name: r.label || r.name })))
-    console.log('Selected regions:', props.selectedRegions)
-    console.log('All regions selected?', allRegionsSelected.value)
-    console.log('Selected filters regions:', selectedFilters.value.regions)
+    // console.log('SearchFilters: regions prop changed:', newRegions.length)
+    // console.log('Regions data:', newRegions.map(r => ({ id: r.id, name: r.label || r.name })))
+    // console.log('Selected regions:', props.selectedRegions)
+    // console.log('All regions selected?', allRegionsSelected.value)
+    // console.log('Selected filters regions:', selectedFilters.value.regions)
   }, { immediate: true })
 
   // Следим за изменениями selectedRegions props и синхронизируем с composable
   watch(() => props.selectedRegions, (newSelectedRegions) => {
-    console.log('SearchFilters: selectedRegions prop changed:', newSelectedRegions)
-    console.log('Current selectedFilters.regions:', selectedFilters.value.regions)
+    // console.log('SearchFilters: selectedRegions prop changed:', newSelectedRegions)
+    // console.log('Current selectedFilters.regions:', selectedFilters.value.regions)
     
     // Синхронизируем с composable
     if (JSON.stringify(selectedFilters.value.regions) !== JSON.stringify(newSelectedRegions)) {
       selectedFilters.value.regions = [...newSelectedRegions]
-      console.log('SearchFilters: synchronized selectedFilters.regions:', selectedFilters.value.regions)
+      // console.log('SearchFilters: synchronized selectedFilters.regions:', selectedFilters.value.regions)
     }
   }, { immediate: true, deep: true })
 
@@ -366,7 +366,7 @@
       if (region.cities && Array.isArray(region.cities)) {
         const cityIds = region.cities.map(city => city.id)
         map.set(region.id, cityIds)
-        console.log(`Region ${region.label || region.name} (${region.id}) mapped to cities:`, cityIds)
+        // console.log(`Region ${region.label || region.name} (${region.id}) mapped to cities:`, cityIds)
       }
     })
     
@@ -374,8 +374,8 @@
     map.forEach((value, key) => {
       mapObj[key] = value
     })
-    console.log('Dynamic region cities map:', mapObj)
-    console.log('Available regions:', props.regions.map(r => ({ id: r.id, label: r.label || r.name })))
+    // console.log('Dynamic region cities map:', mapObj)
+    // console.log('Available regions:', props.regions.map(r => ({ id: r.id, label: r.label || r.name })))
     return map
   })
 
@@ -384,20 +384,20 @@
 
   // Фильтрация отелей по поисковому запросу и выбранным регионам
   const filteredHotels = computed(() => {
-    console.log('=== filteredHotels computed triggered ===')
-    console.log('selectedFilters.regions changed to:', selectedFilters.value.regions)
-    console.log('props.hotels count:', props.hotels.length)
+    // console.log('=== filteredHotels computed triggered ===')
+    // console.log('selectedFilters.regions changed to:', selectedFilters.value.regions)
+    // console.log('props.hotels count:', props.hotels.length)
     
     let hotels = props.hotels
-    console.log('filteredHotels computed - total hotels:', hotels.length)
-    console.log('Selected regions:', selectedFilters.value.regions)
-    console.log('Sample hotels with city_id:', hotels.slice(0, 5).map(h => ({ id: h.id, name: h.label || h.name, city_id: h.city_id })))
+    // console.log('filteredHotels computed - total hotels:', hotels.length)
+    // console.log('Selected regions:', selectedFilters.value.regions)
+    // console.log('Sample hotels with city_id:', hotels.slice(0, 5).map(h => ({ id: h.id, name: h.label || h.name, city_id: h.city_id })))
 
     // Фильтрация по выбранным регионам
     if (selectedFilters.value.regions.length > 0) {
       // Если выбран "Все" (id: 1), показываем все отели
       if (selectedFilters.value.regions.includes(1)) {
-        console.log('All regions selected, showing all hotels')
+        // console.log('All regions selected, showing all hotels')
         // Показываем все отели
       } else {
         // Фильтруем отели по выбранным регионам
@@ -412,27 +412,27 @@
           }
         })
         
-        console.log('Selected cities for filtering:', Array.from(selectedCities))
-        console.log('Region cities map keys:', Array.from(regionCitiesMap.value.keys()))
+        // console.log('Selected cities for filtering:', Array.from(selectedCities))
+        // console.log('Region cities map keys:', Array.from(regionCitiesMap.value.keys()))
         
         hotels = hotels.filter(hotel => {
           // Проверяем, есть ли у отеля city_id и соответствует ли он выбранным городам
           if (hotel.city_id) {
             const matches = selectedCities.has(hotel.city_id)
             if (matches) {
-              console.log(`Hotel ${hotel.label || hotel.name} (city_id: ${hotel.city_id}) matches selected cities`)
+              // console.log(`Hotel ${hotel.label || hotel.name} (city_id: ${hotel.city_id}) matches selected cities`)
             }
             return matches
           }
           // Если у отеля нет city_id, НЕ показываем его (только отели с city_id)
-          console.log(`Hotel ${hotel.label || hotel.name} has no city_id, filtering out`)
+          // console.log(`Hotel ${hotel.label || hotel.name} has no city_id, filtering out`)
           return false
         })
-        console.log(`Filtered hotels by regions: ${beforeFilter} -> ${hotels.length}`)
+        // console.log(`Filtered hotels by regions: ${beforeFilter} -> ${hotels.length}`)
       }
     } else {
       // Если не выбрано ни одного региона, показываем пустой список
-      console.log('No regions selected, showing empty list')
+      // console.log('No regions selected, showing empty list')
       hotels = []
     }
 
@@ -443,11 +443,11 @@
       hotels = hotels.filter(hotel =>
         hotel.name?.toLowerCase().includes(query) || hotel.label?.toLowerCase().includes(query)
       )
-      console.log(`Filtered hotels by search: ${beforeSearch} -> ${hotels.length}`)
+      // console.log(`Filtered hotels by search: ${beforeSearch} -> ${hotels.length}`)
     }
 
-    console.log('Final filtered hotels:', hotels.length)
-    console.log('=== filteredHotels computed finished ===')
+    // console.log('Final filtered hotels:', hotels.length)
+    // console.log('=== filteredHotels computed finished ===')
     return hotels
   })
 
@@ -463,14 +463,14 @@
   }
 
   const handleToggleAllRegions = () => {
-    console.log('handleToggleAllRegions called')
-    console.log('Before toggle - selectedFilters.regions:', selectedFilters.value.regions)
-    console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
+    // console.log('handleToggleAllRegions called')
+    // console.log('Before toggle - selectedFilters.regions:', selectedFilters.value.regions)
+    // console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
     
     toggleAllRegions(props.regions)
     
-    console.log('After toggle - selectedFilters.regions:', selectedFilters.value.regions)
-    console.log('Emitting update:regions with:', selectedFilters.value.regions)
+    // console.log('After toggle - selectedFilters.regions:', selectedFilters.value.regions)
+    // console.log('Emitting update:regions with:', selectedFilters.value.regions)
     
     emit('update:regions', selectedFilters.value.regions)
   }

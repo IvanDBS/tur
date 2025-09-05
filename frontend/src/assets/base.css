@@ -13,6 +13,7 @@
 @import '../styles/datepicker.css';
 @import '../styles/components/multiselect.css';
 @import '../styles/components/forms.css';
+@import '../styles/components/search-form.css';
 
 /* CSS Custom Properties - Business Minimalist Theme */
 :root {

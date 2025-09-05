@@ -16,9 +16,9 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
 
   // Синхронизируем с внешними изменениями
   watch(() => initialFilters, (newFilters) => {
-    console.log('useSearchFilters: initialFilters changed:', newFilters)
+    // console.log('useSearchFilters: initialFilters changed:', newFilters)
     selectedFilters.value = { ...newFilters }
-    console.log('useSearchFilters: selectedFilters updated:', selectedFilters.value)
+    // console.log('useSearchFilters: selectedFilters updated:', selectedFilters.value)
   }, { deep: true })
 
   // Computed для проверки "все выбрано"
@@ -28,13 +28,13 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
     const hasAllRegions = selectedFilters.value.regions.includes(1) || 
                          selectedFilters.value.regions.length === availableData.regions.length
     
-    console.log('allRegionsSelected computed:', {
-      selectedRegions: selectedFilters.value.regions,
-      availableRegions: availableData.regions.length,
-      hasId1: selectedFilters.value.regions.includes(1),
-      allSelected: selectedFilters.value.regions.length === availableData.regions.length,
-      result: hasAllRegions
-    })
+    // console.log('allRegionsSelected computed:', {
+    //   selectedRegions: selectedFilters.value.regions,
+    //   availableRegions: availableData.regions.length,
+    //   hasId1: selectedFilters.value.regions.includes(1),
+    //   allSelected: selectedFilters.value.regions.length === availableData.regions.length,
+    //   result: hasAllRegions
+    // })
     
     return hasAllRegions
   })
@@ -80,19 +80,19 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
   }
 
   const toggleAllRegions = (regions: Region[]) => {
-    console.log('toggleAllRegions called:', {
-      allRegionsSelected: allRegionsSelected.value,
-      currentRegions: selectedFilters.value.regions,
-      availableRegions: regions.map(r => ({ id: r.id, name: r.label || r.name }))
-    })
+    // console.log('toggleAllRegions called:', {
+    //   allRegionsSelected: allRegionsSelected.value,
+    //   currentRegions: selectedFilters.value.regions,
+    //   availableRegions: regions.map(r => ({ id: r.id, name: r.label || r.name }))
+    // })
     
     if (allRegionsSelected.value) {
       selectedFilters.value.regions = []
-      console.log('Cleared all regions')
+      // console.log('Cleared all regions')
     } else {
       // Выбираем все регионы включая ID=1 "все регионы"
       selectedFilters.value.regions = [1, ...regions.map(r => r.id)]
-      console.log('Selected all regions:', selectedFilters.value.regions)
+      // console.log('Selected all regions:', selectedFilters.value.regions)
     }
   }
 

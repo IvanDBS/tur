@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue'
+import { arraysEqual } from '../utils/objectUtils'
 import type { SelectedFilters, Region, Hotel } from '../types/search'
 
 /**
@@ -14,12 +15,17 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
 }) {
   const selectedFilters = ref<SelectedFilters>({ ...initialFilters })
 
-  // Синхронизируем с внешними изменениями
+  // Синхронизируем с внешними изменениями (оптимизированно)
   watch(() => initialFilters, (newFilters) => {
-    // console.log('useSearchFilters: initialFilters changed:', newFilters)
-    selectedFilters.value = { ...newFilters }
-    // console.log('useSearchFilters: selectedFilters updated:', selectedFilters.value)
-  }, { deep: true })
+    // Проверяем, действительно ли изменились фильтры
+    if (!arraysEqual(selectedFilters.value.regions, newFilters.regions) ||
+        !arraysEqual(selectedFilters.value.categories, newFilters.categories) ||
+        !arraysEqual(selectedFilters.value.hotels, newFilters.hotels) ||
+        !arraysEqual(selectedFilters.value.meals, newFilters.meals) ||
+        !arraysEqual(selectedFilters.value.options, newFilters.options)) {
+      selectedFilters.value = { ...newFilters }
+    }
+  })
 
   // Computed для проверки "все выбрано"
   const allRegionsSelected = computed(() => {

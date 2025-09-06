@@ -125,6 +125,11 @@ export const useSearchForm = () => {
         searchForm.value.adults = 2
       }
       // Поле children остается null для выбора пользователем
+      
+      // Устанавливаем дату выезда если она не установлена или меньше даты заезда
+      if (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newDate) {
+        searchForm.value.checkOutDate = newDate
+      }
     }
   })
 
@@ -324,15 +329,6 @@ export const useSearchForm = () => {
     }
   }, { immediate: true })
 
-  // Следим за изменениями даты заезда и устанавливаем дату выезда
-  watch(() => searchForm.value.checkInDate, (newValue) => {
-    if (
-      newValue &&
-      (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newValue)
-    ) {
-      searchForm.value.checkOutDate = newValue
-    }
-  }, { immediate: true })
 
   // Methods
   const handleSearch = () => {

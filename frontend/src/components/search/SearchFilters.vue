@@ -214,6 +214,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, watch, toRef } from 'vue'
   import { useSearchFilters } from '../../composables/useSearchFilters'
+  import { arraysEqual } from '../../utils/objectUtils'
   import type {
     Region,
     Category,
@@ -295,66 +296,40 @@
     // })
   })
 
-  // Следим за изменениями данных
-  watch(() => props.hotels, (newHotels) => {
-    // console.log('SearchFilters: hotels prop changed:', newHotels.length)
-    // console.log('Hotels data:', newHotels)
-    // console.log('Sample hotels with city_id:', newHotels.slice(0, 10).map(h => ({ 
-    //   id: h.id, 
-    //   name: h.label || h.name, 
-    //   city_id: h.city_id 
-    // })))
-  }, { immediate: true })
-
-  watch(() => props.categories, (newCategories) => {
-    // console.log('SearchFilters: categories prop changed:', newCategories.length)
-    // console.log('Categories data:', newCategories.map(c => ({ id: c.id, name: c.label || c.name })))
-  }, { immediate: true })
-
-  watch(() => props.regions, (newRegions) => {
-    // console.log('SearchFilters: regions prop changed:', newRegions.length)
-    // console.log('Regions data:', newRegions.map(r => ({ id: r.id, name: r.label || r.name })))
-    // console.log('Selected regions:', props.selectedRegions)
-    // console.log('All regions selected?', allRegionsSelected.value)
-    // console.log('Selected filters regions:', selectedFilters.value.regions)
-  }, { immediate: true })
+  // Удалены неиспользуемые watchers для логирования - они не влияют на функциональность
 
   // Следим за изменениями selectedRegions props и синхронизируем с composable
   watch(() => props.selectedRegions, (newSelectedRegions) => {
-    // console.log('SearchFilters: selectedRegions prop changed:', newSelectedRegions)
-    // console.log('Current selectedFilters.regions:', selectedFilters.value.regions)
-    
-    // Синхронизируем с composable
-    if (JSON.stringify(selectedFilters.value.regions) !== JSON.stringify(newSelectedRegions)) {
+    // Синхронизируем с composable (оптимизированно)
+    if (!arraysEqual(selectedFilters.value.regions, newSelectedRegions)) {
       selectedFilters.value.regions = [...newSelectedRegions]
-      // console.log('SearchFilters: synchronized selectedFilters.regions:', selectedFilters.value.regions)
     }
-  }, { immediate: true, deep: true })
+  }, { immediate: true })
 
   // Следим за изменениями других фильтров
   watch(() => props.selectedCategories, (newSelectedCategories) => {
-    if (JSON.stringify(selectedFilters.value.categories) !== JSON.stringify(newSelectedCategories)) {
+    if (!arraysEqual(selectedFilters.value.categories, newSelectedCategories)) {
       selectedFilters.value.categories = [...newSelectedCategories]
     }
-  }, { immediate: true, deep: true })
+  }, { immediate: true })
 
   watch(() => props.selectedHotels, (newSelectedHotels) => {
-    if (JSON.stringify(selectedFilters.value.hotels) !== JSON.stringify(newSelectedHotels)) {
+    if (!arraysEqual(selectedFilters.value.hotels, newSelectedHotels)) {
       selectedFilters.value.hotels = [...newSelectedHotels]
     }
-  }, { immediate: true, deep: true })
+  }, { immediate: true })
 
   watch(() => props.selectedMeals, (newSelectedMeals) => {
-    if (JSON.stringify(selectedFilters.value.meals) !== JSON.stringify(newSelectedMeals)) {
+    if (!arraysEqual(selectedFilters.value.meals, newSelectedMeals)) {
       selectedFilters.value.meals = [...newSelectedMeals]
     }
-  }, { immediate: true, deep: true })
+  }, { immediate: true })
 
   watch(() => props.selectedOptions, (newSelectedOptions) => {
-    if (JSON.stringify(selectedFilters.value.options) !== JSON.stringify(newSelectedOptions)) {
+    if (!arraysEqual(selectedFilters.value.options, newSelectedOptions)) {
       selectedFilters.value.options = [...newSelectedOptions]
     }
-  }, { immediate: true, deep: true })
+  }, { immediate: true })
 
   // Создаем динамический маппинг регионов к городам на основе props.regions
   const regionCitiesMap = computed(() => {

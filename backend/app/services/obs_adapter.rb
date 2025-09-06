@@ -1,15 +1,11 @@
 # OBS API Adapter
 # High-level interface for OBS API operations
-class ObsAdapter
-  include ActiveModel::Model
-  include ActiveModel::Attributes
-
+class ObsAdapter < BaseApiService
   attribute :user_id, :integer
   attribute :base_url, :string, default: -> { ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md' }
 
   def initialize(attributes = {})
     super
-    @connection = build_connection
     @auth_service = ObsAuthService.new(user_id: user_id) if user_id.present?
     @site_auth_service = ObsSiteAuthService.instance
   end
@@ -46,21 +42,7 @@ class ObsAdapter
 
   private
 
-  def build_connection
-    Faraday.new(url: base_url) do |conn|
-      # Request middleware
-      conn.request :json
-      conn.request :retry, retry_options
-
-      # Response middleware
-      conn.response :json, content_type: /\bjson$/
-      conn.response :logger, Rails.logger, { headers: false, bodies: true } if Rails.env.development?
-
-      # Adapter
-      conn.adapter Faraday.default_adapter
-    end
-  end
-
+  # Переопределяем make_request для использования правильной аутентификации
   def make_request(method, path, params = {})
     start_time = Time.current
 
@@ -104,86 +86,12 @@ class ObsAdapter
     nil
   end
 
-  def handle_response(response)
-    case response.status
-    when 200..299
-      response.body
-    when 401
-      raise ObsAdapter::UnauthorizedError, 'Authentication failed'
-    when 422
-      raise ObsAdapter::ValidationError, "Validation failed: #{response.body}"
-    when 429
-      raise ObsAdapter::RateLimitError, 'Rate limit exceeded'
-    when 500..599
-      raise ObsAdapter::ServerError, "Server error: #{response.status}"
-    else
-      raise ObsAdapter::Error, "Unexpected response: #{response.status}"
-    end
-  end
 
-  def retry_options
-    {
-      max: 3,
-      interval: 0.5,
-      backoff_factor: 2,
-      retry_if: ->(env, exception) {
-        # Retry on network errors and 5xx responses
-        exception.is_a?(Faraday::TimeoutError) ||
-          exception.is_a?(Faraday::ConnectionFailed) ||
-          (env[:status] && env[:status] >= 500)
-      }
-    }
-  end
-
-  def log_request(method, path, params, headers, start_time)
-    sanitized_params = sanitize_params(params)
-    sanitized_headers = sanitize_headers(headers)
-
-    Rails.logger.info "[OBS Adapter] #{method.upcase} #{path} - Params: #{sanitized_params} - Headers: #{sanitized_headers} - Started at: #{start_time}"
-  end
-
-  def log_response(response, start_time)
-    duration = ((Time.current - start_time) * 1000).round(2)
-    Rails.logger.info "[OBS Adapter] Response: #{response.status} - Duration: #{duration}ms"
-  end
-
-  def log_error(error, method, path, start_time)
-    duration = ((Time.current - start_time) * 1000).round(2)
-    Rails.logger.error "[OBS Adapter] Error in #{method.upcase} #{path} - #{error.class}: #{error.message} - Duration: #{duration}ms"
-  end
-
-  def sanitize_params(params)
-    return {} unless params.is_a?(Hash)
-
-    params.dup.tap do |sanitized|
-      # Remove sensitive fields
-      %w[password token access_token refresh_token].each do |field|
-        sanitized.delete(field)
-        sanitized.delete(field.to_sym)
-      end
-
-      # Sanitize nested hashes
-      sanitized.each do |key, value|
-        sanitized[key] = sanitize_params(value) if value.is_a?(Hash)
-      end
-    end
-  end
-
-  def sanitize_headers(headers)
-    return {} unless headers.is_a?(Hash)
-
-    headers.dup.tap do |sanitized|
-      # Remove authorization header
-      sanitized.delete('Authorization')
-      sanitized.delete(:authorization)
-    end
-  end
-
-  # Custom error classes
-  class Error < StandardError; end
-  class NetworkError < Error; end
-  class UnauthorizedError < Error; end
-  class ValidationError < Error; end
-  class RateLimitError < Error; end
-  class ServerError < Error; end
+  # Custom error classes (наследуются от ApiError)
+  class Error < ApiError::Error; end
+  class NetworkError < ApiError::NetworkError; end
+  class UnauthorizedError < ApiError::UnauthorizedError; end
+  class ValidationError < ApiError::ValidationError; end
+  class RateLimitError < ApiError::RateLimitError; end
+  class ServerError < ApiError::ServerError; end
 end

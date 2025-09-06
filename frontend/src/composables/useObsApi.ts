@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { apiClient } from '@/utils/api'
+import { logger } from '@/utils/logger'
 import type { 
   DepartureCity, 
   Country, 
@@ -90,7 +91,7 @@ export const useObsApi = () => {
 
   const setError = (message: string) => {
     error.value = message
-    console.error('OBS API Error:', message)
+    logger.error('OBS API Error:', message)
   }
 
   // Fetch departure cities
@@ -101,28 +102,28 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      console.log('Fetching departure cities...')
+      logger.apiCall('GET', '/search/departure_cities')
       const response = await apiClient.get<ApiResponse<{ departure_cities: ObsDepartureCity[] }>>('/search/departure_cities')
       
-      console.log('Departure cities response:', response)
+      logger.debug('Departure cities response received', response)
       
       if (response.success) {
         departureCities.value = response.data.departure_cities.map(city => {
-          console.log('Processing city:', city)
+          logger.debug('Processing city:', city)
           return {
             id: city.id,
             name: city.label,
             code: city.label
           }
         })
-        console.log('Processed departure cities:', departureCities.value)
+        logger.info(`Processed ${departureCities.value.length} departure cities`)
         return departureCities.value
       } else {
         throw new Error(response.message)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch departure cities'
-      console.error('fetchDepartureCities error:', err)
+      logger.apiError('GET', '/search/departure_cities', err)
       setError(message)
       return []
     } finally {
@@ -141,7 +142,7 @@ export const useObsApi = () => {
         throw new Error(`Invalid departureCityId: ${departureCityId} (type: ${typeof departureCityId})`)
       }
       
-      console.log(`Fetching countries for departure city ID: ${departureCityId} (type: ${typeof departureCityId})`)
+      logger.apiCall('GET', `/search/countries?airport_city_from=${departureCityId}`)
       
       const response = await apiClient.get<ApiResponse<{ countries: ObsCountry[] }>>(`/search/countries?airport_city_from=${departureCityId}`)
       
@@ -153,15 +154,14 @@ export const useObsApi = () => {
         }))
         
         countries.value = mappedCountries
-        console.log(`Successfully loaded ${countries.value.length} countries`)
-        console.log('Countries data in useObsApi:', countries.value)
+        logger.info(`Successfully loaded ${countries.value.length} countries for city ${departureCityId}`)
         return countries.value
       } else {
         throw new Error(response.message)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch countries'
-      console.error('fetchCountries error:', err)
+      logger.apiError('GET', `/search/countries?airport_city_from=${departureCityId}`, err)
       setError(message)
       return []
     } finally {
@@ -175,11 +175,11 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      console.log(`Fetching package templates for country ${countryId} and city ${departureCityId}`)
+      logger.apiCall('GET', `/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`)
       
       const response = await apiClient.get<ApiResponse<{ package_templates: ObsPackageTemplate[] }>>(`/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`)
       
-      console.log('Package templates API response:', response)
+      logger.debug('Package templates API response received', response)
       
       if (response.success) {
         const mappedPackages = response.data.package_templates.map(pkg => ({
@@ -193,8 +193,7 @@ export const useObsApi = () => {
         }))
         
         packages.value = mappedPackages
-        console.log(`Successfully loaded ${packages.value.length} package templates`)
-        console.log('Mapped packages:', packages.value)
+        logger.info(`Successfully loaded ${packages.value.length} package templates for country ${countryId}`)
         
         // Обновляем arrival cities из airports package templates
         const allAirports = response.data.package_templates
@@ -308,11 +307,11 @@ export const useObsApi = () => {
         url += `?${params.toString()}`
       }
       
-      console.log(`Fetching hotels from: ${url}`)
+      logger.apiCall('GET', url)
       const response = await apiClient.get<ApiResponse<{ hotels: ObsHotel[] }>>(url)
       
       if (response.success) {
-        console.log('Hotels API response:', response.data)
+        logger.debug('Hotels API response received', response.data)
         hotels.value = response.data.hotels.map(hotel => ({
           id: hotel.id,
           name: hotel.label,
@@ -320,14 +319,14 @@ export const useObsApi = () => {
           category: hotel.category_id?.toString(),
           city_id: hotel.city_id
         }))
-        console.log(`Mapped hotels: ${hotels.value.length} hotels loaded`)
+        logger.info(`Mapped ${hotels.value.length} hotels for package ${packageTemplateId}`)
         return hotels.value
       } else {
         throw new Error(response.message)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch hotels'
-      console.error('fetchHotels error:', err)
+      logger.apiError('GET', url, err)
       setError(message)
       return []
     } finally {
@@ -453,17 +452,13 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      console.log('performSearch called with params:', searchParams)
-      console.log('airport_city_to type:', typeof searchParams.airport_city_to)
-      console.log('airport_city_to isArray:', Array.isArray(searchParams.airport_city_to))
-      console.log('airport_city_to value:', searchParams.airport_city_to)
+      logger.debug('performSearch called with params:', searchParams)
       
       // Separate search params from pagination params
       const { page, per_page, ...searchParamsOnly } = searchParams
       
       const requestBody = { search: searchParamsOnly }
-      console.log('Request body:', requestBody)
-      console.log('Request body.airport_city_to:', requestBody.search.airport_city_to)
+      logger.debug('Search request body prepared:', requestBody)
       
       // Add pagination parameters as query params
       const queryParams = new URLSearchParams()
@@ -471,7 +466,7 @@ export const useObsApi = () => {
       if (per_page) queryParams.append('per_page', per_page.toString())
       
       const url = queryParams.toString() ? `/search?${queryParams.toString()}` : '/search'
-      console.log('Search URL:', url)
+      logger.apiCall('POST', url)
       
       const response = await apiClient.post<ApiResponse<Record<string, any>>>(url, requestBody)
       
@@ -494,7 +489,7 @@ export const useObsApi = () => {
     try {
       await fetchDepartureCities()
     } catch (err) {
-      console.error('Failed to initialize OBS API data:', err)
+      logger.error('Failed to initialize OBS API data:', err)
     }
   }
 

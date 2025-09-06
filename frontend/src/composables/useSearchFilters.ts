@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { arraysEqual } from '../utils/objectUtils'
+import { logger } from '../utils/logger'
 import type { SelectedFilters, Region, Hotel } from '../types/search'
 
 /**
@@ -24,8 +25,9 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
         !arraysEqual(selectedFilters.value.meals, newFilters.meals) ||
         !arraysEqual(selectedFilters.value.options, newFilters.options)) {
       selectedFilters.value = { ...newFilters }
+      logger.debug('Filters synchronized with external changes')
     }
-  })
+  }, { deep: true })
 
   // Computed для проверки "все выбрано"
   const allRegionsSelected = computed(() => {

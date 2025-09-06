@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { useObsApi } from './useObsApi'
+import { logger } from '../utils/logger'
 import type { 
   DepartureCity, 
   Country, 
@@ -133,11 +134,11 @@ export const useSearchData = () => {
       const result = await obsApi.fetchDepartureCities()
       // Обновляем локальную переменную departureCities
       departureCities.value = result || []
-      // console.log(`Loaded ${departureCities.value.length} departure cities`)
+      logger.info(`Loaded ${departureCities.value.length} departure cities`)
       // Обновляем options
       updateDepartureCitiesOptions()
     } catch (err) {
-      console.warn('Using fallback departure cities data')
+      logger.warn('Using fallback departure cities data')
       departureCities.value = []
       updateDepartureCitiesOptions()
     }
@@ -145,17 +146,15 @@ export const useSearchData = () => {
 
   const loadCountries = async (departureCityId: number) => {
     try {
-      // console.log(`Loading countries for city ${departureCityId}...`)
+      logger.debug(`Loading countries for city ${departureCityId}...`)
       const result = await obsApi.fetchCountries(departureCityId)
-      // console.log('API result:', result)
       // Обновляем локальную переменную countries
       countries.value = result || []
-      // console.log(`Loaded ${countries.value.length} countries for city ${departureCityId}`)
-      // console.log('Countries data:', countries.value)
+      logger.info(`Loaded ${countries.value.length} countries for city ${departureCityId}`)
       // Обновляем options
       updateCountriesOptions()
     } catch (err) {
-      console.warn('Using fallback countries data:', err)
+      logger.warn('Using fallback countries data:', err)
       countries.value = fallbackCountries.value
       updateCountriesOptions()
     }
@@ -164,18 +163,14 @@ export const useSearchData = () => {
   // Альтернативный метод - загружает через obsApi и синхронизирует
   const syncCountriesFromApi = async (departureCityId: number) => {
     try {
-      // console.log(`syncCountriesFromApi called for city ${departureCityId}`)
-      // console.log('Before loadCountries - local countries:', countries.value.length)
-      // console.log('Before loadCountries - obsApi countries:', obsApi.countries.value.length)
+      logger.debug(`syncCountriesFromApi called for city ${departureCityId}`)
       
       // Используем loadCountries напрямую
       await loadCountries(departureCityId)
       
-      // console.log('After loadCountries - local countries:', countries.value.length)
-      // console.log('After loadCountries - obsApi countries:', obsApi.countries.value.length)
-      // console.log(`Synced ${countries.value.length} countries from API for city ${departureCityId}`)
+      logger.info(`Synced ${countries.value.length} countries from API for city ${departureCityId}`)
     } catch (err) {
-      console.error('Failed to sync countries from API:', err)
+      logger.error('Failed to sync countries from API:', err)
       countries.value = fallbackCountries.value
     }
   }
@@ -185,11 +180,11 @@ export const useSearchData = () => {
       const result = await obsApi.fetchPackageTemplates(countryId, departureCityId)
       // Обновляем локальную переменную packages
       packages.value = result || []
-      // console.log(`Loaded ${packages.value.length} packages for country ${countryId}`)
+      logger.info(`Loaded ${packages.value.length} packages for country ${countryId}`)
       // Обновляем options
       updatePackagesOptions()
     } catch (err) {
-      console.warn('Using fallback package templates data')
+      logger.warn('Using fallback package templates data')
       packages.value = fallbackPackages.value
       updatePackagesOptions()
     }
@@ -199,7 +194,7 @@ export const useSearchData = () => {
     try {
       await obsApi.fetchHotelCategories(packageTemplateId)
     } catch (err) {
-      console.warn('Using fallback hotel categories data')
+      logger.warn('Using fallback hotel categories data')
     }
   }
 
@@ -207,7 +202,7 @@ export const useSearchData = () => {
     try {
       await obsApi.fetchLocations(packageTemplateId)
     } catch (err) {
-      console.warn('Using fallback locations data')
+      logger.warn('Using fallback locations data')
     }
   }
 
@@ -218,13 +213,12 @@ export const useSearchData = () => {
     is_exclusive?: boolean
   }) => {
     try {
-      // console.log(`Loading hotels for package ${packageTemplateId} with filters:`, filters)
+      logger.debug(`Loading hotels for package ${packageTemplateId} with filters:`, filters)
       await obsApi.fetchHotels(packageTemplateId, filters)
-      // console.log(`Hotels loaded successfully. Total hotels: ${hotels.value.length}`)
-      // console.log('Hotels data:', hotels.value)
+      logger.info(`Hotels loaded successfully. Total hotels: ${hotels.value.length}`)
     } catch (err) {
-      console.warn('Using fallback hotels data')
-      console.error('Error loading hotels:', err)
+      logger.warn('Using fallback hotels data')
+      logger.error('Error loading hotels:', err)
     }
   }
 
@@ -232,7 +226,7 @@ export const useSearchData = () => {
     try {
       await obsApi.fetchMeals(packageTemplateId)
     } catch (err) {
-      console.warn('Using fallback meals data')
+      logger.warn('Using fallback meals data')
     }
   }
 
@@ -246,7 +240,7 @@ export const useSearchData = () => {
     try {
       await obsApi.fetchCalendarHints(params)
     } catch (err) {
-      console.warn('Failed to load calendar hints:', err)
+      logger.warn('Failed to load calendar hints:', err)
     }
   }
 
@@ -260,7 +254,7 @@ export const useSearchData = () => {
     try {
       await obsApi.fetchAvailableNights(params)
     } catch (err) {
-      console.warn('Failed to load available nights:', err)
+      logger.warn('Failed to load available nights:', err)
     }
   }
 
@@ -286,7 +280,7 @@ export const useSearchData = () => {
     try {
       return await obsApi.performSearch(searchParams)
     } catch (err) {
-      console.error('Search failed:', err)
+      logger.error('Search failed:', err)
       throw err
     }
   }
@@ -295,9 +289,9 @@ export const useSearchData = () => {
   const initializeData = async () => {
     try {
       await loadDepartureCities()
-      console.log('Search data initialized with departure cities')
+      logger.info('Search data initialized with departure cities')
     } catch (err) {
-      console.error('Failed to initialize search data:', err)
+      logger.error('Failed to initialize search data:', err)
     }
   }
 
@@ -309,13 +303,9 @@ export const useSearchData = () => {
   const getCountries = computed(() => {
     const localCountries = countries.value
     const apiCountries = obsApi.countries.value
-    // console.log('getCountries computed - local:', localCountries.length, 'api:', apiCountries.length)
-    
     if (localCountries.length > 0) {
-      // console.log('Using local countries:', localCountries)
       return localCountries
     } else {
-      // console.log('Using API countries:', apiCountries)
       return apiCountries
     }
   })
@@ -331,13 +321,10 @@ export const useSearchData = () => {
   const getCategories = computed(() => {
     const localCategories = categories.value
     const apiCategories = obsApi.categories.value
-    // console.log('getCategories computed - local:', localCategories.length, 'api:', apiCategories.length)
     
     if (localCategories.length > 0) {
-      // console.log('Using local categories:', localCategories)
       return localCategories
     } else {
-      // console.log('Using API categories:', apiCategories)
       return apiCategories
     }
   })
@@ -345,13 +332,9 @@ export const useSearchData = () => {
   const getRegions = computed(() => {
     const localRegions = regions.value
     const apiRegions = obsApi.regions.value
-    // console.log('getRegions computed - local:', localRegions.length, 'api:', apiRegions.length)
-    
     if (localRegions.length > 0) {
-      // console.log('Using local regions:', localRegions)
       return localRegions
     } else {
-      // console.log('Using API regions:', apiRegions)
       return apiRegions
     }
   })
@@ -359,13 +342,9 @@ export const useSearchData = () => {
   const getHotels = computed(() => {
     const localHotels = hotels.value
     const apiHotels = obsApi.hotels.value
-    // console.log('getHotels computed - local:', localHotels.length, 'api:', apiHotels.length)
-    
     if (localHotels.length > 0) {
-      // console.log('Using local hotels:', localHotels)
       return localHotels
     } else {
-      // console.log('Using API hotels:', apiHotels)
       return apiHotels
     }
   })
@@ -373,13 +352,9 @@ export const useSearchData = () => {
   const getMeals = computed(() => {
     const localMeals = meals.value
     const apiMeals = obsApi.meals.value
-    // console.log('getMeals computed - local:', localMeals.length, 'api:', apiMeals.length)
-    
     if (localMeals.length > 0) {
-      // console.log('Using local meals:', localMeals)
       return localMeals
     } else {
-      // console.log('Using API meals:', apiMeals)
       return apiMeals
     }
   })
@@ -406,14 +381,10 @@ export const useSearchData = () => {
 
   const updatePackagesOptions = () => {
     const packages = getPackages.value
-    // console.log('updatePackagesOptions - packages:', packages)
-    
     packagesOptions.value = packages.map(pkg => ({
       value: pkg,
       label: pkg.label || pkg.name || `Package ${pkg.id}`
     }))
-    
-    // console.log('updatePackagesOptions - options:', packagesOptions.value)
   }
 
   return {

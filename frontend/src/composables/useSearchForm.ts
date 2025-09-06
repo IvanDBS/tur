@@ -1,5 +1,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useSearchData } from './useSearchData'
+import { logger } from '../utils/logger'
+import { getAirportIdByPackageName } from '../constants/airports'
 import type { SearchForm, SelectedFilters } from '../types/search'
 
 // Интерфейс для результатов поиска от OBS API
@@ -184,35 +186,30 @@ export const useSearchForm = () => {
     return formatted
   })
 
-  // Следим за изменениями города отправления и загружаем страны
-  watch(() => searchForm.value.departureCity, async (newCity) => {
-    try {
-      if (newCity && newCity.id) {
-        searchForm.value.destination = null
-        searchForm.value.package = null
-        // Загружаем страны для выбранного города через useSearchData
-        await searchData.loadCountries(newCity.id)
-      }
-    } catch (err) {
-      console.error('Departure city watch error:', err)
-    }
-  })
-
-  // Следим за изменениями страны и загружаем пакеты
-  watch(() => searchForm.value.destination, async (newCountry) => {
-    try {
-      if (newCountry && newCountry.id && searchForm.value.departureCity?.id) {
-        // Очищаем предыдущий выбор
-        searchForm.value.package = null
-        searchForm.value.arrivalCity = null
+  // Объединенный watcher для города отправления и страны
+  watch(
+    () => [searchForm.value.departureCity, searchForm.value.destination],
+    async ([newCity, newCountry], [oldCity, oldCountry]) => {
+      try {
+        // Обработка изменения города отправления
+        if (newCity && newCity.id && newCity.id !== oldCity?.id) {
+          searchForm.value.destination = null
+          searchForm.value.package = null
+          await searchData.loadCountries(newCity.id)
+        }
         
-        // Загружаем пакеты для выбранной страны через useSearchData
-        await searchData.loadPackageTemplates(newCountry.id, searchForm.value.departureCity.id)
+        // Обработка изменения страны
+        if (newCountry && newCountry.id && newCountry.id !== oldCountry?.id && searchForm.value.departureCity?.id) {
+          searchForm.value.package = null
+          searchForm.value.arrivalCity = null
+          await searchData.loadPackageTemplates(newCountry.id, searchForm.value.departureCity.id)
+        }
+      } catch (err) {
+        logger.error('Search form cascade watch error:', err)
       }
-    } catch (err) {
-      console.error('Destination watch error:', err)
-    }
-  })
+    },
+    { deep: true }
+  )
 
   // Следим за изменениями пакета и загружаем связанные данные
   watch(() => searchForm.value.package, async (newPackage) => {
@@ -236,37 +233,15 @@ export const useSearchForm = () => {
         } else {
           // Если это пакет для конкретного направления, 
           // попробуем определить город по названию пакета
-          const packageName = (newPackage.label || newPackage.name || '').toLowerCase()
-          let arrivalCity = null
+          const packageName = newPackage.label || newPackage.name || ''
+          const airportId = getAirportIdByPackageName(packageName)
           
-          if (packageName.includes('antalya')) {
-            arrivalCity = {
-              id: 50004, // ID аэропорта ANTALYA из документации
-              name: 'ANTALYA'
+          if (airportId) {
+            const arrivalCity = {
+              id: airportId,
+              name: packageName.toUpperCase()
             }
-          } else if (packageName.includes('istanbul')) {
-            arrivalCity = {
-              id: 50005, // ID аэропорта ISTANBUL
-              name: 'ISTANBUL'
-            }
-          } else if (packageName.includes('bodrum')) {
-            arrivalCity = {
-              id: 50006, // ID аэропорта BODRUM
-              name: 'BODRUM'
-            }
-          } else if (packageName.includes('kemer')) {
-            arrivalCity = {
-              id: 50007, // ID аэропорта KEMER
-              name: 'KEMER'
-            }
-          } else if (packageName.includes('alanya')) {
-            arrivalCity = {
-              id: 50008, // ID аэропорта ALANYA
-              name: 'ALANYA'
-            }
-          }
-          
-          if (arrivalCity) {
+            
             // Принудительно обновляем реактивность
             searchForm.value.arrivalCity = { ...arrivalCity }
             
@@ -304,28 +279,30 @@ export const useSearchForm = () => {
         searchForm.value.arrivalCity = null
       }
     } catch (err) {
-      console.error('Package watch error:', err)
+      logger.error('Package watch error:', err)
     }
   })
 
-  // Следим за изменениями количества детей и обновляем массив возрастов
-  watch(() => searchForm.value.children, (newValue) => {
-    if (newValue === null || newValue === 0) {
-      searchForm.value.childrenAges = []
-    } else {
-      const currentAges = [...searchForm.value.childrenAges]
-      searchForm.value.childrenAges = Array(newValue)
-        .fill(0)
-        .map((_, index) => {
-          return index < currentAges.length ? currentAges[index] : 0
-        })
+  // Watcher для количества детей
+  watch(() => searchForm.value.children, (newChildren, oldChildren) => {
+    if (newChildren !== oldChildren) {
+      if (newChildren === null || newChildren === 0) {
+        searchForm.value.childrenAges = []
+      } else {
+        const currentAges = [...searchForm.value.childrenAges]
+        searchForm.value.childrenAges = Array(newChildren)
+          .fill(0)
+          .map((_, index) => {
+            return index < currentAges.length ? currentAges[index] : 0
+          })
+      }
     }
   }, { immediate: true })
 
-  // Следим за изменениями nights и обновляем nights2
-  watch(() => searchForm.value.nights, (newValue) => {
-    if (newValue && (!searchForm.value.nights2 || searchForm.value.nights2 < newValue)) {
-      searchForm.value.nights2 = newValue
+  // Watcher для nights
+  watch(() => searchForm.value.nights, (newNights, oldNights) => {
+    if (newNights !== oldNights && newNights && (!searchForm.value.nights2 || searchForm.value.nights2 < newNights)) {
+      searchForm.value.nights2 = newNights
     }
   }, { immediate: true })
 
@@ -421,7 +398,7 @@ export const useSearchForm = () => {
         }
       })
       .catch((error) => {
-        console.error('Search failed:', error)
+        logger.error('Search failed:', error)
         isLoading.value = false
         // Здесь можно показать ошибку пользователю
       })
@@ -504,13 +481,12 @@ export const useSearchForm = () => {
   // Метод инициализации данных
   const initializeData = async () => {
     try {
-      console.log('🔄 Initializing search data...')
+      logger.info('🔄 Initializing search data...')
       await searchData.initializeData()
-      console.log('✅ Search data initialized')
-      console.log('🏙️ Departure cities loaded:', searchData.departureCitiesOptions.value.length)
-      console.log('🏙️ Departure cities data:', searchData.departureCitiesOptions.value)
+      logger.info('✅ Search data initialized')
+      logger.info(`🏙️ Departure cities loaded: ${searchData.departureCitiesOptions.value.length}`)
     } catch (err) {
-      console.error('❌ Failed to initialize search data:', err)
+      logger.error('❌ Failed to initialize search data:', err)
     }
   }
 

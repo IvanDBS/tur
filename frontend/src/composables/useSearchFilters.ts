@@ -11,7 +11,7 @@ import type { SelectedFilters, Region, Hotel } from '../types/search'
 export function useSearchFilters(initialFilters: SelectedFilters, availableData?: {
   regions?: Region[]
   categories?: unknown[]
-  hotels?: Hotel[]
+  hotels?: Hotel[] | (() => Hotel[])
   meals?: unknown[]
   options?: unknown[]
 }) {
@@ -63,8 +63,10 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
   const allHotelsSelected = computed(() => {
     if (!availableData?.hotels) return selectedFilters.value.hotels.length > 0
     // Проверяем, выбраны ли все отели (включая ID=1 "все отели" или все доступные отели)
+    // Учитываем только отфильтрованные отели, если они переданы
+    const hotelsToCheck = typeof availableData.hotels === 'function' ? availableData.hotels() : availableData.hotels
     return selectedFilters.value.hotels.includes(1) || 
-           selectedFilters.value.hotels.length === availableData.hotels.length
+           selectedFilters.value.hotels.length === hotelsToCheck.length
   })
 
   const allMealsSelected = computed(() => {
@@ -129,7 +131,7 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
       selectedFilters.value.categories = []
     } else {
       // Выбираем все категории включая ID=1 "все категории"
-      selectedFilters.value.categories = [1, ...categories.map((c: any) => c.id)]
+      selectedFilters.value.categories = [1, ...categories.map((c: unknown) => (c as { id: number }).id)]
     }
   }
 
@@ -189,7 +191,7 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
       selectedFilters.value.meals = []
     } else {
       // Выбираем все типы питания включая ID=1 "все типы питания"
-      selectedFilters.value.meals = [1, ...meals.map((m: any) => m.id)]
+      selectedFilters.value.meals = [1, ...meals.map((m: unknown) => (m as { id: number }).id)]
     }
   }
 
@@ -211,7 +213,7 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
     if (allOptionsSelected.value) {
       selectedFilters.value.options = []
     } else {
-      selectedFilters.value.options = options.map((o: any) => o.id)
+      selectedFilters.value.options = options.map((o: unknown) => (o as { id: number }).id)
     }
   }
 
@@ -229,8 +231,8 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
   // Установка фильтров по умолчанию
   const setDefaultFilters = (regions: Region[], categories: unknown[], meals: unknown[], hotels?: Hotel[]) => {
     selectedFilters.value.regions = [1, ...regions.map(r => r.id)]
-    selectedFilters.value.categories = [1, ...categories.map((c: any) => c.id)]
-    selectedFilters.value.meals = [1, ...meals.map((m: any) => m.id)] // Добавляем ID=1 для "все типы питания"
+    selectedFilters.value.categories = [1, ...categories.map((c: unknown) => (c as { id: number }).id)]
+    selectedFilters.value.meals = [1, ...meals.map((m: unknown) => (m as { id: number }).id)] // Добавляем ID=1 для "все типы питания"
     if (hotels) {
       selectedFilters.value.hotels = [1, ...hotels.map(h => h.id)]
     }

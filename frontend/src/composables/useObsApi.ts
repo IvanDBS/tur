@@ -316,7 +316,7 @@ export const useObsApi = () => {
           id: hotel.id,
           name: hotel.label,
           label: hotel.label,
-          category: hotel.category_id?.toString(),
+          category_id: hotel.category_id,
           city_id: hotel.city_id
         }))
         logger.info(`Mapped ${hotels.value.length} hotels for package ${packageTemplateId}`)

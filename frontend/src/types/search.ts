@@ -154,3 +154,122 @@ export interface Option {
   name?: string
   label?: string
 }
+
+// Детальные типы для результатов поиска
+export interface SearchResult {
+  unique_key: string
+  rid: string
+  hotel_results_counter: number
+  package_template: number
+  operator: number
+  additional_services: any[]
+  dates: SearchResultDates
+  nights: SearchResultNights
+  accommodation: SearchResultAccommodation
+  tickets: SearchResultTickets
+  price: SearchResultPrice
+  transfers: SearchResultTransfers
+  never_land_entrance: any[]
+  gala_dinner: any[]
+  aquapark_services: any[]
+  tourists: SearchResultTourists
+}
+
+export interface SearchResultDates {
+  check_in: string
+  check_out: string
+}
+
+export interface SearchResultNights {
+  total: number
+  on_the_way: number
+}
+
+export interface SearchResultAccommodation {
+  hotel: SearchResultHotel
+  room: SearchResultRoom
+  placement: SearchResultPlacement
+  meal: SearchResultMeal
+}
+
+export interface SearchResultHotel {
+  id: number
+  name: string
+  is_exclusive: boolean
+  category: string
+  city: string
+  in_stop: boolean
+}
+
+export interface SearchResultRoom {
+  id: number
+  name: string
+}
+
+export interface SearchResultPlacement {
+  id: number
+  name: string
+}
+
+export interface SearchResultMeal {
+  id: number
+  name: string
+  full_name: string
+}
+
+export interface SearchResultTickets {
+  from: SearchResultFlight
+  to: SearchResultFlight
+  on_request: 'y' | 'n'
+  has_tickets: boolean
+}
+
+export interface SearchResultFlight {
+  id: number
+  name: string
+  airline: SearchResultAirline
+  departure: SearchResultDateTime
+  arrival: SearchResultDateTime
+  airports: SearchResultAirports
+  tickets: number | null
+}
+
+export interface SearchResultAirline {
+  iata_code: string
+  color: string
+  airline: string
+}
+
+export interface SearchResultDateTime {
+  date: string
+  time: string
+}
+
+export interface SearchResultAirports {
+  from: SearchResultAirport
+  to: SearchResultAirport
+}
+
+export interface SearchResultAirport {
+  name: string
+  prefix: string
+}
+
+export interface SearchResultPrice {
+  amount: number
+  netto: number
+  commission: number
+  type: string
+  currency: string
+  currency_id: number
+}
+
+export interface SearchResultTransfers {
+  to: number
+  from: number
+}
+
+export interface SearchResultTourists {
+  adults: number
+  children_ages: number[]
+}

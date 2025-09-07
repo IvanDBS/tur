@@ -415,6 +415,27 @@
 
   // Удалены неиспользуемые watchers для логирования - они не влияют на функциональность
 
+  // Watcher для очистки выбранных отелей при изменении регионов или категорий
+  watch(
+    () => [selectedFilters.value.regions, selectedFilters.value.categories],
+    (newValues, oldValues) => {
+      const [newRegions, newCategories] = newValues
+      const [oldRegions, oldCategories] = oldValues || [[], []]
+      
+      // Проверяем, изменились ли регионы или категории
+      const regionsChanged = !arraysEqual(newRegions, oldRegions)
+      const categoriesChanged = !arraysEqual(newCategories, oldCategories)
+      
+      if (regionsChanged || categoriesChanged) {
+        // Очищаем выбранные отели при изменении регионов или категорий
+        selectedFilters.value.hotels = []
+        emit('update:hotels', [])
+        // console.log('Cleared selected hotels due to region/category change')
+      }
+    },
+    { deep: true }
+  )
+
   // Единый watcher для всех props (оптимизация: 1 вместо 5)
   watch(
     () => ({

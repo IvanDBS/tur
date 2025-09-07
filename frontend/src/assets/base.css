@@ -14,6 +14,7 @@
 @import '../styles/components/multiselect.css';
 @import '../styles/components/forms.css';
 @import '../styles/components/search-form.css';
+@import '../styles/components/hotel-cards.css';
 
 /* CSS Custom Properties - Business Minimalist Theme */
 :root {
@@ -40,6 +41,7 @@
   --color-primary-hover: #e74e54;
   --color-primary-light: #ff8a8e;
   --color-primary-muted: rgba(255, 90, 95, 0.1);
+  --color-primary-dark: #d63d42;
 
   /* Secondary Colors - Темно-синий (дополнительный к коралловому) */
   --color-secondary: #1a3c61;

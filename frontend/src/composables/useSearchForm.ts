@@ -324,6 +324,60 @@ export const useSearchForm = () => {
   }, { immediate: true })
 
 
+  // Helper function to get hotels for search
+  const getSelectedHotelsForSearch = () => {
+    // Если выбраны регионы или категории, используем отфильтрованные отели
+    if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
+      // Получаем отфильтрованные отели из searchData
+      const allHotels = searchData.hotels.value
+      let filteredHotels = allHotels
+      
+      // Применяем фильтрацию по регионам
+      if (selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
+        // Создаем маппинг регионов к городам
+        const regionCitiesMap = new Map<number, number[]>()
+        searchData.regions.value.forEach(region => {
+          if (region.cities && Array.isArray(region.cities)) {
+            const cityIds = region.cities.map(city => city.id)
+            regionCitiesMap.set(region.id, cityIds)
+          }
+        })
+        
+        // Получаем все города для выбранных регионов
+        const selectedCities = new Set<number>()
+        selectedFilters.value.regions.forEach(regionId => {
+          const cities = regionCitiesMap.get(regionId)
+          if (cities) {
+            cities.forEach(cityId => selectedCities.add(cityId))
+          }
+        })
+        
+        // Фильтруем отели по городам
+        filteredHotels = filteredHotels.filter(hotel => {
+          return hotel.city_id && selectedCities.has(hotel.city_id)
+        })
+      }
+      
+      // Применяем фильтрацию по категориям
+      if (selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
+        filteredHotels = filteredHotels.filter(hotel => {
+          return hotel.category_id && selectedFilters.value.categories.includes(hotel.category_id)
+        })
+      }
+      
+      // Возвращаем ID отфильтрованных отелей
+      return filteredHotels.map(hotel => Number(hotel.id))
+    }
+    
+    // Если пользователь выбрал отели вручную (и нет фильтров по регионам/категориям), используем их
+    if (selectedFilters.value.hotels.length > 0) {
+      return selectedFilters.value.hotels.map(id => Number(id))
+    }
+    
+    // Fallback: если ничего не выбрано, используем [1]
+    return [1]
+  }
+
   // Methods
   const handleSearch = () => {
     // Добавляем выбранные отели в форму поиска
@@ -372,7 +426,7 @@ export const useSearchForm = () => {
       adults: Number(searchForm.value.adults),
       children: searchForm.value.children !== null ? Number(searchForm.value.children) : undefined,
       children_age: searchForm.value.children !== null && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
-      selected_hotels: selectedFilters.value.hotels.length > 0 ? selectedFilters.value.hotels.map(id => Number(id)) : [1],
+      selected_hotels: getSelectedHotelsForSearch(),
       meals: selectedFilters.value.meals.length > 0 ? selectedFilters.value.meals.map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
         return meal?.name || meal?.label || mealId.toString()

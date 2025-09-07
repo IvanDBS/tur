@@ -1,0 +1,242 @@
+/* Hotel Result Cards Styles */
+
+/* Enhanced card animations */
+.hotel-result-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.hotel-result-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.hotel-result-card:hover::before {
+  left: 100%;
+}
+
+/* Flight section enhancements */
+.flight-section {
+  position: relative;
+}
+
+.flight-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--color-border), transparent);
+}
+
+/* Airline logo enhancements */
+.airline-logo {
+  position: relative;
+  overflow: hidden;
+}
+
+.airline-logo::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.airline-logo:hover::after {
+  opacity: 1;
+}
+
+/* Hotel badges animations */
+.badge {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.badge:hover::before {
+  left: 100%;
+}
+
+/* Meal type badges */
+.meal-type {
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.meal-type:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Price section enhancements */
+.price-section {
+  position: relative;
+}
+
+.price-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--color-border), transparent);
+}
+
+/* Action buttons enhancements */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+}
+
+.action-btn:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+.action-btn.book {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  box-shadow: 0 4px 12px rgba(26, 60, 97, 0.3);
+}
+
+.action-btn.book:hover {
+  box-shadow: 0 6px 16px rgba(26, 60, 97, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Stop sale styling */
+.hotel-result-card.stop-sale {
+  position: relative;
+}
+
+.hotel-result-card.stop-sale::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 48%, rgba(220, 38, 38, 0.05) 49%, rgba(220, 38, 38, 0.05) 51%, transparent 52%);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+/* Responsive enhancements */
+@media (max-width: 1024px) {
+  .hotel-result-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hotel-result-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@media (max-width: 768px) {
+  .hotel-result-card {
+    border-radius: 8px;
+  }
+  
+  .flight-section,
+  .hotel-section,
+  .price-section {
+    padding: 1rem;
+  }
+  
+  .action-buttons {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Loading states */
+.hotel-result-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.hotel-result-card.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Accessibility improvements */
+.action-btn:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.hotel-result-card:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .hotel-result-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .action-buttons {
+    display: none;
+  }
+  
+  .flight-section,
+  .hotel-section,
+  .price-section {
+    background: white !important;
+  }
+}

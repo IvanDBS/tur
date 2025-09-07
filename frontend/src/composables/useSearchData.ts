@@ -276,6 +276,8 @@ export const useSearchData = () => {
     options?: string[]
     price_from?: number
     price_to?: number
+    page?: number
+    per_page?: number
   }) => {
     try {
       return await obsApi.performSearch(searchParams)

@@ -52,8 +52,9 @@
     <!-- Результаты поиска -->
     <div v-if="searchResults && Object.keys(searchResults).length > 0" class="search-results-section">
       <SearchResults 
-        :results="formattedResults" 
+        :results="paginatedResults" 
         :is-loading="isLoading"
+        :is-loading-more="isLoadingMore"
         :current-page="currentPage"
         :total-pages="totalPages"
         :prev-page="currentPage > 1 ? currentPage - 1 : null"
@@ -89,6 +90,9 @@
     formattedResults,
     activeSelector,
     filteredNights2Options,
+    paginatedResults,
+    isLoadingMore,
+    needsMoreData,
     searchData,
     handleSearch,
     handleReset,
@@ -96,6 +100,7 @@
     handlePageChange,
     handleBook,
     initializeData,
+    loadMoreData,
   } = useSearchForm()
 
   // Emits

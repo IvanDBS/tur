@@ -1,6 +1,6 @@
 <template>
   <div class="search-results">
-    <div v-if="results.length === 0 && !isLoading" class="empty-state">
+    <div v-if="(!results || results.length === 0) && !isLoading" class="empty-state">
       <p>Туры не найдены</p>
       <p class="text-soft">Попробуйте изменить параметры поиска</p>
     </div>
@@ -52,6 +52,12 @@
           Забронировать
         </button>
       </div>
+    </div>
+
+    <!-- Loading indicator for additional data -->
+    <div v-if="isLoadingMore" class="loading-more">
+      <div class="spinner"></div>
+      <span>Загружаем больше туров...</span>
     </div>
 
     <!-- Pagination -->
@@ -112,6 +118,7 @@
     totalPages?: number
     prevPage?: number | null
     nextPage?: number | null
+    isLoadingMore?: boolean
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -122,6 +129,7 @@
     totalPages: 1,
     prevPage: null,
     nextPage: null,
+    isLoadingMore: false,
   })
 
 
@@ -135,6 +143,16 @@
 
   // State
   const isLoadingMore = ref(false)
+
+  // Debug logging
+  watch(() => props.results, (newResults) => {
+    console.log('SearchResults: results changed', {
+      results: newResults,
+      length: newResults?.length,
+      isLoading: props.isLoading,
+      currentPage: props.currentPage
+    })
+  }, { immediate: true })
 
   // Methods
 
@@ -341,6 +359,31 @@
   .load-more-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  /* Loading more indicator */
+  .loading-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: var(--color-text-soft);
+    font-size: 0.9rem;
+  }
+
+  .loading-more .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-border);
+    border-top: 2px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   /* Mobile responsive */

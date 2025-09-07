@@ -73,29 +73,46 @@ export const useSearchForm = () => {
   // Пагинация
   const currentPage = ref(1)
   const itemsPerPage = 20 // Показываем по 20 на странице
-  const serverPageSize = 501 // Загружаем все результаты сразу (бэкенд возвращает все если per_page > 500)
+  const serverPageSize = 100 // Загружаем все результаты сразу (per_page >= 100)
   const lastSearchParams = ref<Record<string, unknown> | null>(null)
   const allLoadedResults = ref<Record<string, ObsSearchResult> | null>(null) // Все загруженные результаты
+  const loadedPages = ref<Set<number>>(new Set()) // Отслеживаем загруженные страницы сервера
+  const isLoadingMore = ref(false) // Загрузка дополнительных данных
   
-  // Server-side pagination - no client-side pagination needed
-  const totalPages = computed(() => Math.ceil(totalResults.value / itemsPerPage))
+  // Client-side pagination based on loaded results
+  const totalPages = computed(() => {
+    if (!allLoadedResults.value) return 0
+    const loadedCount = Object.keys(allLoadedResults.value).length
+    const pages = Math.ceil(loadedCount / itemsPerPage)
+    logger.debug(`totalPages computed: loadedCount=${loadedCount}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
+    return pages
+  })
   
   // Hybrid pagination: server loads 100, frontend shows 20
   const paginatedResults = computed(() => {
     if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') {
+      logger.debug('paginatedResults: no allLoadedResults')
       return []
     }
     
     // Get all loaded results as array
     const allResults = Object.values(allLoadedResults.value)
+    logger.debug(`paginatedResults: allResults.length = ${allResults.length}, currentPage = ${currentPage.value}`)
     
     // Calculate pagination for current page (20 items per page)
     const startIndex = (currentPage.value - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     
     const paginated = allResults.slice(startIndex, endIndex)
+    logger.debug(`paginatedResults: startIndex = ${startIndex}, endIndex = ${endIndex}, paginated.length = ${paginated.length}`)
     
     return paginated
+  })
+
+  // Простая клиентская пагинация - загружаем все результаты сразу
+  const needsMoreData = computed(() => {
+    // Всегда false - загружаем все результаты сразу
+    return false
   })
 
   // Определяем активный селектор для показа стрелки
@@ -371,6 +388,7 @@ export const useSearchForm = () => {
     searchResults.value = null
     totalResults.value = 0
     currentPage.value = 1
+    loadedPages.value.clear() // Очищаем отслеживание загруженных страниц
     
     // Добавляем параметры пагинации (загружаем по 100 туров)
     const searchParamsWithPagination = {
@@ -378,6 +396,9 @@ export const useSearchForm = () => {
       page: 1, // Всегда начинаем с первой страницы
       per_page: serverPageSize // Загружаем по 100 туров
     }
+    
+    logger.debug(`Search params with pagination:`, searchParamsWithPagination)
+    logger.debug(`Search params with pagination - page: ${searchParamsWithPagination.page}, per_page: ${searchParamsWithPagination.per_page}`)
     
     // Сохраняем параметры поиска для пагинации
     lastSearchParams.value = searchParams
@@ -395,6 +416,11 @@ export const useSearchForm = () => {
           searchResults.value = result.results
           totalResults.value = result.total_results || 0
           allLoadedResults.value = result.results // Сохраняем все загруженные результаты
+          loadedPages.value.add(1) // Отмечаем первую страницу как загруженную
+          
+          logger.debug(`Search completed: total_results = ${totalResults.value}, results keys = ${Object.keys(result.results).length}`)
+          logger.debug(`Search completed: allLoadedResults keys = ${Object.keys(allLoadedResults.value).length}`)
+          logger.debug(`Search completed: first few keys = ${Object.keys(allLoadedResults.value).slice(0, 5)}`)
         }
       })
       .catch((error) => {
@@ -436,12 +462,49 @@ export const useSearchForm = () => {
     totalResults.value = 0
     currentPage.value = 1
     lastSearchParams.value = null
+    loadedPages.value.clear()
+    isLoadingMore.value = false
   }
 
   // Метод для обновления минимального значения для nights2
   const updateNights2Min = () => {
     if (searchForm.value.nights && (!searchForm.value.nights2 || searchForm.value.nights2 < searchForm.value.nights)) {
       searchForm.value.nights2 = searchForm.value.nights
+    }
+  }
+
+  // Метод для загрузки дополнительных данных
+  const loadMoreData = async () => {
+    if (!lastSearchParams.value || isLoadingMore.value) return
+
+    isLoadingMore.value = true
+    
+    try {
+      // Определяем следующую страницу сервера для загрузки
+      const currentServerPage = Math.ceil((currentPage.value * itemsPerPage) / serverPageSize)
+      
+      // Подготавливаем параметры для загрузки следующей порции
+      const searchParamsWithPagination = {
+        ...lastSearchParams.value,
+        page: currentServerPage,
+        per_page: serverPageSize
+      }
+      
+      // Загружаем следующую порцию данных
+      const result = await searchData.performSearch(searchParamsWithPagination)
+      
+      if (result && result.results) {
+        // Объединяем новые результаты с существующими
+        const newResults = { ...allLoadedResults.value, ...result.results }
+        allLoadedResults.value = newResults
+        loadedPages.value.add(currentServerPage)
+        
+        logger.info(`Loaded page ${currentServerPage}, total results: ${Object.keys(newResults).length}`)
+      }
+    } catch (error) {
+      logger.error('Failed to load more data:', error)
+    } finally {
+      isLoadingMore.value = false
     }
   }
 
@@ -452,9 +515,8 @@ export const useSearchForm = () => {
       return
     }
     
+    logger.debug(`handlePageChange: changing from page ${currentPage.value} to page ${page}`)
     currentPage.value = page
-    
-    // Since we load all results at once (per_page > 500), no need to make additional API calls
     
     // Прокручиваем к началу результатов с отступом сверху
     const resultsSection = document.querySelector('.search-results-section')
@@ -502,6 +564,9 @@ export const useSearchForm = () => {
     formattedResults,
     activeSelector,
     filteredNights2Options,
+    paginatedResults,
+    isLoadingMore,
+    needsMoreData,
     
     // Search data
     searchData,
@@ -513,5 +578,6 @@ export const useSearchForm = () => {
     handlePageChange,
     handleBook,
     initializeData,
+    loadMoreData,
   }
 }

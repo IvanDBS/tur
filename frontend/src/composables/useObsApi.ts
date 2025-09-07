@@ -94,7 +94,7 @@ export const useObsApi = () => {
     logger.error('OBS API Error:', message)
   }
 
-  // Fetch departure cities
+  // Fetch departure cities (оптимизировано с кешированием)
   const fetchDepartureCities = async () => {
     if (departureCities.value.length > 0) return departureCities.value
 
@@ -464,11 +464,14 @@ export const useObsApi = () => {
       const queryParams = new URLSearchParams()
       if (page) queryParams.append('page', page.toString())
       if (per_page) queryParams.append('per_page', per_page.toString())
+      // Add cache-busting parameter
+      queryParams.append('_t', Date.now().toString())
       
-      const url = queryParams.toString() ? `/search?${queryParams.toString()}` : '/search'
-      logger.apiCall('POST', url)
-      
-      const response = await apiClient.post<ApiResponse<Record<string, any>>>(url, requestBody)
+        const url = `/search?${queryParams.toString()}`
+        logger.debug(`performSearch API call: ${url}`)
+        logger.apiCall('POST', url)
+        
+        const response = await apiClient.post<ApiResponse<Record<string, any>>>(url, requestBody)
       
       if (response.success) {
         return response.data
@@ -506,6 +509,11 @@ export const useObsApi = () => {
     clearError()
   }
 
+  // Очистка кеша API
+  const clearApiCache = (pattern?: string) => {
+    apiClient.clearCache(pattern)
+  }
+
   return {
     // State
     loading: computed(() => loading.value),
@@ -535,6 +543,7 @@ export const useObsApi = () => {
     performSearch,
     initializeData,
     clearData,
-    clearError
+    clearError,
+    clearApiCache
   }
 }

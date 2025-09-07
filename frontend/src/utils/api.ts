@@ -3,6 +3,8 @@ const API_BASE_URL =
 
 class ApiClient {
   private baseURL: string
+  private cache = new Map<string, { data: unknown; timestamp: number }>()
+  private readonly CACHE_TTL = 5 * 60 * 1000 // 5 минут
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
@@ -48,9 +50,32 @@ class ApiClient {
     }
   }
 
-  // GET запрос
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
+  // GET запрос с кешированием
+  async get<T>(endpoint: string, useCache = true): Promise<T> {
+    const cacheKey = `GET:${endpoint}`
+    
+    // Проверяем кеш для GET запросов
+    if (useCache && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey)!
+      const isExpired = Date.now() - cached.timestamp > this.CACHE_TTL
+      
+      if (!isExpired) {
+        console.log(`Cache hit: ${endpoint}`)
+        return cached.data as T
+      } else {
+        this.cache.delete(cacheKey)
+      }
+    }
+    
+    const result = await this.request<T>(endpoint, { method: 'GET' })
+    
+    // Кешируем только успешные GET запросы
+    if (useCache) {
+      this.cache.set(cacheKey, { data: result, timestamp: Date.now() })
+      console.log(`Cached: ${endpoint}`)
+    }
+    
+    return result
   }
 
   // POST запрос
@@ -72,6 +97,30 @@ class ApiClient {
   // DELETE запрос
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' })
+  }
+
+  // Очистка кеша
+  clearCache(pattern?: string) {
+    if (pattern) {
+      // Очищаем кеш по паттерну
+      for (const key of this.cache.keys()) {
+        if (key.includes(pattern)) {
+          this.cache.delete(key)
+        }
+      }
+    } else {
+      // Очищаем весь кеш
+      this.cache.clear()
+    }
+    console.log(`Cache cleared${pattern ? ` for pattern: ${pattern}` : ''}`)
+  }
+
+  // Получение статистики кеша
+  getCacheStats() {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    }
   }
 }
 

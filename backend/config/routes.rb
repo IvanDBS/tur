@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       get 'search/package_templates/:id/hotels', to: 'search#hotels'
       get 'search/package_templates/:id/meals', to: 'search#meals'
       post 'search', to: 'search#search'
+      post 'search/clear_cache', to: 'search#clear_cache'
       get 'search', to: 'search#index'
       get 'search/:id', to: 'search#show'
       

@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { arraysEqual } from '../utils/objectUtils'
 import { logger } from '../utils/logger'
+import { debounce } from '../utils/debounce'
 import type { SelectedFilters, Region, Hotel } from '../types/search'
 
 /**
@@ -9,12 +10,18 @@ import type { SelectedFilters, Region, Hotel } from '../types/search'
  */
 export function useSearchFilters(initialFilters: SelectedFilters, availableData?: {
   regions?: Region[]
-  categories?: any[]
+  categories?: unknown[]
   hotels?: Hotel[]
-  meals?: any[]
-  options?: any[]
+  meals?: unknown[]
+  options?: unknown[]
 }) {
   const selectedFilters = ref<SelectedFilters>({ ...initialFilters })
+
+  // Debounced функция для синхронизации (оптимизация)
+  const debouncedSync = debounce((newFilters: unknown) => {
+    selectedFilters.value = { ...(newFilters as SelectedFilters) }
+    logger.debug('Filters synchronized with external changes')
+  }, 100)
 
   // Синхронизируем с внешними изменениями (оптимизированно)
   watch(() => initialFilters, (newFilters) => {
@@ -24,8 +31,7 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
         !arraysEqual(selectedFilters.value.hotels, newFilters.hotels) ||
         !arraysEqual(selectedFilters.value.meals, newFilters.meals) ||
         !arraysEqual(selectedFilters.value.options, newFilters.options)) {
-      selectedFilters.value = { ...newFilters }
-      logger.debug('Filters synchronized with external changes')
+      debouncedSync(newFilters)
     }
   }, { deep: true })
 
@@ -118,12 +124,12 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
     selectedFilters.value.categories = currentCategories
   }
 
-  const toggleAllCategories = (categories: any[]) => {
+  const toggleAllCategories = (categories: unknown[]) => {
     if (allCategoriesSelected.value) {
       selectedFilters.value.categories = []
     } else {
       // Выбираем все категории включая ID=1 "все категории"
-      selectedFilters.value.categories = [1, ...categories.map(c => c.id)]
+      selectedFilters.value.categories = [1, ...categories.map((c: any) => c.id)]
     }
   }
 
@@ -178,12 +184,12 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
     selectedFilters.value.meals = currentMeals
   }
 
-  const toggleAllMeals = (meals: any[]) => {
+  const toggleAllMeals = (meals: unknown[]) => {
     if (allMealsSelected.value) {
       selectedFilters.value.meals = []
     } else {
       // Выбираем все типы питания включая ID=1 "все типы питания"
-      selectedFilters.value.meals = [1, ...meals.map(m => m.id)]
+      selectedFilters.value.meals = [1, ...meals.map((m: any) => m.id)]
     }
   }
 
@@ -201,11 +207,11 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
     selectedFilters.value.options = currentOptions
   }
 
-  const toggleAllOptions = (options: any[]) => {
+  const toggleAllOptions = (options: unknown[]) => {
     if (allOptionsSelected.value) {
       selectedFilters.value.options = []
     } else {
-      selectedFilters.value.options = options.map(o => o.id)
+      selectedFilters.value.options = options.map((o: any) => o.id)
     }
   }
 
@@ -221,10 +227,10 @@ export function useSearchFilters(initialFilters: SelectedFilters, availableData?
   }
 
   // Установка фильтров по умолчанию
-  const setDefaultFilters = (regions: Region[], categories: any[], meals: any[], hotels?: Hotel[]) => {
+  const setDefaultFilters = (regions: Region[], categories: unknown[], meals: unknown[], hotels?: Hotel[]) => {
     selectedFilters.value.regions = [1, ...regions.map(r => r.id)]
-    selectedFilters.value.categories = [1, ...categories.map(c => c.id)]
-    selectedFilters.value.meals = [1, ...meals.map(m => m.id)] // Добавляем ID=1 для "все типы питания"
+    selectedFilters.value.categories = [1, ...categories.map((c: any) => c.id)]
+    selectedFilters.value.meals = [1, ...meals.map((m: any) => m.id)] // Добавляем ID=1 для "все типы питания"
     if (hotels) {
       selectedFilters.value.hotels = [1, ...hotels.map(h => h.id)]
     }

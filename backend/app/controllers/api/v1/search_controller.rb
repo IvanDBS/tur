@@ -18,21 +18,22 @@ module Api
       # GET /api/v1/search/departure_cities
       def departure_cities
         begin
-          Rails.logger.info "Fetching departure cities from OBS API"
+          # Кеширование на 1 час (статические данные)
+          cities = Rails.cache.fetch('departure_cities', expires_in: 1.hour) do
+            Rails.logger.info "Fetching departure cities from OBS API (cache miss)"
+            
+            # Use site-level authentication for public endpoints
+            obs_service = ObsApiService.new(
+              base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+              access_token: ObsSiteAuthService.instance.access_token
+            )
+            
+            obs_service.departure_cities
+          end
           
-          # Use site-level authentication for public endpoints
-          obs_service = ObsApiService.new(
-            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
-            access_token: ObsSiteAuthService.instance.access_token
-          )
-          
-          Rails.logger.info "OBS service created, fetching cities..."
-          cities = obs_service.departure_cities
-          Rails.logger.info "Received cities from OBS API: #{cities.inspect}"
+          Rails.logger.info "Serving departure cities (cached: #{Rails.cache.exist?('departure_cities')})"
           
           response_data = { departure_cities: cities }
-          Rails.logger.info "Rendering response: #{response_data.inspect}"
-          
           render_success(response_data)
         rescue ObsApiService::Error => e
           Rails.logger.error "OBS API error in departure_cities: #{e.message}"
@@ -62,13 +63,20 @@ module Api
         end
 
         begin
-          # Use site-level authentication for public endpoints
-          obs_service = ObsApiService.new(
-            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
-            access_token: ObsSiteAuthService.instance.access_token
-          )
-          countries = obs_service.countries(airport_city_from)
-          Rails.logger.info "Successfully fetched #{countries.length} countries"
+          # Кеширование на 30 минут (зависит от города отправления)
+          cache_key = "countries_#{airport_city_from}"
+          countries = Rails.cache.fetch(cache_key, expires_in: 30.minutes) do
+            Rails.logger.info "Fetching countries from OBS API (cache miss) for city: #{airport_city_from}"
+            
+            # Use site-level authentication for public endpoints
+            obs_service = ObsApiService.new(
+              base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+              access_token: ObsSiteAuthService.instance.access_token
+            )
+            obs_service.countries(airport_city_from)
+          end
+          
+          Rails.logger.info "Serving countries (cached: #{Rails.cache.exist?(cache_key)}) for city: #{airport_city_from}"
           render_success({ countries: countries })
         rescue ObsApiService::Error => e
           Rails.logger.error "OBS API error: #{e.message}"
@@ -156,7 +164,7 @@ module Api
             
             # Apply pagination using Pagy only if per_page is reasonable
             if per_page > 500
-              # For large per_page, return all results without pagination
+              # For per_page > 500, return all results without pagination
               Rails.logger.info "Returning all results without pagination - total_results: #{total_results}"
               Rails.logger.info "results_array length: #{results_array.length}"
               
@@ -176,8 +184,16 @@ module Api
                                message: "Found #{total_results} tours"
                              })
             else
-              # Apply pagination using Pagy
-              pagy, paginated_results = pagy_array(results_array, page: page, items: per_page)
+              # Apply simple pagination without Pagy
+              Rails.logger.info "Applying simple pagination: page=#{page}, per_page=#{per_page}, total_results=#{total_results}"
+              
+              # Calculate pagination manually
+              start_index = (page - 1) * per_page
+              end_index = start_index + per_page
+              paginated_results = results_array[start_index...end_index]
+              total_pages = (total_results.to_f / per_page).ceil
+              
+              Rails.logger.info "Simple pagination result: paginated_results.length=#{paginated_results.length}, page=#{page}, total_pages=#{total_pages}"
               
               # Convert paginated array to hash for frontend compatibility
               paginated_hash = paginated_results.each_with_index.map { |result, index| [index.to_s, result] }.to_h
@@ -186,11 +202,11 @@ module Api
                                search_id: search_id,
                                results: paginated_hash,
                                total_results: total_results,
-                               page: pagy.page,
+                               page: page,
                                per_page: per_page,
-                               total_pages: pagy.pages,
-                               prev_page: pagy.prev,
-                               next_page: pagy.next,
+                               total_pages: total_pages,
+                               prev_page: page > 1 ? page - 1 : nil,
+                               next_page: page < total_pages ? page + 1 : nil,
                                message: "Found #{total_results} tours"
                              })
             end
@@ -343,6 +359,22 @@ module Api
           render_success({ meals: meals })
         rescue ObsApiService::Error => e
           render_error("Failed to fetch meals: #{e.message}", :bad_gateway)
+        end
+      end
+
+      # POST /api/v1/search/clear_cache - очистка кеша (для админов)
+      def clear_cache
+        begin
+          pattern = params[:pattern] || 'search'
+          
+          # Очищаем кеш по паттерну
+          Rails.cache.delete_matched("#{pattern}*")
+          
+          Rails.logger.info "Cache cleared for pattern: #{pattern}"
+          render_success({ message: "Cache cleared for pattern: #{pattern}" })
+        rescue StandardError => e
+          Rails.logger.error "Failed to clear cache: #{e.message}"
+          render_error("Failed to clear cache: #{e.message}", :internal_server_error)
         end
       end
     end

@@ -298,38 +298,35 @@
 
   // Удалены неиспользуемые watchers для логирования - они не влияют на функциональность
 
-  // Следим за изменениями selectedRegions props и синхронизируем с composable
-  watch(() => props.selectedRegions, (newSelectedRegions) => {
-    // Синхронизируем с composable (оптимизированно)
-    if (!arraysEqual(selectedFilters.value.regions, newSelectedRegions)) {
-      selectedFilters.value.regions = [...newSelectedRegions]
-    }
-  }, { immediate: true })
-
-  // Следим за изменениями других фильтров
-  watch(() => props.selectedCategories, (newSelectedCategories) => {
-    if (!arraysEqual(selectedFilters.value.categories, newSelectedCategories)) {
-      selectedFilters.value.categories = [...newSelectedCategories]
-    }
-  }, { immediate: true })
-
-  watch(() => props.selectedHotels, (newSelectedHotels) => {
-    if (!arraysEqual(selectedFilters.value.hotels, newSelectedHotels)) {
-      selectedFilters.value.hotels = [...newSelectedHotels]
-    }
-  }, { immediate: true })
-
-  watch(() => props.selectedMeals, (newSelectedMeals) => {
-    if (!arraysEqual(selectedFilters.value.meals, newSelectedMeals)) {
-      selectedFilters.value.meals = [...newSelectedMeals]
-    }
-  }, { immediate: true })
-
-  watch(() => props.selectedOptions, (newSelectedOptions) => {
-    if (!arraysEqual(selectedFilters.value.options, newSelectedOptions)) {
-      selectedFilters.value.options = [...newSelectedOptions]
-    }
-  }, { immediate: true })
+  // Единый watcher для всех props (оптимизация: 1 вместо 5)
+  watch(
+    () => ({
+      regions: props.selectedRegions,
+      categories: props.selectedCategories,
+      hotels: props.selectedHotels,
+      meals: props.selectedMeals,
+      options: props.selectedOptions
+    }),
+    (newProps) => {
+      // Синхронизируем только изменившиеся фильтры
+      if (!arraysEqual(selectedFilters.value.regions, newProps.regions)) {
+        selectedFilters.value.regions = [...newProps.regions]
+      }
+      if (!arraysEqual(selectedFilters.value.categories, newProps.categories)) {
+        selectedFilters.value.categories = [...newProps.categories]
+      }
+      if (!arraysEqual(selectedFilters.value.hotels, newProps.hotels)) {
+        selectedFilters.value.hotels = [...newProps.hotels]
+      }
+      if (!arraysEqual(selectedFilters.value.meals, newProps.meals)) {
+        selectedFilters.value.meals = [...newProps.meals]
+      }
+      if (!arraysEqual(selectedFilters.value.options, newProps.options)) {
+        selectedFilters.value.options = [...newProps.options]
+      }
+    },
+    { immediate: true, deep: true }
+  )
 
   // Создаем динамический маппинг регионов к городам на основе props.regions
   const regionCitiesMap = computed(() => {

@@ -12,7 +12,6 @@
         :result="result"
         @book="handleBook"
         @details="handleDetails"
-        @compare="handleCompare"
         @save-search-state="handleSaveSearchState"
       />
     </div>
@@ -73,7 +72,6 @@
   const emit = defineEmits<{
     book: [result: GroupedSearchResult]
     details: [result: GroupedSearchResult]
-    compare: [result: GroupedSearchResult]
     loadMore: []
     'page-change': [page: number]
     'save-search-state': []
@@ -101,9 +99,6 @@
     emit('details', result)
   }
 
-  const handleCompare = (result: GroupedSearchResult) => {
-    emit('compare', result)
-  }
 
   const handleSaveSearchState = () => {
     emit('save-search-state')

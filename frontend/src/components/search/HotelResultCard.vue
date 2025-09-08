@@ -171,18 +171,12 @@
           <span>{{ getAvailabilityText() }}</span>
         </button>
         
-        <button class="action-btn details" title="Детали отеля">
+        <button class="action-btn details" title="Подробнее" @click="handleDetails">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2"/>
             <path d="M8 5V3a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
           </svg>
-        </button>
-        
-        <button class="action-btn compare" title="Сравнить">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M9 19c-5 0-7-2-7-7s2-7 7-7 7 2 7 7-2 7-7 7z" stroke="currentColor" stroke-width="2"/>
-            <path d="M15 5c5 0 7 2 7 7s-2 7-7 7" stroke="currentColor" stroke-width="2"/>
-          </svg>
+          <span>Подробнее</span>
         </button>
         
         <button 
@@ -221,7 +215,6 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   book: [result: GroupedSearchResult]
   details: [result: GroupedSearchResult]
-  compare: [result: GroupedSearchResult]
   saveSearchState: []
 }>()
 
@@ -408,10 +401,6 @@ const handleDetails = () => {
   emit('details', props.result)
 }
 
-// Handle compare
-const handleCompare = () => {
-  emit('compare', props.result)
-}
 
 // Handle image error
 const handleImageError = (event: Event) => {

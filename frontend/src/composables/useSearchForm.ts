@@ -507,23 +507,45 @@ export const useSearchForm = () => {
     return searchData.hotels.value.map(hotel => Number(hotel.id))
   }
 
-  // Функция для группировки результатов по отелям
+  // Функция для группировки результатов по отелям с поддержкой вариантов комнат
   const groupResultsByHotel = (results: ObsSearchResult[]): GroupedSearchResult[] => {
     const groupedMap = new Map<string, GroupedSearchResult>()
     
     results.forEach(result => {
-      const hotelKey = `${result.accommodation.hotel.id}-${result.accommodation.room.id}-${result.accommodation.meal.id}`
+      // Группируем только по отелю
+      const hotelKey = `${result.accommodation.hotel.id}`
       
       if (groupedMap.has(hotelKey)) {
-        // Добавляем вариант перелета к существующему отелю
         const existing = groupedMap.get(hotelKey)!
         
-        // Добавляем цену к варианту перелета
-        const flightOptionWithPrice = {
-          ...result.tickets,
-          price: result.price
+        // Ищем существующий вариант комнаты
+        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}`
+        const existingRoomOption = existing.roomOptions.find(option => 
+          `${option.room.id}-${option.meal.id}` === roomKey
+        )
+        
+        if (existingRoomOption) {
+          // Добавляем вариант перелета к существующему варианту комнаты
+          const flightOptionWithPrice = {
+            ...result.tickets,
+            price: result.price
+          }
+          existingRoomOption.flightOptions.push(flightOptionWithPrice)
+        } else {
+          // Создаем новый вариант комнаты
+          const newRoomOption = {
+            id: roomKey,
+            room: result.accommodation.room,
+            meal: result.accommodation.meal,
+            placement: result.accommodation.placement,
+            price: result.price,
+            flightOptions: [{
+              ...result.tickets,
+              price: result.price
+            }]
+          }
+          existing.roomOptions.push(newRoomOption)
         }
-        existing.flightOptions.push(flightOptionWithPrice)
         
         // Обновляем минимальную и максимальную цены
         const currentPrice = result.price.amount
@@ -535,21 +557,26 @@ export const useSearchForm = () => {
         }
       } else {
         // Создаем новый группированный результат
+        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}`
         const grouped: GroupedSearchResult = {
           hotel: result.accommodation.hotel,
-          room: result.accommodation.room,
-          meal: result.accommodation.meal,
           dates: result.dates,
           nights: result.nights,
-          price: result.price,
           transfers: result.transfers,
           never_land_entrance: result.never_land_entrance,
           gala_dinner: result.gala_dinner,
           aquapark_services: result.aquapark_services,
           tourists: result.tourists,
-          flightOptions: [{
-            ...result.tickets,
-            price: result.price
+          roomOptions: [{
+            id: roomKey,
+            room: result.accommodation.room,
+            meal: result.accommodation.meal,
+            placement: result.accommodation.placement,
+            price: result.price,
+            flightOptions: [{
+              ...result.tickets,
+              price: result.price
+            }]
           }],
           minPrice: result.price.amount,
           maxPrice: result.price.amount,

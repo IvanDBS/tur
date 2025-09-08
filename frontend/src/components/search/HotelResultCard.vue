@@ -27,7 +27,7 @@
       <div class="flight-options-summary">
         <div class="flight-label">Варианты перелетов</div>
         <div class="flight-count">
-          {{ result.flightOptions.length }} {{ getFlightWord(result.flightOptions.length) }}
+          {{ getFlightOptionsCount() }} {{ getFlightWord(getFlightOptionsCount()) }}
         </div>
         <div class="flight-price-range" v-if="result.minPrice !== result.maxPrice">
           от {{ result.minPrice }} до {{ result.maxPrice }} {{ result.currency }}
@@ -79,38 +79,19 @@
         </div>
       </div>
 
-      <!-- Key Facts -->
-      <div class="key-facts">
-        <div class="fact-item" v-if="result.hotel?.beach_distance">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12h18m-9-9v18" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 3l3 3-3 3-3-3z" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          До пляжа: {{ result.hotel.beach_distance }}м
-        </div>
-        <div class="fact-item" v-if="result.hotel?.airport_distance">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
-          </svg>
-          До аэропорта: {{ result.hotel.airport_distance }}км
-        </div>
-        <div class="fact-item meal-type" :class="getMealClass(result.meal?.name || '')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M3 2v7c0 1.1.9 2 2 2h4v2.5c0 .83.67 1.5 1.5 1.5S12 13.33 12 12.5V11h4c1.1 0 2-.9 2-2V2H3z" fill="currentColor"/>
-          </svg>
-          {{ result.meal?.name || '' }}
-        </div>
-      </div>
 
       <div class="accommodation-details">
-        <div class="room-info">
-          <span class="room-type">{{ result.room?.name || '' }}</span>
-          <span class="placement">{{ result.placement?.name || '' }}</span>
-        </div>
-        <div class="meal-info">
-          <span class="meal-type" :class="getMealClass(result.meal?.name || '')">
-            {{ result.meal?.name || '' }}
-          </span>
+        <div class="room-options-summary">
+          <div class="room-label">Варианты проживания</div>
+          <div class="room-count">
+            {{ result.roomOptions?.length || 1 }} {{ getRoomWord(result.roomOptions?.length || 1) }}
+          </div>
+          <div class="room-price-range" v-if="result.minPrice !== result.maxPrice">
+            от {{ result.minPrice }} до {{ result.maxPrice }} {{ result.currency }}
+          </div>
+          <div class="room-price-range" v-else>
+            {{ result.minPrice }} {{ result.currency }}
+          </div>
         </div>
       </div>
 
@@ -160,24 +141,6 @@
       </div>
 
       <div class="action-buttons">
-        <button 
-          class="action-btn availability" 
-          :class="getAvailabilityClass()"
-          :title="getAvailabilityTooltip()"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
-          </svg>
-          <span>{{ getAvailabilityText() }}</span>
-        </button>
-        
-        <button class="action-btn details" title="Подробнее" @click="handleDetails">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2"/>
-            <path d="M8 5V3a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          <span>Подробнее</span>
-        </button>
         
         <button 
           class="action-btn book" 
@@ -186,10 +149,6 @@
           :disabled="!canBook"
           @click="handleBook"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-4" stroke="currentColor" stroke-width="2"/>
-            <path d="M9 11V9a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
-          </svg>
           <span>Забронировать</span>
         </button>
       </div>
@@ -214,7 +173,6 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   book: [result: GroupedSearchResult]
-  details: [result: GroupedSearchResult]
   saveSearchState: []
 }>()
 
@@ -235,18 +193,6 @@ const formatDateShort = (dateString: string) => {
   return `${day}.${month}`
 }
 
-// Get meal type CSS class
-const getMealClass = (mealType: string) => {
-  const mealMap: Record<string, string> = {
-    'AI': 'all-inclusive',
-    'UAI': 'ultra-all-inclusive', 
-    'HB': 'half-board',
-    'FB': 'full-board',
-    'BB': 'bed-breakfast',
-    'RO': 'room-only'
-  }
-  return mealMap[mealType] || 'other'
-}
 
 // Check if has additional services
 const hasAdditionalServices = computed(() => {
@@ -255,120 +201,36 @@ const hasAdditionalServices = computed(() => {
          (props.result.aquapark_services?.length || 0) > 0
 })
 
-// Get availability text
-const getAvailabilityText = () => {
-  // Check if any flight option has no tickets
-  const hasNoTickets = props.result.flightOptions.some(option => 
-    option.has_tickets === false
-  )
-  
-  if (hasNoTickets) {
-    return 'Нет мест'
-  }
-  
-  // Check if any option is on request
-  const hasOnRequest = props.result.flightOptions.some(option => 
-    option.on_request === 'y'
-  )
-  
-  if (hasOnRequest) {
-    return 'На запрос'
-  }
-  
-  // Calculate minimum tickets across all flight options
-  let minTickets = 10
-  props.result.flightOptions.forEach(option => {
-    const fromTickets = option.from?.tickets
-    const toTickets = option.to?.tickets
-    
-    if (fromTickets !== null && toTickets !== null) {
-      const optionMinTickets = Math.min(fromTickets, toTickets)
-      minTickets = Math.min(minTickets, optionMinTickets)
-    }
-  })
-  
-  return minTickets >= 10 ? '10+' : minTickets.toString()
-}
-
-// Get availability tooltip
-const getAvailabilityTooltip = () => {
-  // Check if any flight option has no tickets
-  const hasNoTickets = props.result.flightOptions.some(option => 
-    option.has_tickets === false
-  )
-  
-  if (hasNoTickets) {
-    return 'Билеты недоступны'
-  }
-  
-  // Check if any option is on request
-  const hasOnRequest = props.result.flightOptions.some(option => 
-    option.on_request === 'y'
-  )
-  
-  if (hasOnRequest) {
-    return 'Билеты на запрос - требуется подтверждение'
-  }
-  
-  // Show flight options count
-  const optionsCount = props.result.flightOptions.length
-  return `${optionsCount} ${getFlightWord(optionsCount)} перелетов доступно`
-}
 
 // Check if booking is available
 const canBook = computed(() => {
-  // Check if any flight option has tickets available
-  const hasAvailableTickets = props.result.flightOptions.some(option => 
-    option.has_tickets !== false
-  )
+  // Check if any room option has available flights
+  if ('roomOptions' in props.result) {
+    const groupedResult = props.result as GroupedSearchResult
+    const hasAvailableTickets = groupedResult.roomOptions.some(roomOption => 
+      roomOption.flightOptions.some(flightOption => 
+        flightOption.has_tickets !== false
+      )
+    )
+    return hasAvailableTickets
+  }
   
-  return hasAvailableTickets
+  // For regular SearchResult, check tickets directly
+  if ('accommodation' in props.result) {
+    const regularResult = props.result as SearchResult
+    return regularResult.tickets.has_tickets !== false
+  }
+  
+  return true
 })
 
-// Get availability CSS class
-const getAvailabilityClass = () => {
-  // Check if any flight option has tickets available
-  const hasAvailableTickets = props.result.flightOptions.some(option => 
-    option.has_tickets !== false
-  )
-  
-  if (!hasAvailableTickets) {
-    return 'no-tickets'
-  }
-  
-  // Check if any option is on request
-  const hasOnRequest = props.result.flightOptions.some(option => 
-    option.on_request === 'y'
-  )
-  
-  if (hasOnRequest) {
-    return 'on-request'
-  }
-  
-  // Calculate minimum tickets across all options
-  let minTickets = 10
-  props.result.flightOptions.forEach(option => {
-    const fromTickets = option.from?.tickets
-    const toTickets = option.to?.tickets
-    const optionMinTickets = Math.min(fromTickets || 10, toTickets || 10)
-    minTickets = Math.min(minTickets, optionMinTickets)
-  })
-  
-  if (minTickets <= 2) {
-    return 'low-availability'
-  } else if (minTickets <= 5) {
-    return 'medium-availability'
-  } else {
-    return 'high-availability'
-  }
-}
 
 // Handle booking
 const handleBook = () => {
   console.log('Booking button clicked!', props.result)
   
   // Create unique key for grouped result
-  const uniqueKey = `${props.result.hotel.id}-${props.result.room.id}-${props.result.meal.id}`
+  const uniqueKey = `${props.result.hotel.id}`
   
   // Navigate to booking page with search result data
   console.log('Navigating to booking page with ID:', uniqueKey)
@@ -396,10 +258,6 @@ const handleBook = () => {
   })
 }
 
-// Handle details
-const handleDetails = () => {
-  emit('details', props.result)
-}
 
 
 // Handle image error
@@ -421,6 +279,27 @@ const getFlightWord = (count: number) => {
   if (count === 1) return 'вариант'
   if (count >= 2 && count <= 4) return 'варианта'
   return 'вариантов'
+}
+
+// Get room word with correct declension
+const getRoomWord = (count: number) => {
+  if (count === 1) return 'вариант'
+  if (count >= 2 && count <= 4) return 'варианта'
+  return 'вариантов'
+}
+
+// Get flight options count
+const getFlightOptionsCount = () => {
+  if ('roomOptions' in props.result) {
+    const groupedResult = props.result as GroupedSearchResult
+    // Считаем общее количество вариантов перелетов для всех комнат
+    return groupedResult.roomOptions.reduce((total, roomOption) => 
+      total + roomOption.flightOptions.length, 0
+    )
+  }
+  
+  // For regular SearchResult, return 1
+  return 1
 }
 
 // Export component
@@ -773,32 +652,6 @@ defineExpose({})
   gap: 0.5rem;
 }
 
-/* Key Facts */
-.key-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  background: var(--color-background-soft);
-  border-radius: 6px;
-}
-
-.fact-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.fact-item.meal-type {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
 
 .accommodation-details {
   display: flex;
@@ -806,29 +659,28 @@ defineExpose({})
   align-items: center;
 }
 
-.room-info {
+.room-options-summary {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.room-type {
+.room-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.room-count {
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
-  font-size: 0.85rem;
 }
 
-.placement {
-  background: var(--color-background-soft);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  color: var(--color-text-soft);
-}
-
-.meal-info {
-  display: flex;
-  align-items: center;
+.room-price-range {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .meal-type {
@@ -957,6 +809,11 @@ defineExpose({})
   background: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
+  width: auto;
+  min-width: 120px;
+  height: 40px;
+  padding: 0 1rem;
+  font-size: 0.8rem;
 }
 
 .action-btn.book:hover {
@@ -1157,13 +1014,11 @@ defineExpose({})
     gap: 0.5rem;
   }
   
-  .key-facts {
-    flex-direction: column;
-    gap: 0.5rem;
+  .action-btn.book {
+    min-width: 140px;
+    height: 44px;
+    font-size: 0.85rem;
   }
   
-  .fact-item {
-    font-size: 0.75rem;
-  }
 }
 </style>

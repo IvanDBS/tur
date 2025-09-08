@@ -93,3 +93,13 @@ export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
+
+/**
+ * Форматирует цену в читаемый вид
+ * @param price - цена для форматирования
+ * @returns отформатированная цена
+ */
+export const formatPrice = (price: number): string => {
+  if (typeof price !== 'number') return '0'
+  return new Intl.NumberFormat('ru-RU').format(price)
+}

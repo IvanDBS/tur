@@ -2,6 +2,7 @@
 export interface BookingData {
   searchResult: SearchResult | GroupedSearchResult
   selectedFlight?: SelectedFlight
+  selectedRoom?: SelectedRoom
   tourists: TouristData[]
   additionalServices: AdditionalServices
   notes?: string
@@ -10,6 +11,13 @@ export interface BookingData {
 export interface SelectedFlight {
   outbound: FlightSegment
   inbound: FlightSegment
+}
+
+export interface SelectedRoom {
+  room: SearchResultRoom
+  meal: SearchResultMeal
+  placement: SearchResultPlacement
+  price: SearchResultPrice
 }
 
 export interface FlightSegment {
@@ -89,7 +97,14 @@ export interface BookingNotes {
 }
 
 // Импортируем SearchResult из существующих типов
-import type { SearchResult, GroupedSearchResult } from './search'
+import type { 
+  SearchResult, 
+  GroupedSearchResult, 
+  SearchResultRoom, 
+  SearchResultMeal, 
+  SearchResultPlacement, 
+  SearchResultPrice 
+} from './search'
 
 // Типы для API ответов
 export interface BookingCreateRequest {

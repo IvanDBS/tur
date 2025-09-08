@@ -94,11 +94,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
-import type { SelectedFlight } from '../../types/booking'
+import type { SelectedFlight, SelectedRoom } from '../../types/booking'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
   selectedFlight?: SelectedFlight
+  selectedRoom?: SelectedRoom
 }
 
 const props = defineProps<Props>()
@@ -116,25 +117,45 @@ const hotel = computed(() => {
 })
 
 const room = computed(() => {
+  // Если выбрана комната, используем её
+  if (props.selectedRoom) {
+    return props.selectedRoom.room
+  }
+  
   if (isGroupedResult.value) {
-    return (props.searchResult as GroupedSearchResult).room || {}
+    const groupedResult = props.searchResult as GroupedSearchResult
+    // Используем первую доступную комнату
+    return groupedResult.roomOptions?.[0]?.room || {}
   } else {
     return (props.searchResult as SearchResult).accommodation?.room || {}
   }
 })
 
 const placement = computed(() => {
+  // Если выбрана комната, используем её размещение
+  if (props.selectedRoom) {
+    return props.selectedRoom.placement
+  }
+  
   if (isGroupedResult.value) {
-    // GroupedSearchResult doesn't have placement, use empty object
-    return {}
+    const groupedResult = props.searchResult as GroupedSearchResult
+    // Используем размещение первой доступной комнаты
+    return groupedResult.roomOptions?.[0]?.placement || {}
   } else {
     return (props.searchResult as SearchResult).accommodation?.placement || {}
   }
 })
 
 const meal = computed(() => {
+  // Если выбрана комната, используем её питание
+  if (props.selectedRoom) {
+    return props.selectedRoom.meal
+  }
+  
   if (isGroupedResult.value) {
-    return (props.searchResult as GroupedSearchResult).meal || {}
+    const groupedResult = props.searchResult as GroupedSearchResult
+    // Используем питание первой доступной комнаты
+    return groupedResult.roomOptions?.[0]?.meal || {}
   } else {
     return (props.searchResult as SearchResult).accommodation?.meal || {}
   }
@@ -142,27 +163,28 @@ const meal = computed(() => {
 
 const dates = computed(() => props.searchResult.dates || {})
 const nights = computed(() => props.searchResult.nights || {})
-// Check if this is a grouped result with flight options
-const isGroupedResult = computed(() => 'flightOptions' in props.searchResult)
+// Check if this is a grouped result with room options
+const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
 
-// Calculate price based on selected flight
+// Calculate price based on selected room and flight
 const price = computed(() => {
-  if (isGroupedResult.value && props.selectedFlight) {
-    const groupedResult = props.searchResult as GroupedSearchResult
-    
-    // Find the selected flight option
-    const selectedOption = groupedResult.flightOptions?.find(option => {
-      const outboundId = props.selectedFlight?.outbound.id
-      const inboundId = props.selectedFlight?.inbound.id
-      return option.from.id === outboundId && option.to.id === inboundId
-    })
-    
-    // Return price from selected flight option, or fallback to base price
-    return selectedOption?.price || groupedResult.price || {}
+  // If room is selected, use its price
+  if (props.selectedRoom) {
+    return props.selectedRoom.price
   }
   
   // For regular SearchResult, return the base price
-  return props.searchResult.price || {}
+  if ('accommodation' in props.searchResult) {
+    return props.searchResult.price || {}
+  }
+  
+  // For grouped result, use first room option price
+  if (isGroupedResult.value) {
+    const groupedResult = props.searchResult as GroupedSearchResult
+    return groupedResult.roomOptions?.[0]?.price || {}
+  }
+  
+  return {}
 })
 
 const starRating = computed(() => {

@@ -214,7 +214,12 @@ const filteredNightsOptions = computed(() => {
     return props.dynamicNightsOptions
   }
   
-  const dateString = props.searchForm.checkInDate.toISOString().split('T')[0]
+  const checkInDate = props.searchForm.checkInDate
+  if (!checkInDate || typeof checkInDate.toISOString !== 'function') {
+    return props.dynamicNightsOptions
+  }
+  
+  const dateString = checkInDate.toISOString().split('T')[0]
   const dateHints = props.calendarHints.calendarHints.value[dateString]
   
   if (!dateHints || !Array.isArray(dateHints)) {

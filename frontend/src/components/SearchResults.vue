@@ -11,7 +11,6 @@
         :key="result.unique_key"
         :result="result"
         @book="handleBook"
-        @details="handleDetails"
         @save-search-state="handleSaveSearchState"
       />
     </div>
@@ -71,7 +70,6 @@
   // Emits
   const emit = defineEmits<{
     book: [result: GroupedSearchResult]
-    details: [result: GroupedSearchResult]
     loadMore: []
     'page-change': [page: number]
     'save-search-state': []
@@ -95,9 +93,6 @@
     emit('book', result)
   }
 
-  const handleDetails = (result: GroupedSearchResult) => {
-    emit('details', result)
-  }
 
 
   const handleSaveSearchState = () => {

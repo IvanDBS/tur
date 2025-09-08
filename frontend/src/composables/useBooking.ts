@@ -110,6 +110,27 @@ export const useBooking = () => {
     searchResult.value = result
     bookingData.searchResult = result as SearchResult
     
+    // Auto-select first room if available
+    if ('roomOptions' in result && result.roomOptions?.length > 0) {
+      const firstRoom = result.roomOptions[0]
+      bookingData.selectedRoom = {
+        room: firstRoom.room,
+        meal: firstRoom.meal,
+        placement: firstRoom.placement,
+        price: firstRoom.price
+      }
+      logger.info('Auto-selected first room:', bookingData.selectedRoom)
+    } else if ('accommodation' in result && result.accommodation) {
+      // For regular SearchResult
+      bookingData.selectedRoom = {
+        room: result.accommodation.room,
+        meal: result.accommodation.meal,
+        placement: result.accommodation.placement,
+        price: result.price
+      }
+      logger.info('Auto-selected room from regular result:', bookingData.selectedRoom)
+    }
+    
     // Auto-select first flight if available
     if ('flightOptions' in result && result.flightOptions?.length > 0) {
       const firstFlight = result.flightOptions[0]
@@ -170,6 +191,12 @@ export const useBooking = () => {
   const updateSelectedFlight = (flight: SelectedFlight) => {
     bookingData.selectedFlight = flight
     logger.info('Selected flight updated:', flight)
+  }
+
+  // Update selected room
+  const updateSelectedRoom = (room: SelectedRoom) => {
+    bookingData.selectedRoom = room
+    logger.info('Selected room updated:', room)
   }
 
   // Update tourist data
@@ -307,6 +334,7 @@ export const useBooking = () => {
     // Methods
     initializeBooking,
     updateSelectedFlight,
+    updateSelectedRoom,
     updateTourist,
     updateAdditionalServices,
     calculateBooking,

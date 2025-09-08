@@ -36,6 +36,14 @@
         <HotelInfoBlock 
           :search-result="searchResult" 
           :selected-flight="bookingData.selectedFlight"
+          :selected-room="bookingData.selectedRoom"
+        />
+
+        <!-- Room Selection Block -->
+        <RoomSelectionBlock 
+          :search-result="searchResult"
+          :selected-room="bookingData.selectedRoom"
+          @update:selected-room="updateSelectedRoom"
         />
 
         <!-- Flight Selection Block -->
@@ -132,6 +140,7 @@ import { useBooking } from '../composables/useBooking'
 import { useSearchData } from '../composables/useSearchData'
 // Import components dynamically to avoid TypeScript issues
 const HotelInfoBlock = defineAsyncComponent(() => import('../components/booking/HotelInfoBlock.vue'))
+const RoomSelectionBlock = defineAsyncComponent(() => import('../components/booking/RoomSelectionBlock.vue'))
 const FlightSelectionBlock = defineAsyncComponent(() => import('../components/booking/FlightSelectionBlock.vue'))
 const TouristDataBlock = defineAsyncComponent(() => import('../components/booking/TouristDataBlock.vue'))
 const AdditionalServicesBlock = defineAsyncComponent(() => import('../components/booking/AdditionalServicesBlock.vue'))
@@ -159,6 +168,7 @@ const {
   bookingData,
   initializeBooking,
   updateSelectedFlight,
+  updateSelectedRoom,
   updateTourist,
   updateAdditionalServices,
   calculateBooking,
@@ -192,6 +202,12 @@ const loadSearchResult = async () => {
       try {
         const searchResult = JSON.parse(storedSearchResult)
         console.log('Loaded search result from sessionStorage:', searchResult)
+        
+        // Validate search result structure
+        if (!searchResult || typeof searchResult !== 'object') {
+          throw new Error('Invalid search result format')
+        }
+        
         initializeBooking(searchResult)
         return
       } catch (parseError) {
@@ -224,6 +240,11 @@ const loadSearchResult = async () => {
     
   } catch (err) {
     console.error('Failed to load search result:', err)
+    // Set error state to show error message to user
+    if (err instanceof Error) {
+      // You might want to set an error state here
+      console.error('Error details:', err.message)
+    }
   }
 }
 
@@ -316,7 +337,7 @@ const getBasePriceDescription = () => {
   const parts = []
   
   // Проверяем, есть ли перелет (для GroupedSearchResult)
-  if ('flightOptions' in result && result.flightOptions?.length > 0) {
+  if ('flightOptions' in result && Array.isArray(result.flightOptions) && result.flightOptions.length > 0) {
     parts.push('Перелет')
   }
   
@@ -325,8 +346,8 @@ const getBasePriceDescription = () => {
   
   // Добавляем питание
   let mealName = 'питание'
-  if ('meal' in result && result.meal) {
-    mealName = result.meal.name || 'питание'
+  if ('meal' in result && result.meal && typeof result.meal === 'object' && result.meal !== null) {
+    mealName = (result.meal as any).name || 'питание'
   } else if ('accommodation' in result && result.accommodation?.meal) {
     mealName = result.accommodation.meal.name || 'питание'
   }
@@ -384,8 +405,12 @@ watch(() => bookingData.value.tourists, () => {
 }, { deep: true })
 
 // Lifecycle
-onMounted(() => {
-  loadSearchResult()
+onMounted(async () => {
+  try {
+    await loadSearchResult()
+  } catch (error) {
+    console.error('Error in BookingView onMounted:', error)
+  }
 })
 </script>
 

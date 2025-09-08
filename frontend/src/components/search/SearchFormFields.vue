@@ -49,6 +49,8 @@
           :model-value="searchForm.checkInDate"
           @update:model-value="updateField('checkInDate', $event)"
           :min-date="new Date()"
+          :max-date="new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)"
+          :disabled-dates="getDisabledDates"
           format="dd.MM.yyyy"
           placeholder="Выберите дату"
           :month-change-on-scroll="false"
@@ -74,6 +76,8 @@
           :model-value="searchForm.checkOutDate"
           @update:model-value="updateField('checkOutDate', $event)"
           :min-date="searchForm.checkInDate || new Date()"
+          :max-date="new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)"
+          :disabled-dates="getDisabledDates"
           format="dd.MM.yyyy"
           placeholder="Выберите дату"
           :month-change-on-scroll="false"
@@ -98,11 +102,11 @@
         <Multiselect
           :model-value="searchForm.nights"
           @update:model-value="updateField('nights', $event)"
-          :options="searchData.nightsOptions.value"
+          :options="filteredNightsOptions"
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="6"
+          placeholder="Выберите количество ночей"
           label="label"
           valueProp="value"
           :disabled="!searchForm.checkInDate"
@@ -123,7 +127,7 @@
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="6"
+          placeholder="Выберите количество ночей"
           label="label"
           valueProp="value"
           :disabled="!searchForm.checkInDate"
@@ -159,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, computed } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Multiselect from '@vueform/multiselect'
@@ -178,6 +182,63 @@ const props = defineProps<SearchFormFieldsProps>()
 
 // Emits
 const emit = defineEmits<SearchFormFieldsEmits>()
+
+// Computed
+const getDisabledDates = computed(() => {
+  // Если нет calendar hints, не блокируем даты
+  if (!props.calendarHints || !props.calendarHints.calendarHints.value) {
+    return []
+  }
+  
+  const availableDates = Object.keys(props.calendarHints.calendarHints.value)
+  const disabledDates = []
+  
+  // Блокируем все даты, кроме доступных
+  const today = new Date()
+  const oneYearFromNow = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000)
+  
+  for (let date = new Date(today); date <= oneYearFromNow; date.setDate(date.getDate() + 1)) {
+    const dateString = date.toISOString().split('T')[0]
+    if (!availableDates.includes(dateString)) {
+      disabledDates.push(new Date(date))
+    }
+  }
+  
+  return disabledDates
+})
+
+// Фильтруем ночи по выбранной дате
+const filteredNightsOptions = computed(() => {
+  // Если нет выбранной даты или calendar hints, показываем все варианты
+  if (!props.searchForm.checkInDate || !props.calendarHints || !props.calendarHints.calendarHints.value) {
+    return props.dynamicNightsOptions
+  }
+  
+  const dateString = props.searchForm.checkInDate.toISOString().split('T')[0]
+  const dateHints = props.calendarHints.calendarHints.value[dateString]
+  
+  if (!dateHints || !Array.isArray(dateHints)) {
+    return props.dynamicNightsOptions
+  }
+  
+  // Извлекаем доступные ночи для выбранной даты
+  const availableNights = new Set<number>()
+  dateHints.forEach(hint => {
+    const days = hint.days.split(',').map(d => parseInt(d.trim()))
+    days.forEach(day => {
+      if (!isNaN(day) && day > 0) {
+        availableNights.add(day)
+      }
+    })
+  })
+  
+  // Фильтруем опции по доступным ночам
+  const filteredOptions = props.dynamicNightsOptions.filter(option => 
+    availableNights.has(option.value)
+  )
+  
+  return filteredOptions.length > 0 ? filteredOptions : props.dynamicNightsOptions
+})
 
 // Methods
 const updateField = (field: keyof typeof props.searchForm, value: unknown) => {

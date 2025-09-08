@@ -37,7 +37,7 @@
 <script setup lang="ts">
   import { ref, defineAsyncComponent, watch } from 'vue'
   import { formatDate, getNightWord } from '../utils/dateUtils'
-  import type { SearchResult } from '../types/search'
+  import type { SearchResult, GroupedSearchResult } from '../types/search'
   
   // Динамический импорт компонентов
   const Pagination = defineAsyncComponent(() => import('./Pagination.vue'))
@@ -45,7 +45,7 @@
 
   // Props
   interface Props {
-    results?: SearchResult[]
+    results?: GroupedSearchResult[]
     isLoading?: boolean
     hasMore?: boolean
     currentPage?: number
@@ -70,9 +70,9 @@
 
   // Emits
   const emit = defineEmits<{
-    book: [result: SearchResult]
-    details: [result: SearchResult]
-    compare: [result: SearchResult]
+    book: [result: GroupedSearchResult]
+    details: [result: GroupedSearchResult]
+    compare: [result: GroupedSearchResult]
     loadMore: []
     'page-change': [page: number]
   }>()
@@ -91,15 +91,15 @@
   }, { immediate: true })
 
   // Methods
-  const handleBook = (result: SearchResult) => {
+  const handleBook = (result: GroupedSearchResult) => {
     emit('book', result)
   }
 
-  const handleDetails = (result: SearchResult) => {
+  const handleDetails = (result: GroupedSearchResult) => {
     emit('details', result)
   }
 
-  const handleCompare = (result: SearchResult) => {
+  const handleCompare = (result: GroupedSearchResult) => {
     emit('compare', result)
   }
 

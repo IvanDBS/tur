@@ -1,43 +1,138 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useSearchData } from './useSearchData'
+import { useCalendarHints } from './useCalendarHints'
+import { useNotifications } from './useNotifications'
 import { logger } from '../utils/logger'
 import { getAirportIdByPackageName } from '../constants/airports'
-import type { SearchForm, SelectedFilters } from '../types/search'
+import type { SearchForm, SelectedFilters, GroupedSearchResult } from '../types/search'
 
 // Интерфейс для результатов поиска от OBS API
 interface ObsSearchResult {
   unique_key: string
   rid: string
-  accommodation: {
-    hotel: {
-      name: string
-      category: string
-      city: string
-    }
-    room: {
-      name: string
-    }
-    meal: {
-      full_name: string
-    }
-  }
+  hotel_results_counter: number
+  package_template: number
+  operator: number
+  additional_services: unknown[]
   dates: {
     check_in: string
     check_out: string
   }
   nights: {
     total: number
+    on_the_way: number
+  }
+  accommodation: {
+    hotel: {
+      id: number
+      name: string
+      is_exclusive: boolean
+      category: string
+      city: string
+      in_stop: boolean
+    }
+    room: {
+      id: number
+      name: string
+    }
+    placement: {
+      id: number
+      name: string
+    }
+    meal: {
+      id: number
+      name: string
+      full_name: string
+    }
+  }
+  tickets: {
+    from: {
+      id: number
+      name: string
+      airline: {
+        iata_code: string
+        color: string
+        name: string
+        airline: string
+      }
+      departure: {
+        date: string
+        time: string
+      }
+      arrival: {
+        date: string
+        time: string
+      }
+      airports: {
+        from: {
+          name: string
+          prefix: string
+        }
+        to: {
+          name: string
+          prefix: string
+        }
+      }
+      tickets: number | null
+    }
+    to: {
+      id: number
+      name: string
+      airline: {
+        iata_code: string
+        color: string
+        name: string
+        airline: string
+      }
+      departure: {
+        date: string
+        time: string
+      }
+      arrival: {
+        date: string
+        time: string
+      }
+      airports: {
+        from: {
+          name: string
+          prefix: string
+        }
+        to: {
+          name: string
+          prefix: string
+        }
+      }
+      tickets: number | null
+    }
+    on_request: 'y' | 'n'
+    has_tickets: boolean
   }
   price: {
     amount: number
-    currency: string
+    netto: number
+    commission: number
     type: string
+    currency: string
+    currency_id: number
+  }
+  transfers: {
+    to: number
+    from: number
+  }
+  never_land_entrance: unknown[]
+  gala_dinner: unknown[]
+  aquapark_services: unknown[]
+  tourists: {
+    adults: number
+    children_ages: number[]
   }
 }
 
 export const useSearchForm = () => {
   // Получаем данные из composable
   const searchData = useSearchData()
+  const calendarHints = useCalendarHints()
+  const { showError } = useNotifications()
 
   // Reactive data
   const searchForm = ref<SearchForm>({
@@ -82,9 +177,10 @@ export const useSearchForm = () => {
   // Client-side pagination based on loaded results
   const totalPages = computed(() => {
     if (!allLoadedResults.value) return 0
-    const loadedCount = Object.keys(allLoadedResults.value).length
-    const pages = Math.ceil(loadedCount / itemsPerPage)
-    logger.debug(`totalPages computed: loadedCount=${loadedCount}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
+    const allResults = Object.values(allLoadedResults.value)
+    const groupedResults = groupResultsByHotel(allResults)
+    const pages = Math.ceil(groupedResults.length / itemsPerPage)
+    logger.debug(`totalPages computed: groupedResults.length=${groupedResults.length}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
     return pages
   })
   
@@ -99,11 +195,15 @@ export const useSearchForm = () => {
     const allResults = Object.values(allLoadedResults.value)
     logger.debug(`paginatedResults: allResults.length = ${allResults.length}, currentPage = ${currentPage.value}`)
     
+    // Группируем результаты по отелям
+    const groupedResults = groupResultsByHotel(allResults)
+    logger.debug(`paginatedResults: groupedResults.length = ${groupedResults.length}`)
+    
     // Calculate pagination for current page (20 items per page)
     const startIndex = (currentPage.value - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     
-    const paginated = allResults.slice(startIndex, endIndex)
+    const paginated = groupedResults.slice(startIndex, endIndex)
     logger.debug(`paginatedResults: startIndex = ${startIndex}, endIndex = ${endIndex}, paginated.length = ${paginated.length}`)
     
     return paginated
@@ -133,13 +233,11 @@ export const useSearchForm = () => {
   // Автоматическое заполнение полей значениями по умолчанию после выбора даты заезда
   watch(() => searchForm.value.checkInDate, (newDate) => {
     if (newDate) {
-      // Заполняем поля значениями по умолчанию
-      if (!searchForm.value.nights) {
-        searchForm.value.nights = 6
-      }
-      if (!searchForm.value.nights2) {
-        searchForm.value.nights2 = 6
-      }
+      // Сбрасываем выбранные ночи при смене даты, чтобы пользователь выбрал из доступных
+      searchForm.value.nights = null
+      searchForm.value.nights2 = null
+      
+      // Заполняем только количество взрослых
       if (!searchForm.value.adults) {
         searchForm.value.adults = 2
       }
@@ -162,6 +260,17 @@ export const useSearchForm = () => {
       (option: { value: number; label: string }) => option.value >= (searchForm.value.nights || 0)
     )
   })
+  
+  // Динамические опции ночей на основе calendar hints
+  const dynamicNightsOptions = computed(() => {
+    // Если есть доступные ночи из calendar hints, используем их
+    if (calendarHints.availableNights.value.length > 0) {
+      return calendarHints.availableNightsOptions.value
+    }
+    
+    // Иначе используем стандартные опции
+    return searchData.nightsOptions.value
+  })
 
   // Форматированные результаты для отображения
   const formattedResults = computed(() => {
@@ -170,20 +279,20 @@ export const useSearchForm = () => {
     }
     
     // Используем пагинированные результаты
-    const formatted = paginatedResults.value.map((result: ObsSearchResult) => ({
-      unique_key: result.unique_key || '',
-      rid: result.rid || '',
+    const formatted = paginatedResults.value.map((result: GroupedSearchResult) => ({
+      unique_key: `${result.hotel.id}-${result.room.id}-${result.meal.id}`,
+      rid: `${result.hotel.id}-${result.room.id}-${result.meal.id}`,
       accommodation: {
         hotel: {
-          name: result.accommodation?.hotel?.name || 'Название отеля',
-          category: result.accommodation?.hotel?.category || '',
-          city: result.accommodation?.hotel?.city || ''
+          name: result.hotel?.name || 'Название отеля',
+          category: result.hotel?.category || '',
+          city: result.hotel?.city || ''
         },
         room: {
-          name: result.accommodation?.room?.name || ''
+          name: result.room?.name || ''
         },
         meal: {
-          full_name: result.accommodation?.meal?.full_name || ''
+          full_name: result.meal?.full_name || result.meal?.name || ''
         }
       },
       dates: {
@@ -194,8 +303,8 @@ export const useSearchForm = () => {
         total: result.nights?.total || 0
       },
       price: {
-        amount: result.price?.amount || 0,
-        currency: result.price?.currency || 'EUR',
+        amount: result.minPrice || 0,
+        currency: result.currency || 'EUR',
         type: result.price?.type || ''
       }
     }))
@@ -275,6 +384,19 @@ export const useSearchForm = () => {
           searchData.loadMeals(newPackage.id)
         ])
         
+        // Загружаем calendar hints для доступных дат и ночей
+        if (searchForm.value.departureCity?.id && searchForm.value.arrivalCity?.id) {
+          try {
+            await calendarHints.loadCalendarHints({
+              city_from: searchForm.value.departureCity.id,
+              city_to: searchForm.value.arrivalCity.id.toString()
+            })
+            logger.info('Calendar hints loaded successfully')
+          } catch (err) {
+            logger.warn('Failed to load calendar hints:', err)
+          }
+        }
+        
         // Автоматически выбираем все регионы, категории и отели
         if (searchData.regions.value.length > 0) {
           selectedFilters.value.regions = [1, ...searchData.regions.value.map(r => r.id)]
@@ -326,6 +448,18 @@ export const useSearchForm = () => {
 
   // Helper function to get hotels for search
   const getSelectedHotelsForSearch = () => {
+    // Если пользователь выбрал отели вручную, используем их
+    if (selectedFilters.value.hotels.length > 0) {
+      // Если выбран ID=1 (все отели), возвращаем все доступные отели
+      if (selectedFilters.value.hotels.includes(1)) {
+        return searchData.hotels.value.map(hotel => Number(hotel.id))
+      }
+      // Иначе возвращаем выбранные отели (исключая ID=1)
+      return selectedFilters.value.hotels
+        .filter(id => id !== 1)
+        .map(id => Number(id))
+    }
+    
     // Если выбраны регионы или категории, используем отфильтрованные отели
     if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
       // Получаем отфильтрованные отели из searchData
@@ -369,37 +503,103 @@ export const useSearchForm = () => {
       return filteredHotels.map(hotel => Number(hotel.id))
     }
     
-    // Если пользователь выбрал отели вручную (и нет фильтров по регионам/категориям), используем их
-    if (selectedFilters.value.hotels.length > 0) {
-      return selectedFilters.value.hotels.map(id => Number(id))
-    }
+    // Если ничего не выбрано, возвращаем все доступные отели
+    return searchData.hotels.value.map(hotel => Number(hotel.id))
+  }
+
+  // Функция для группировки результатов по отелям
+  const groupResultsByHotel = (results: ObsSearchResult[]): GroupedSearchResult[] => {
+    const groupedMap = new Map<string, GroupedSearchResult>()
     
-    // Fallback: если ничего не выбрано, используем [1]
-    return [1]
+    results.forEach(result => {
+      const hotelKey = `${result.accommodation.hotel.id}-${result.accommodation.room.id}-${result.accommodation.meal.id}`
+      
+      if (groupedMap.has(hotelKey)) {
+        // Добавляем вариант перелета к существующему отелю
+        const existing = groupedMap.get(hotelKey)!
+        existing.flightOptions.push(result.tickets)
+        
+        // Обновляем минимальную и максимальную цены
+        const currentPrice = result.price.amount
+        if (currentPrice < existing.minPrice) {
+          existing.minPrice = currentPrice
+        }
+        if (currentPrice > existing.maxPrice) {
+          existing.maxPrice = currentPrice
+        }
+      } else {
+        // Создаем новый группированный результат
+        const grouped: GroupedSearchResult = {
+          hotel: result.accommodation.hotel,
+          room: result.accommodation.room,
+          meal: result.accommodation.meal,
+          dates: result.dates,
+          nights: result.nights,
+          price: result.price,
+          transfers: result.transfers,
+          never_land_entrance: result.never_land_entrance,
+          gala_dinner: result.gala_dinner,
+          aquapark_services: result.aquapark_services,
+          tourists: result.tourists,
+          flightOptions: [result.tickets],
+          minPrice: result.price.amount,
+          maxPrice: result.price.amount,
+          currency: result.price.currency
+        }
+        groupedMap.set(hotelKey, grouped)
+      }
+    })
+    
+    // Сортируем по минимальной цене
+    return Array.from(groupedMap.values()).sort((a, b) => a.minPrice - b.minPrice)
   }
 
   // Methods
   const handleSearch = () => {
-    // Добавляем выбранные отели в форму поиска
-    searchForm.value.selectedHotels = [...selectedFilters.value.hotels]
+    // Добавляем выбранные отели в форму поиска (используем правильную логику)
+    searchForm.value.selectedHotels = getSelectedHotelsForSearch()
 
     // Проверяем обязательные поля
     if (!searchForm.value.departureCity?.id) {
+      showError('Ошибка поиска', 'Выберите город отправления')
       return
     }
     if (!searchForm.value.destination?.id) {
+      showError('Ошибка поиска', 'Выберите страну назначения')
       return
     }
     if (!searchForm.value.package?.id) {
+      showError('Ошибка поиска', 'Выберите пакет тура')
       return
     }
     if (!searchForm.value.arrivalCity?.id) {
+      showError('Ошибка поиска', 'Выберите город прилета')
       return
     }
     if (!searchForm.value.checkInDate) {
+      showError('Ошибка поиска', 'Выберите дату заезда')
       return
     }
     if (!searchForm.value.checkOutDate) {
+      showError('Ошибка поиска', 'Выберите дату выезда')
+      return
+    }
+    if (!searchForm.value.nights) {
+      showError('Ошибка поиска', 'Выберите количество ночей')
+      return
+    }
+    if (!searchForm.value.nights2) {
+      showError('Ошибка поиска', 'Выберите максимальное количество ночей')
+      return
+    }
+    if (searchForm.value.children === null) {
+      showError('Ошибка поиска', 'Укажите количество детей (можно выбрать "Без детей")')
+      return
+    }
+
+    // Проверяем, что выбраны отели или опция "Любой"
+    if (selectedFilters.value.hotels.length === 0) {
+      showError('Ошибка поиска', 'Выберите отели или опцию "Любой" в фильтрах')
       return
     }
 
@@ -465,6 +665,10 @@ export const useSearchForm = () => {
       .then((result) => {
         isLoading.value = false
         
+        logger.debug('Raw search result:', result)
+        logger.debug('Result type:', typeof result)
+        logger.debug('Result keys:', result ? Object.keys(result) : 'null')
+        
         // Сохраняем результаты поиска
         if (result && result.results) {
           searchResults.value = result.results
@@ -473,14 +677,28 @@ export const useSearchForm = () => {
           loadedPages.value.add(1) // Отмечаем первую страницу как загруженную
           
           logger.debug(`Search completed: total_results = ${totalResults.value}, results keys = ${Object.keys(result.results).length}`)
-          logger.debug(`Search completed: allLoadedResults keys = ${Object.keys(allLoadedResults.value).length}`)
-          logger.debug(`Search completed: first few keys = ${Object.keys(allLoadedResults.value).slice(0, 5)}`)
+          logger.debug(`Search completed: allLoadedResults keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0}`)
+          logger.debug(`Search completed: first few keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).slice(0, 5) : []}`)
+        } else {
+          logger.warn('No results in search response:', result)
         }
       })
       .catch((error) => {
         logger.error('Search failed:', error)
         isLoading.value = false
-        // Здесь можно показать ошибку пользователю
+        
+        // Показываем ошибку пользователю
+        let errorMessage = 'Произошла ошибка при поиске туров'
+        
+        if (error.message && error.message.includes('Validation failed')) {
+          errorMessage = 'Проверьте правильность заполнения формы'
+        } else if (error.message && error.message.includes('NO_TICKETS')) {
+          errorMessage = 'По выбранным параметрам туры не найдены. Попробуйте изменить даты или количество ночей'
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+        
+        showError('Ошибка поиска', errorMessage)
       })
   }
 
@@ -537,15 +755,12 @@ export const useSearchForm = () => {
       // Определяем следующую страницу сервера для загрузки
       const currentServerPage = Math.ceil((currentPage.value * itemsPerPage) / serverPageSize)
       
-      // Подготавливаем параметры для загрузки следующей порции
-      const searchParamsWithPagination = {
+      // Загружаем следующую порцию данных
+      const result = await searchData.performSearch({
         ...lastSearchParams.value,
         page: currentServerPage,
         per_page: serverPageSize
-      }
-      
-      // Загружаем следующую порцию данных
-      const result = await searchData.performSearch(searchParamsWithPagination)
+      } as Parameters<typeof searchData.performSearch>[0])
       
       if (result && result.results) {
         // Объединяем новые результаты с существующими
@@ -589,9 +804,9 @@ export const useSearchForm = () => {
   }
 
   // Обработчик бронирования тура
-  const handleBook = (result: ObsSearchResult) => {
+  const handleBook = (result: GroupedSearchResult) => {
     // Здесь можно добавить логику бронирования
-    alert(`Бронирование тура: ${result.accommodation.hotel.name} за ${result.price.amount} ${result.price.currency}`)
+    alert(`Бронирование тура: ${result.hotel.name} от ${result.minPrice} ${result.currency}`)
   }
 
   // Метод инициализации данных
@@ -618,12 +833,16 @@ export const useSearchForm = () => {
     formattedResults,
     activeSelector,
     filteredNights2Options,
+    dynamicNightsOptions,
     paginatedResults,
     isLoadingMore,
     needsMoreData,
     
     // Search data
     searchData,
+    
+    // Calendar hints
+    calendarHints,
     
     // Methods
     handleSearch,
@@ -633,5 +852,6 @@ export const useSearchForm = () => {
     handleBook,
     initializeData,
     loadMoreData,
+    groupResultsByHotel,
   }
 }

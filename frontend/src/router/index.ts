@@ -39,6 +39,12 @@ const router = createRouter({
       name: 'contact',
       component: () => import('../views/ContactView.vue'),
     },
+    {
+      path: '/booking/:searchResultId',
+      name: 'booking',
+      component: () => import('../views/BookingView.vue'),
+      props: true,
+    },
   ],
 })
 

@@ -273,3 +273,26 @@ export interface SearchResultTourists {
   adults: number
   children_ages: number[]
 }
+
+// Группированный результат поиска (один отель с несколькими вариантами перелетов)
+export interface GroupedSearchResult {
+  hotel: SearchResultHotel
+  room: SearchResultRoom
+  meal: SearchResultMeal
+  dates: SearchResultDates
+  nights: SearchResultNights
+  price: SearchResultPrice
+  transfers: SearchResultTransfers
+  never_land_entrance: any[]
+  gala_dinner: any[]
+  aquapark_services: any[]
+  tourists: SearchResultTourists
+  // Массив вариантов перелетов для этого отеля
+  flightOptions: SearchResultTickets[]
+  // Минимальная цена среди всех вариантов
+  minPrice: number
+  // Максимальная цена среди всех вариантов
+  maxPrice: number
+  // Валюта
+  currency: string
+}

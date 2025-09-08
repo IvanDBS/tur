@@ -12,6 +12,8 @@
         :is-loading="isLoading"
         :search-data="searchData"
         :filtered-nights2-options="filteredNights2Options"
+        :dynamic-nights-options="dynamicNightsOptions"
+        :calendar-hints="calendarHints"
         @update:search-form="searchForm = $event"
         @update:selected-filters="selectedFilters = $event"
         @update-nights2-min="updateNights2Min"
@@ -90,10 +92,12 @@
     formattedResults,
     activeSelector,
     filteredNights2Options,
+    dynamicNightsOptions,
     paginatedResults,
     isLoadingMore,
     needsMoreData,
     searchData,
+    calendarHints,
     handleSearch,
     handleReset,
     updateNights2Min,

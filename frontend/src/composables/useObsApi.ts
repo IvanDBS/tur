@@ -378,10 +378,13 @@ export const useObsApi = () => {
       queryParams.append('city_from', params.city_from.toString())
       queryParams.append('city_to', params.city_to)
       
-      const response = await apiClient.get<ApiResponse<Record<string, any[]>>>(`/search/calendar_hints?${queryParams.toString()}`)
+      const response = await apiClient.get<ApiResponse<{ calendar_hints: Record<string, any[]> }>>(`/search/calendar_hints?${queryParams.toString()}`)
+      
+      logger.info('Calendar hints API response:', response)
       
       if (response.success) {
-        return response.data
+        logger.info('Calendar hints data extracted:', response.data.calendar_hints)
+        return response.data.calendar_hints
       } else {
         throw new Error(response.message)
       }
@@ -411,10 +414,10 @@ export const useObsApi = () => {
       queryParams.append('city_from', params.city_from.toString())
       queryParams.append('city_to', params.city_to)
       
-      const response = await apiClient.get<ApiResponse<number[]>>(`/search/available_nights?${queryParams.toString()}`)
+      const response = await apiClient.get<ApiResponse<{ available_nights: number[] }>>(`/search/available_nights?${queryParams.toString()}`)
       
       if (response.success) {
-        return response.data
+        return response.data.available_nights
       } else {
         throw new Error(response.message)
       }

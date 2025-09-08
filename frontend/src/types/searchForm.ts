@@ -18,6 +18,8 @@ export interface SearchFormFieldsProps {
   isLoading: boolean
   searchData: any // TODO: типизировать searchData
   filteredNights2Options: Array<{ value: number; label: string }>
+  dynamicNightsOptions: Array<{ value: number; label: string }>
+  calendarHints: any // TODO: типизировать calendarHints
 }
 
 // События для компонентов

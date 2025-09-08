@@ -1,58 +1,39 @@
 <template>
-  <div class="hotel-result-card" :class="{ 'stop-sale': result.accommodation.hotel.in_stop }">
-    <!-- Flight Information Section -->
-    <div class="flight-section">
-      <!-- Outbound Flight -->
-      <div class="flight-info outbound">
-        <div class="flight-label">Вылет туда</div>
-        <div class="flight-date-time">
-          <div class="date">{{ formatFlightDate(result.tickets?.from?.departure?.date || '') }}</div>
-          <div class="time">{{ result.tickets?.from?.departure?.time || '' }}</div>
-        </div>
-        <div class="flight-route">
-          <div class="airport-codes">
-            <span class="airport-from">{{ result.tickets?.from?.airports?.from?.prefix || '' }}</span>
-            <div class="flight-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
-              </svg>
-            </div>
-            <span class="airport-to">{{ result.tickets?.from?.airports?.to?.prefix || '' }}</span>
-          </div>
-          <div class="airline-info">
-            <div class="airline-logo" :style="{ backgroundColor: result.tickets?.from?.airline?.color || '#ccc' }">
-              ✈
-            </div>
-            <span class="airline-code">{{ result.tickets?.from?.airline?.iata_code || '' }}</span>
-            <span class="flight-number">{{ result.tickets?.from?.name || '' }}</span>
-          </div>
+  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop }">
+    <!-- Hotel Image Section -->
+    <div class="hotel-image-section">
+      <div class="hotel-image">
+        <img 
+          v-if="result.hotel?.image_url" 
+          :src="result.hotel.image_url" 
+          :alt="result.hotel.name"
+          @error="handleImageError"
+        />
+        <div v-else class="image-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2"/>
+          </svg>
         </div>
       </div>
+      <div class="hotel-badges-overlay">
+        <span v-if="result.hotel?.is_exclusive" class="badge exclusive">Эксклюзив</span>
+        <span v-if="result.hotel?.in_stop" class="badge stop-sale">STOP SALE</span>
+      </div>
+    </div>
 
-      <!-- Return Flight -->
-      <div class="flight-info return">
-        <div class="flight-label">Вылет оттуда</div>
-        <div class="flight-date-time">
-          <div class="date">{{ formatFlightDate(result.tickets?.to?.departure?.date || '') }}</div>
-          <div class="time">{{ result.tickets?.to?.departure?.time || '' }}</div>
+    <!-- Flight Information Section -->
+    <div class="flight-section">
+      <!-- Flight Options Summary -->
+      <div class="flight-options-summary">
+        <div class="flight-label">Варианты перелетов</div>
+        <div class="flight-count">
+          {{ result.flightOptions.length }} {{ getFlightWord(result.flightOptions.length) }}
         </div>
-        <div class="flight-route">
-          <div class="airport-codes">
-            <span class="airport-from">{{ result.tickets?.to?.airports?.from?.prefix || '' }}</span>
-            <div class="flight-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
-              </svg>
-            </div>
-            <span class="airport-to">{{ result.tickets?.to?.airports?.to?.prefix || '' }}</span>
-          </div>
-          <div class="airline-info">
-            <div class="airline-logo" :style="{ backgroundColor: result.tickets?.to?.airline?.color || '#ccc' }">
-              ✈
-            </div>
-            <span class="airline-code">{{ result.tickets?.to?.airline?.iata_code || '' }}</span>
-            <span class="flight-number">{{ result.tickets?.to?.name || '' }}</span>
-          </div>
+        <div class="flight-price-range" v-if="result.minPrice !== result.maxPrice">
+          от {{ result.minPrice }} до {{ result.maxPrice }} {{ result.currency }}
+        </div>
+        <div class="flight-price-range" v-else>
+          {{ result.minPrice }} {{ result.currency }}
         </div>
       </div>
 
@@ -71,15 +52,17 @@
     <!-- Hotel Information Section -->
     <div class="hotel-section">
       <div class="hotel-header">
-        <h3 class="hotel-name">{{ result.accommodation?.hotel?.name || 'Отель' }}</h3>
-        <div class="hotel-badges">
-          <span v-if="result.accommodation?.hotel?.is_exclusive" class="badge exclusive">Эксклюзив</span>
-          <span v-if="result.accommodation?.hotel?.in_stop" class="badge stop-sale">STOP SALE</span>
+        <h3 class="hotel-name">{{ result.hotel?.name || 'Отель' }}</h3>
+        <div class="hotel-rating">
+          <div class="stars">
+            <span v-for="star in getStarRating()" :key="star" class="star">★</span>
+          </div>
+          <span class="rating-text">{{ result.hotel?.category || '' }}</span>
         </div>
       </div>
 
       <!-- STOP SALE Warning -->
-      <div v-if="result.accommodation?.hotel?.in_stop" class="stop-sale-warning">
+      <div v-if="result.hotel?.in_stop" class="stop-sale-warning">
         <div class="warning-icon">⚠️</div>
         <div class="warning-text">
           <strong>Внимание!</strong> Ограниченное количество мест. Бронирование может быть недоступно.
@@ -87,18 +70,46 @@
       </div>
       
       <div class="hotel-details">
-        <div class="hotel-category">{{ result.accommodation?.hotel?.category || '' }}</div>
-        <div class="hotel-location">{{ result.accommodation?.hotel?.city || '' }}</div>
+        <div class="hotel-location">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          {{ result.hotel?.city || '' }}
+        </div>
+      </div>
+
+      <!-- Key Facts -->
+      <div class="key-facts">
+        <div class="fact-item" v-if="result.hotel?.beach_distance">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12h18m-9-9v18" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 3l3 3-3 3-3-3z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          До пляжа: {{ result.hotel.beach_distance }}м
+        </div>
+        <div class="fact-item" v-if="result.hotel?.airport_distance">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
+          </svg>
+          До аэропорта: {{ result.hotel.airport_distance }}км
+        </div>
+        <div class="fact-item meal-type" :class="getMealClass(result.meal?.name || '')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M3 2v7c0 1.1.9 2 2 2h4v2.5c0 .83.67 1.5 1.5 1.5S12 13.33 12 12.5V11h4c1.1 0 2-.9 2-2V2H3z" fill="currentColor"/>
+          </svg>
+          {{ result.meal?.name || '' }}
+        </div>
       </div>
 
       <div class="accommodation-details">
         <div class="room-info">
-          <span class="room-type">{{ result.accommodation?.room?.name || '' }}</span>
-          <span class="placement">{{ result.accommodation?.placement?.name || '' }}</span>
+          <span class="room-type">{{ result.room?.name || '' }}</span>
+          <span class="placement">{{ result.placement?.name || '' }}</span>
         </div>
         <div class="meal-info">
-          <span class="meal-type" :class="getMealClass(result.accommodation?.meal?.name || '')">
-            {{ result.accommodation?.meal?.name || '' }}
+          <span class="meal-type" :class="getMealClass(result.meal?.name || '')">
+            {{ result.meal?.name || '' }}
           </span>
         </div>
       </div>
@@ -133,12 +144,17 @@
     <!-- Price and Actions Section -->
     <div class="price-section">
       <div class="price-info">
-        <div v-if="result.accommodation?.hotel?.in_stop" class="stop-sale-price">
+        <div v-if="result.hotel?.in_stop" class="stop-sale-price">
           <div class="stop-sale-label">STOP SALE</div>
-          <div class="price">{{ result.price?.amount || 0 }} {{ result.price?.currency || '' }}</div>
+          <div class="price">{{ result.minPrice }} {{ result.currency }}</div>
         </div>
         <div v-else class="normal-price">
-          <div class="price">{{ result.price?.amount || 0 }} {{ result.price?.currency || '' }}</div>
+          <div class="price" v-if="result.minPrice !== result.maxPrice">
+            от {{ result.minPrice }} {{ result.currency }}
+          </div>
+          <div class="price" v-else>
+            {{ result.minPrice }} {{ result.currency }}
+          </div>
         </div>
         <div class="price-type">{{ result.price?.type || '' }}</div>
       </div>
@@ -169,11 +185,18 @@
           </svg>
         </button>
         
-        <button class="action-btn book" title="Забронировать" @click="handleBook">
+        <button 
+          class="action-btn book" 
+          :class="{ 'disabled': !canBook }"
+          :title="canBook ? 'Забронировать' : 'Бронирование недоступно'"
+          :disabled="!canBook"
+          @click="handleBook"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-4" stroke="currentColor" stroke-width="2"/>
             <path d="M9 11V9a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
           </svg>
+          <span>Забронировать</span>
         </button>
       </div>
     </div>
@@ -182,19 +205,23 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { formatDate, getNightWord } from '../../utils/dateUtils'
-import type { SearchResult } from '../../types/search'
+import type { SearchResult, GroupedSearchResult } from '../../types/search'
+
+// Get router instance at the top level of setup()
+const router = useRouter()
 
 interface Props {
-  result: SearchResult
+  result: GroupedSearchResult
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  book: [result: SearchResult]
-  details: [result: SearchResult]
-  compare: [result: SearchResult]
+  book: [result: GroupedSearchResult]
+  details: [result: GroupedSearchResult]
+  compare: [result: GroupedSearchResult]
 }>()
 
 // Format flight date (show day of week)
@@ -231,73 +258,107 @@ const getMealClass = (mealType: string) => {
 const hasAdditionalServices = computed(() => {
   return (props.result.never_land_entrance?.length || 0) > 0 ||
          (props.result.gala_dinner?.length || 0) > 0 ||
-         (props.result.aquapark_services?.length || 0) > 0 ||
-         (props.result.additional_services?.length || 0) > 0
+         (props.result.aquapark_services?.length || 0) > 0
 })
 
 // Get availability text
 const getAvailabilityText = () => {
-  const tickets = props.result.tickets
-  if (!tickets) return '10+'
+  // Check if any flight option has no tickets
+  const hasNoTickets = props.result.flightOptions.some(option => 
+    option.has_tickets === false
+  )
   
-  const fromTickets = tickets.from?.tickets
-  const toTickets = tickets.to?.tickets
-  
-  if (tickets.has_tickets === false) {
+  if (hasNoTickets) {
     return 'Нет мест'
   }
   
-  if (tickets.on_request === 'y') {
+  // Check if any option is on request
+  const hasOnRequest = props.result.flightOptions.some(option => 
+    option.on_request === 'y'
+  )
+  
+  if (hasOnRequest) {
     return 'На запрос'
   }
   
-  // Get minimum available tickets
-  const minTickets = Math.min(
-    fromTickets || 10,
-    toTickets || 10
-  )
+  // Calculate minimum tickets across all flight options
+  let minTickets = 10
+  props.result.flightOptions.forEach(option => {
+    const fromTickets = option.from?.tickets
+    const toTickets = option.to?.tickets
+    
+    if (fromTickets !== null && toTickets !== null) {
+      const optionMinTickets = Math.min(fromTickets, toTickets)
+      minTickets = Math.min(minTickets, optionMinTickets)
+    }
+  })
   
   return minTickets >= 10 ? '10+' : minTickets.toString()
 }
 
 // Get availability tooltip
 const getAvailabilityTooltip = () => {
-  const tickets = props.result.tickets
-  if (!tickets) return 'Информация недоступна'
+  // Check if any flight option has no tickets
+  const hasNoTickets = props.result.flightOptions.some(option => 
+    option.has_tickets === false
+  )
   
-  const fromTickets = tickets.from?.tickets
-  const toTickets = tickets.to?.tickets
-  
-  if (tickets.has_tickets === false) {
+  if (hasNoTickets) {
     return 'Билеты недоступны'
   }
   
-  if (tickets.on_request === 'y') {
+  // Check if any option is on request
+  const hasOnRequest = props.result.flightOptions.some(option => 
+    option.on_request === 'y'
+  )
+  
+  if (hasOnRequest) {
     return 'Билеты на запрос - требуется подтверждение'
   }
   
-  const fromText = fromTickets ? `${fromTickets} мест` : '10+ мест'
-  const toText = toTickets ? `${toTickets} мест` : '10+ мест'
-  
-  return `Туда: ${fromText}, Обратно: ${toText}`
+  // Show flight options count
+  const optionsCount = props.result.flightOptions.length
+  return `${optionsCount} ${getFlightWord(optionsCount)} перелетов доступно`
 }
+
+// Check if booking is available
+const canBook = computed(() => {
+  // Check if any flight option has tickets available
+  const hasAvailableTickets = props.result.flightOptions.some(option => 
+    option.has_tickets !== false
+  )
+  
+  return hasAvailableTickets
+})
 
 // Get availability CSS class
 const getAvailabilityClass = () => {
-  const tickets = props.result.tickets
-  if (!tickets) return 'high-availability'
+  // Check if any flight option has tickets available
+  const hasAvailableTickets = props.result.flightOptions.some(option => 
+    option.has_tickets !== false
+  )
   
-  if (tickets.has_tickets === false) {
+  if (!hasAvailableTickets) {
     return 'no-tickets'
   }
   
-  if (tickets.on_request === 'y') {
+  // Check if any option is on request
+  const hasOnRequest = props.result.flightOptions.some(option => 
+    option.on_request === 'y'
+  )
+  
+  if (hasOnRequest) {
     return 'on-request'
   }
   
-  const fromTickets = tickets.from?.tickets
-  const toTickets = tickets.to?.tickets
-  const minTickets = Math.min(fromTickets || 10, toTickets || 10)
+  // Calculate minimum tickets across all options
+  let minTickets = 10
+  props.result.flightOptions.forEach(option => {
+    const fromTickets = option.from?.tickets
+    const toTickets = option.to?.tickets
+    const optionMinTickets = Math.min(fromTickets || 10, toTickets || 10)
+    minTickets = Math.min(minTickets, optionMinTickets)
+  })
   
   if (minTickets <= 2) {
     return 'low-availability'
@@ -310,7 +371,32 @@ const getAvailabilityClass = () => {
 
 // Handle booking
 const handleBook = () => {
-  emit('book', props.result)
+  console.log('Booking button clicked!', props.result)
+  
+  // Create unique key for grouped result
+  const uniqueKey = `${props.result.hotel.id}-${props.result.room.id}-${props.result.meal.id}`
+  
+  // Navigate to booking page with search result data
+  console.log('Navigating to booking page with ID:', uniqueKey)
+  
+  // Store search result in sessionStorage for the booking page
+  try {
+    sessionStorage.setItem('bookingSearchResult', JSON.stringify(props.result))
+  } catch (error) {
+    console.warn('Failed to store search result in sessionStorage:', error)
+  }
+  
+  router.push({
+    name: 'booking',
+    params: {
+      searchResultId: uniqueKey
+    }
+  }).then(() => {
+    console.log('Navigation successful')
+  }).catch((error) => {
+    console.error('Navigation failed:', error)
+    alert('Ошибка перехода на страницу бронирования: ' + error.message)
+  })
 }
 
 // Handle details
@@ -321,6 +407,27 @@ const handleDetails = () => {
 // Handle compare
 const handleCompare = () => {
   emit('compare', props.result)
+}
+
+// Handle image error
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+  img.parentElement?.querySelector('.image-placeholder')?.classList.add('show')
+}
+
+// Get star rating
+const getStarRating = () => {
+  const category = props.result.hotel?.category || ''
+  const match = category.match(/(\d+)/)
+  return match ? parseInt(match[1]) : 0
+}
+
+// Get flight word with correct declension
+const getFlightWord = (count: number) => {
+  if (count === 1) return 'вариант'
+  if (count >= 2 && count <= 4) return 'варианта'
+  return 'вариантов'
 }
 
 // Export component
@@ -335,7 +442,7 @@ defineExpose({})
   border: 1px solid var(--color-border);
   overflow: hidden;
   transition: all 0.3s ease;
-  min-height: 140px;
+  min-height: 200px;
 }
 
 .hotel-result-card:hover {
@@ -347,6 +454,73 @@ defineExpose({})
 .hotel-result-card.stop-sale {
   background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
   border-color: #fecaca;
+}
+
+/* Hotel Image Section */
+.hotel-image-section {
+  flex: 0 0 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hotel-image {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.hotel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.hotel-image:hover img {
+  transform: scale(1.05);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-soft);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-placeholder.show {
+  opacity: 1;
+}
+
+.hotel-badges-overlay {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hotel-badges-overlay .badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.hotel-badges-overlay .badge.exclusive {
+  color: #1e40af;
+}
+
+.hotel-badges-overlay .badge.stop-sale {
+  color: #dc2626;
 }
 
 /* Flight Section */
@@ -505,6 +679,7 @@ defineExpose({})
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .hotel-name {
@@ -514,6 +689,29 @@ defineExpose({})
   line-height: 1.3;
   margin: 0;
   flex: 1;
+}
+
+.hotel-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.stars {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.star {
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+.rating-text {
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+  font-weight: 500;
 }
 
 .hotel-badges {
@@ -571,17 +769,42 @@ defineExpose({})
   display: flex;
   gap: 1rem;
   align-items: center;
-}
-
-.hotel-category {
-  font-weight: 600;
-  color: var(--color-primary);
-  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
 }
 
 .hotel-location {
   color: var(--color-text-soft);
   font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Key Facts */
+.key-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-background-soft);
+  border-radius: 6px;
+}
+
+.fact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.fact-item.meal-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .accommodation-details {
@@ -748,6 +971,19 @@ defineExpose({})
   transform: translateY(-1px);
 }
 
+.action-btn.book.disabled {
+  background: #9ca3af;
+  color: #6b7280;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.action-btn.book.disabled:hover {
+  background: #9ca3af;
+  transform: none;
+}
+
 .action-btn.availability {
   background: #dcfce7;
   color: #166534;
@@ -868,6 +1104,11 @@ defineExpose({})
     min-height: auto;
   }
   
+  .hotel-image-section {
+    flex: none;
+    height: 200px;
+  }
+  
   .flight-section {
     flex: none;
     border-right: none;
@@ -921,6 +1162,15 @@ defineExpose({})
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  
+  .key-facts {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .fact-item {
+    font-size: 0.75rem;
   }
 }
 </style>

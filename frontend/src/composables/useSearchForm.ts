@@ -665,7 +665,7 @@ export const useSearchForm = () => {
   // Methods
   const handleSearch = () => {
     // Получаем календарные подсказки для проверки доступности дат
-    const { isDateAvailable, availableDates } = useCalendarHints()
+    const { isDateAvailable, availableDates } = calendarHints
     
     logger.info('🔍 Starting search with form data:', {
       departureCity: searchForm.value.departureCity?.id,

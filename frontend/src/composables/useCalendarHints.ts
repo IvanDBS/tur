@@ -25,7 +25,24 @@ export const useCalendarHints = () => {
   
   // Computed properties
   const availableDates = computed(() => {
-    return Object.keys(calendarHints.value).map(date => new Date(date))
+    const keys = Object.keys(calendarHints.value)
+    const dates = keys.map(date => new Date(date))
+    console.log('📅 availableDates computed - totalDates:', dates.length)
+    console.log('📅 availableDates computed - keys:', keys)
+    console.log('📅 availableDates computed - dates:', dates.map(d => d.toISOString().split('T')[0]))
+    console.log('📅 availableDates computed - calendarHints.value:', calendarHints.value)
+    logger.info('📅 availableDates computed:', {
+      totalDates: dates.length,
+      firstFewDates: dates.slice(0, 3).map(d => d.toISOString().split('T')[0]),
+      calendarHintsKeys: keys.slice(0, 5),
+      calendarHintsLength: keys.length,
+      calendarHintsValue: calendarHints.value,
+      keysArray: keys,
+      datesArray: dates.map(d => d.toISOString().split('T')[0]),
+      calendarHintsType: typeof calendarHints.value,
+      calendarHintsIsObject: calendarHints.value && typeof calendarHints.value === 'object'
+    })
+    return dates
   })
   
   const availableNightsOptions = computed(() => {
@@ -59,7 +76,16 @@ export const useCalendarHints = () => {
       logger.debug('Loading calendar hints with params:', params)
       
         const hints = await obsApi.fetchCalendarHints(params)
+        logger.info('🔍 Raw hints from API:', hints)
+        logger.info('🔍 Hints type:', typeof hints)
+        logger.info('🔍 Hints keys:', Object.keys(hints))
+        
         calendarHints.value = hints
+        logger.info('🔍 calendarHints.value after assignment:', calendarHints.value)
+        logger.info('🔍 calendarHints.value keys:', Object.keys(calendarHints.value))
+        logger.info('🔍 calendarHints.value type:', typeof calendarHints.value)
+        logger.info('🔍 calendarHints.value is object:', calendarHints.value && typeof calendarHints.value === 'object')
+        logger.info('🔍 calendarHints.value keys length:', Object.keys(calendarHints.value).length)
 
         logger.info(`Loaded calendar hints for ${Object.keys(hints).length} dates`)
         logger.info('Calendar hints data:', hints)
@@ -70,12 +96,14 @@ export const useCalendarHints = () => {
         // Проверяем, что dateHints является массивом
         if (Array.isArray(dateHints)) {
           dateHints.forEach(hint => {
-            const days = hint.days.split(',').map(d => parseInt(d.trim()))
-            days.forEach(day => {
-              if (!isNaN(day) && day > 0) {
-                nightsSet.add(day)
-              }
-            })
+            if (hint.days && typeof hint.days === 'string') {
+              const days = hint.days.split(',').map(d => parseInt(d.trim()))
+              days.forEach(day => {
+                if (!isNaN(day) && day > 0) {
+                  nightsSet.add(day)
+                }
+              })
+            }
           })
         }
       })
@@ -125,7 +153,21 @@ export const useCalendarHints = () => {
   // Проверка доступности даты
   const isDateAvailable = (date: Date) => {
     const dateString = date.toISOString().split('T')[0]
-    return dateString in calendarHints.value && Array.isArray(calendarHints.value[dateString])
+    const isAvailable = dateString in calendarHints.value && Array.isArray(calendarHints.value[dateString])
+    
+    logger.info('🔍 isDateAvailable check:', {
+      date: date,
+      dateString: dateString,
+      isAvailable: isAvailable,
+      calendarHintsKeys: Object.keys(calendarHints.value).slice(0, 10), // первые 10 ключей
+      totalHints: Object.keys(calendarHints.value).length,
+      hasDateInHints: dateString in calendarHints.value,
+      dateValue: calendarHints.value[dateString],
+      calendarHintsValue: calendarHints.value,
+      calendarHintsType: typeof calendarHints.value
+    })
+    
+    return isAvailable
   }
   
   // Получение доступных ночей для конкретной даты

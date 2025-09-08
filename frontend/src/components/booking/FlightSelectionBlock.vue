@@ -137,7 +137,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SearchResult, GroupedSearchResult } from '../../types/search'
+import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice } from '../../types/search'
 import type { SelectedFlight, FlightSegment } from '../../types/booking'
 
 interface Props {
@@ -153,15 +153,31 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 // Computed
-const isGroupedResult = computed(() => 'flightOptions' in props.searchResult)
+const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
 
 const flightOptions = computed(() => {
+  console.log('🔍 searchResult:', props.searchResult)
+  console.log('🔍 isGroupedResult:', isGroupedResult.value)
+  console.log('🔍 searchResult keys:', Object.keys(props.searchResult))
+  
   if (isGroupedResult.value) {
     const groupedResult = props.searchResult as GroupedSearchResult
-    return groupedResult.flightOptions || []
+    console.log('🔍 groupedResult.roomOptions:', groupedResult.roomOptions)
+    
+    // Собираем все flightOptions из всех roomOptions
+    const allFlightOptions: (SearchResultTickets & { price: SearchResultPrice })[] = []
+    groupedResult.roomOptions?.forEach(roomOption => {
+      if (roomOption.flightOptions) {
+        allFlightOptions.push(...roomOption.flightOptions)
+      }
+    })
+    
+    console.log('🔍 allFlightOptions:', allFlightOptions)
+    return allFlightOptions
   } else {
     // For regular SearchResult, create a single flight option
     const regularResult = props.searchResult as SearchResult
+    console.log('🔍 regularResult.tickets:', regularResult.tickets)
     return regularResult.tickets ? [regularResult.tickets] : []
   }
 })

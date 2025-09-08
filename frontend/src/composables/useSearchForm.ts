@@ -257,9 +257,12 @@ export const useSearchForm = () => {
     if (!searchForm.value.arrivalCity) return 'arrivalCity'
     if (!searchForm.value.checkInDate) return 'checkInDate'
     if (!searchForm.value.checkOutDate) return 'checkOutDate'
-    // После выбора даты заезда активируются все поля одновременно
-    // Показываем стрелочку на поле "Детей" после выбора даты заезда
-    if (searchForm.value.checkInDate && searchForm.value.children === null) return 'children'
+    // После выбора даты заезда активируется поле "ночей от"
+    if (searchForm.value.checkInDate && searchForm.value.nights === null) return 'nights'
+    // После выбора ночей от активируется поле "взрослых"
+    if (searchForm.value.nights !== null && searchForm.value.adults === null) return 'adults'
+    // После выбора взрослых активируется поле "детей"
+    if (searchForm.value.adults !== null && searchForm.value.children === null) return 'children'
     // После выбора детей (включая 0 - "Без детей") все поля активируются, стрелочка исчезает
     return null // Все селекторы заполнены
   })
@@ -267,15 +270,12 @@ export const useSearchForm = () => {
   // Автоматическое заполнение полей значениями по умолчанию после выбора даты заезда
   watch(() => searchForm.value.checkInDate, (newDate) => {
     if (newDate) {
-      // Сбрасываем выбранные ночи при смене даты, чтобы пользователь выбрал из доступных
+      // Сбрасываем выбранные поля при смене даты для пошагового заполнения
       searchForm.value.nights = null
       searchForm.value.nights2 = null
-      
-      // Заполняем только количество взрослых
-      if (!searchForm.value.adults) {
-        searchForm.value.adults = 2
-      }
-      // Поле children остается null для выбора пользователем
+      searchForm.value.adults = null
+      searchForm.value.children = null
+      searchForm.value.childrenAges = []
       
       // Устанавливаем дату выезда если она не установлена или меньше даты заезда
       if (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newDate) {
@@ -910,7 +910,10 @@ export const useSearchForm = () => {
     // Вызываем API поиска
     searchData.performSearch(searchParamsWithPagination)
       .then((result) => {
-        isLoading.value = false
+        // Используем nextTick для безопасного обновления реактивности
+        nextTick(() => {
+          isLoading.value = false
+        })
         
         logger.debug('Raw search result:', result)
         logger.debug('Result type:', typeof result)
@@ -949,34 +952,42 @@ export const useSearchForm = () => {
           }
           
           if (resultsData && Object.keys(resultsData).length > 0) {
-            searchResults.value = resultsData
-            totalResults.value = totalCount
-            allLoadedResults.value = resultsData
-            loadedPages.value.add(1)
+            nextTick(() => {
+              searchResults.value = resultsData
+              totalResults.value = totalCount
+              allLoadedResults.value = resultsData
+              loadedPages.value.add(1)
+            })
             
-            logger.info(`✅ Search completed successfully: total_results = ${totalResults.value}`)
-            logger.info(`✅ Results stored: allLoadedResults keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0}`)
-            logger.info(`✅ First few result keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).slice(0, 5) : []}`)
-            logger.info(`✅ searchResults.value = ${searchResults.value ? 'SET' : 'NULL'}`)
-            logger.info(`✅ totalResults.value = ${totalResults.value}`)
+            logger.info(`✅ Search completed successfully: total_results = ${totalCount}`)
+            logger.info(`✅ Results stored: allLoadedResults keys = ${resultsData ? Object.keys(resultsData).length : 0}`)
+            logger.info(`✅ First few result keys = ${resultsData ? Object.keys(resultsData).slice(0, 5) : []}`)
+            logger.info(`✅ searchResults.value = ${resultsData ? 'SET' : 'NULL'}`)
+            logger.info(`✅ totalResults.value = ${totalCount}`)
           } else {
             logger.warn('❌ No valid results found in search response:', result)
             logger.warn('❌ resultsData =', resultsData)
             logger.warn('❌ resultKeys length =', result ? Object.keys(result).length : 'no result')
-            searchResults.value = null
-            allLoadedResults.value = null
-            totalResults.value = 0
+            nextTick(() => {
+              searchResults.value = null
+              allLoadedResults.value = null
+              totalResults.value = 0
+            })
           }
         } else {
           logger.warn('Empty search response')
-          searchResults.value = null
-          allLoadedResults.value = null
-          totalResults.value = 0
+          nextTick(() => {
+            searchResults.value = null
+            allLoadedResults.value = null
+            totalResults.value = 0
+          })
         }
       })
       .catch((error) => {
         logger.error('Search failed:', error)
-        isLoading.value = false
+        nextTick(() => {
+          isLoading.value = false
+        })
         
         // Показываем ошибку пользователю
         let errorMessage = 'Произошла ошибка при поиске туров'

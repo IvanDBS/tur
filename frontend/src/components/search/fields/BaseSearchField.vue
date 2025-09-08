@@ -57,7 +57,8 @@ const fieldProps = computed(() => ({
   canDeselect: props.canDeselect,
   disabled: props.disabled,
   valueProp: props.valueProp,
-  label: props.labelProp
+  label: props.labelProp,
+  maxHeight: 280 // 7 элементов по ~40px
 }))
 
 // Methods

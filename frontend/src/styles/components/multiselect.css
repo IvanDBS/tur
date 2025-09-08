@@ -71,3 +71,52 @@
   background: var(--color-secondary) !important;
   color: #fff !important;
 }
+
+/* Настройка для селектора "Куда:" - показывать 7 элементов */
+:root {
+  --ms-max-height: 280px; /* 7 элементов по ~40px */
+}
+
+.multiselect__content-wrapper {
+  max-height: 280px !important; /* Примерно 7 элементов по 40px */
+}
+
+.multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Более специфичные селекторы для переопределения стилей библиотеки */
+.multiselect .multiselect__content-wrapper {
+  max-height: 280px !important;
+}
+
+.multiselect .multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Для всех multiselect в форме поиска */
+.search-form .multiselect__content-wrapper {
+  max-height: 280px !important;
+}
+
+.search-form .multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Стили с максимальной специфичностью для Vue компонентов */
+:deep(.multiselect__content-wrapper) {
+  max-height: 280px !important;
+}
+
+:deep(.multiselect__content) {
+  max-height: 280px !important;
+}
+
+/* Специально для селектора "Куда:" */
+.field-group:has(.multiselect) :deep(.multiselect__content-wrapper) {
+  max-height: 280px !important;
+}
+
+.field-group:has(.multiselect) :deep(.multiselect__content) {
+  max-height: 280px !important;
+}

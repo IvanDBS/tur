@@ -173,7 +173,7 @@
         </div>
       </div>
 
-      <!-- Опции - 15% -->
+      <!-- Опции - скрыт CSS -->
       <div class="filters-column options">
         <!-- Options -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
@@ -501,6 +501,7 @@
     emit('update:options', selectedFilters.value.options)
   }
 
+
   const handleToggleHotel = (hotelId: number) => {
     toggleHotel(hotelId)
     emit('update:hotels', selectedFilters.value.hotels)
@@ -533,6 +534,7 @@
     emit('update:options', selectedFilters.value.options)
   }
 
+
   // Явный экспорт для TypeScript
   defineExpose({})
 </script>
@@ -546,7 +548,7 @@
 
   .filters-row {
     display: grid;
-    grid-template-columns: 0.8fr 0.8fr 2.5fr 0.8fr 1.2fr;
+    grid-template-columns: 0.8fr 0.8fr 2.5fr 0.8fr 0fr;
     gap: 12px;
     width: 100%;
   }
@@ -554,6 +556,11 @@
   .filters-column {
     display: flex;
     flex-direction: column;
+  }
+
+  /* Скрываем блок Опции */
+  .filters-column.options {
+    display: none;
   }
 
   /* Принудительно устанавливаем ширину для блока Отели */

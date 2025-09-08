@@ -326,6 +326,28 @@ const getFlightOptionsCount = () => {
   return 1
 }
 
+// Availability methods
+const getAvailabilityClass = () => {
+  if (canBook.value) {
+    return 'available'
+  }
+  return 'not-available'
+}
+
+const getAvailabilityText = () => {
+  if (canBook.value) {
+    return 'Доступно'
+  }
+  return 'Недоступно'
+}
+
+const getAvailabilityTooltip = () => {
+  if (canBook.value) {
+    return 'Бронирование доступно'
+  }
+  return 'Бронирование недоступно'
+}
+
 // Export component
 defineExpose({})
 </script>

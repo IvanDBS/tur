@@ -144,7 +144,7 @@
         :adults-options="searchData.adultsOptions.value"
         :children-options="searchData.childrenOptions.value"
         :active-selector="activeSelector"
-        :disabled="!searchForm.checkInDate"
+        :disabled="!searchForm.checkInDate || searchForm.nights === null"
         @update:adults="updateField('adults', $event)"
         @update:children="updateField('children', $event)"
         @update:children-age="updateChildrenAge($event.index, $event.value)"

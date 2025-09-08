@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useObsApi } from './useObsApi'
 import { logger } from '../utils/logger'
 import type { 
@@ -192,7 +192,9 @@ export const useSearchData = () => {
 
   const loadHotelCategories = async (packageTemplateId: number) => {
     try {
-      await obsApi.fetchHotelCategories(packageTemplateId)
+      const loadedCategories = await obsApi.fetchHotelCategories(packageTemplateId)
+      // Синхронизируем данные между obsApi и searchData
+      categories.value = loadedCategories || []
     } catch (err) {
       logger.warn('Using fallback hotel categories data')
     }
@@ -200,7 +202,9 @@ export const useSearchData = () => {
 
   const loadLocations = async (packageTemplateId: number) => {
     try {
-      await obsApi.fetchLocations(packageTemplateId)
+      const loadedRegions = await obsApi.fetchLocations(packageTemplateId)
+      // Синхронизируем данные между obsApi и searchData
+      regions.value = loadedRegions || []
     } catch (err) {
       logger.warn('Using fallback locations data')
     }
@@ -214,8 +218,13 @@ export const useSearchData = () => {
   }) => {
     try {
       logger.debug(`Loading hotels for package ${packageTemplateId} with filters:`, filters)
-      await obsApi.fetchHotels(packageTemplateId, filters)
-      logger.info(`Hotels loaded successfully. Total hotels: ${hotels.value.length}`)
+      const loadedHotels = await obsApi.fetchHotels(packageTemplateId, filters)
+      logger.debug(`🏨 Received ${(loadedHotels || []).length} hotels from obsApi.fetchHotels`)
+      // Синхронизируем данные между obsApi и searchData
+      hotels.value = loadedHotels || []
+      await nextTick() // Ждем обновления реактивности
+      logger.info(`🏨 Hotels synced to searchData. Total hotels: ${hotels.value.length}`)
+      logger.debug(`🏨 First 3 hotels:`, hotels.value.slice(0, 3))
     } catch (err) {
       logger.warn('Using fallback hotels data')
       logger.error('Error loading hotels:', err)
@@ -224,7 +233,9 @@ export const useSearchData = () => {
 
   const loadMeals = async (packageTemplateId: number) => {
     try {
-      await obsApi.fetchMeals(packageTemplateId)
+      const loadedMeals = await obsApi.fetchMeals(packageTemplateId)
+      // Синхронизируем данные между obsApi и searchData
+      meals.value = loadedMeals || []
     } catch (err) {
       logger.warn('Using fallback meals data')
     }

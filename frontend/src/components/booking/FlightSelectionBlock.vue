@@ -7,8 +7,8 @@
     <div class="flight-content">
       <div class="flight-options">
         <div 
-          v-for="flightPair in flightPairs" 
-          :key="flightPair.id"
+          v-for="(flightPair, index) in flightPairs" 
+          :key="`flight-${index}-${flightPair.id}`"
           class="flight-pair-option"
           :class="{ 'selected': selectedFlightPair?.id === flightPair.id }"
           @click="selectFlightPair(flightPair)"
@@ -49,7 +49,10 @@
                     </div>
                     <div class="flight-info-line">
                       <span class="label">Наличие:</span>
-                      <span class="value availability-status">под запрос</span>
+                      <span class="value availability-status">
+                        <span class="availability-indicator"></span>
+                        Под запрос
+                      </span>
                     </div>
                   </div>
                   
@@ -100,7 +103,10 @@
                     </div>
                     <div class="flight-info-line">
                       <span class="label">Наличие:</span>
-                      <span class="value availability-status">под запрос</span>
+                      <span class="value availability-status">
+                        <span class="availability-indicator"></span>
+                        Под запрос
+                      </span>
                     </div>
                   </div>
                   
@@ -123,14 +129,6 @@
             </div>
           </div>
           
-          <div class="flight-pair-footer">
-            <div class="tickets-info">
-              <span v-if="flightPair.tickets" class="tickets-count">
-                {{ flightPair.tickets }} мест доступно
-              </span>
-              <span v-else class="tickets-on-request">Наличие мест по запросу</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -170,7 +168,9 @@ const flightOptions = computed(() => {
 
 // Create flight pairs from flight options
 const flightPairs = computed(() => {
-  return flightOptions.value.map((option) => {
+  console.log('🔍 flightOptions.value:', flightOptions.value)
+  return flightOptions.value.map((option, index) => {
+    console.log(`🔍 Processing flight option ${index}:`, option)
     const outbound = option.from
     const inbound = option.to
     
@@ -293,7 +293,7 @@ const selectFlightPair = (flightPair: any) => {
 }
 
 .flight-pair-option {
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem;
   cursor: pointer;
@@ -320,6 +320,7 @@ const selectFlightPair = (flightPair: any) => {
 
 .flight-pair-option.selected {
   border-color: var(--color-primary);
+  border-width: 1px;
   background: #f8fafc;
   box-shadow: 0 2px 8px rgba(26, 60, 97, 0.15);
 }
@@ -451,6 +452,7 @@ const selectFlightPair = (flightPair: any) => {
   align-items: center;
   font-size: 0.75rem;
   gap: 0.5rem;
+  margin-bottom: 0.125rem;
 }
 
 .flight-info-line .label {
@@ -491,7 +493,33 @@ const selectFlightPair = (flightPair: any) => {
 .availability-status {
   color: var(--color-warning);
   font-weight: 500;
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.availability-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ff8c00;
+  opacity: 0.6;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
 }
 
 .flight-duration {

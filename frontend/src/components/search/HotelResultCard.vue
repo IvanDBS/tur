@@ -1,5 +1,5 @@
 <template>
-  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop }">
+  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop, [getAvailabilityClass()]: true }">
     <!-- Hotel Image Section -->
     <div class="hotel-image-section">
       <div class="hotel-image">
@@ -161,7 +161,7 @@
 
       <div class="action-buttons">
         <button 
-          class="action-btn availability" 
+          class="action-btn availability availability-badge" 
           :class="getAvailabilityClass()"
           :title="getAvailabilityTooltip()"
         >

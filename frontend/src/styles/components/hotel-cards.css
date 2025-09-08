@@ -213,6 +213,123 @@
   pointer-events: none;
 }
 
+/* No tickets styling - красные карточки для отелей без мест */
+.hotel-result-card.no-tickets {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fca5a5;
+  opacity: 0.8;
+}
+
+.hotel-result-card.no-tickets .hotel-name {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.hotel-result-card.no-tickets .hotel-category {
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+.hotel-result-card.no-tickets .price-amount {
+  color: #dc2626;
+  text-decoration: line-through;
+}
+
+.hotel-result-card.no-tickets .availability-badge {
+  background: #dc2626;
+  color: white;
+  font-weight: 600;
+}
+
+.hotel-result-card.no-tickets .action-btn.book {
+  background: #dc2626;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hotel-result-card.no-tickets .action-btn.book:hover {
+  background: #dc2626;
+  transform: none;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.hotel-result-card.no-tickets .flight-section {
+  opacity: 0.7;
+}
+
+.hotel-result-card.no-tickets .airline-logo {
+  opacity: 0.6;
+}
+
+/* On request styling - желтые карточки для отелей на запрос */
+.hotel-result-card.on-request {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #f59e0b;
+}
+
+.hotel-result-card.on-request .hotel-name {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.hotel-result-card.on-request .hotel-category {
+  color: #d97706;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+}
+
+.hotel-result-card.on-request .availability-badge {
+  background: #f59e0b;
+  color: white;
+  font-weight: 600;
+}
+
+.hotel-result-card.on-request .action-btn.book {
+  background: #f59e0b;
+}
+
+.hotel-result-card.on-request .action-btn.book:hover {
+  background: #d97706;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+}
+
+/* Low availability styling - оранжевые карточки для низкой доступности */
+.hotel-result-card.low-availability {
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+  border: 1px solid #fb923c;
+}
+
+.hotel-result-card.low-availability .availability-badge {
+  background: #fb923c;
+  color: white;
+  font-weight: 600;
+}
+
+/* Medium availability styling - желтые карточки для средней доступности */
+.hotel-result-card.medium-availability {
+  background: linear-gradient(135deg, #fefce8 0%, #fde047 100%);
+  border: 1px solid #eab308;
+}
+
+.hotel-result-card.medium-availability .availability-badge {
+  background: #eab308;
+  color: white;
+  font-weight: 600;
+}
+
+/* High availability styling - зеленые карточки для высокой доступности */
+.hotel-result-card.high-availability {
+  background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+  border: 1px solid #22c55e;
+}
+
+.hotel-result-card.high-availability .availability-badge {
+  background: #22c55e;
+  color: white;
+  font-weight: 600;
+}
+
 /* Responsive enhancements */
 @media (max-width: 1024px) {
   .hotel-result-card {

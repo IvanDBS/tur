@@ -14,6 +14,7 @@
           :model-value="modelValue"
           @update:model-value="$emit('update:checkInDate', $event)"
           :min-date="new Date()"
+          :disabled-dates="isDateDisabled"
           format="dd.MM.yyyy"
           placeholder="Выберите дату"
           :month-change-on-scroll="false"
@@ -44,6 +45,7 @@
           :model-value="modelValue"
           @update:model-value="$emit('update:checkOutDate', $event)"
           :min-date="checkInDate || new Date()"
+          :disabled-dates="isDateDisabled"
           format="dd.MM.yyyy"
           placeholder="Выберите дату"
           :month-change-on-scroll="false"
@@ -65,7 +67,8 @@
 <script setup lang="ts">
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, computed } from 'vue'
+import { useCalendarHints } from '../../../composables/useCalendarHints'
 const BaseSearchField = defineAsyncComponent(() => import('./BaseSearchField.vue'))
 
 // Props
@@ -86,6 +89,20 @@ const emit = defineEmits<{
   'update:checkInDate': [value: Date | null]
   'update:checkOutDate': [value: Date | null]
 }>()
+
+// Calendar hints для ограничения доступных дат
+const { isDateAvailable, availableDates } = useCalendarHints()
+
+// Функция для проверки доступности даты в календаре
+const isDateDisabled = (date: Date) => {
+  // Если нет календарных подсказок, разрешаем все даты от сегодня
+  if (availableDates.value.length === 0) {
+    return date < new Date()
+  }
+  
+  // Проверяем доступность даты через календарные подсказки
+  return !isDateAvailable(date)
+}
 </script>
 
 <style scoped>

@@ -47,6 +47,10 @@
                       <span class="label">Рейс:</span>
                       <span class="value">{{ flightPair.outbound.airline.iata_code }} {{ flightPair.outbound.name }} ({{ flightPair.outbound.airline.airline }})</span>
                     </div>
+                    <div class="flight-info-line">
+                      <span class="label">Наличие:</span>
+                      <span class="value availability-status">под запрос</span>
+                    </div>
                   </div>
                   
                   <div class="flight-section arrival">
@@ -93,6 +97,10 @@
                     <div class="flight-info-line">
                       <span class="label">Рейс:</span>
                       <span class="value">{{ flightPair.inbound.airline.iata_code }} {{ flightPair.inbound.name }} ({{ flightPair.inbound.airline.airline }})</span>
+                    </div>
+                    <div class="flight-info-line">
+                      <span class="label">Наличие:</span>
+                      <span class="value availability-status">под запрос</span>
                     </div>
                   </div>
                   
@@ -478,6 +486,12 @@ const selectFlightPair = (flightPair: any) => {
 .tickets-on-request {
   color: var(--color-warning);
   font-weight: 500;
+}
+
+.availability-status {
+  color: var(--color-warning);
+  font-weight: 500;
+  font-style: italic;
 }
 
 .flight-duration {

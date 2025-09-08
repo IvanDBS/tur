@@ -222,6 +222,7 @@ export interface SearchResultTickets {
   to: SearchResultFlight
   on_request: 'y' | 'n'
   has_tickets: boolean
+  price?: SearchResultPrice // Добавляем цену для каждого варианта перелета
 }
 
 export interface SearchResultFlight {

@@ -63,6 +63,7 @@
         :next-page="currentPage < totalPages ? currentPage + 1 : null"
         @book="handleBook"
         @page-change="handlePageChange"
+        @save-search-state="saveSearchState"
       />
     </div>
   </div>
@@ -105,6 +106,7 @@
     handleBook,
     initializeData,
     loadMoreData,
+    saveSearchState,
   } = useSearchForm()
 
   // Emits

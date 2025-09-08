@@ -517,7 +517,13 @@ export const useSearchForm = () => {
       if (groupedMap.has(hotelKey)) {
         // Добавляем вариант перелета к существующему отелю
         const existing = groupedMap.get(hotelKey)!
-        existing.flightOptions.push(result.tickets)
+        
+        // Добавляем цену к варианту перелета
+        const flightOptionWithPrice = {
+          ...result.tickets,
+          price: result.price
+        }
+        existing.flightOptions.push(flightOptionWithPrice)
         
         // Обновляем минимальную и максимальную цены
         const currentPrice = result.price.amount
@@ -541,7 +547,10 @@ export const useSearchForm = () => {
           gala_dinner: result.gala_dinner,
           aquapark_services: result.aquapark_services,
           tourists: result.tourists,
-          flightOptions: [result.tickets],
+          flightOptions: [{
+            ...result.tickets,
+            price: result.price
+          }],
           minPrice: result.price.amount,
           maxPrice: result.price.amount,
           currency: result.price.currency
@@ -736,6 +745,9 @@ export const useSearchForm = () => {
     lastSearchParams.value = null
     loadedPages.value.clear()
     isLoadingMore.value = false
+    
+    // Очищаем сохраненное состояние
+    clearSearchState()
   }
 
   // Метод для обновления минимального значения для nights2
@@ -805,8 +817,81 @@ export const useSearchForm = () => {
 
   // Обработчик бронирования тура
   const handleBook = (result: GroupedSearchResult) => {
+    // Сохраняем состояние поиска перед переходом на бронирование
+    saveSearchState()
+    
     // Здесь можно добавить логику бронирования
     alert(`Бронирование тура: ${result.hotel.name} от ${result.minPrice} ${result.currency}`)
+  }
+
+  // Сохранение состояния поиска
+  const saveSearchState = () => {
+    try {
+      const searchState = {
+        searchForm: searchForm.value,
+        selectedFilters: selectedFilters.value,
+        searchResults: searchResults.value,
+        allLoadedResults: allLoadedResults.value,
+        totalResults: totalResults.value,
+        currentPage: currentPage.value,
+        lastSearchParams: lastSearchParams.value,
+        loadedPages: Array.from(loadedPages.value),
+        timestamp: Date.now()
+      }
+      
+      sessionStorage.setItem('searchState', JSON.stringify(searchState))
+      logger.info('💾 Search state saved to sessionStorage')
+    } catch (error) {
+      logger.warn('Failed to save search state:', error)
+    }
+  }
+
+  // Восстановление состояния поиска
+  const restoreSearchState = () => {
+    try {
+      const savedState = sessionStorage.getItem('searchState')
+      if (!savedState) {
+        logger.info('No saved search state found')
+        return false
+      }
+
+      const searchState = JSON.parse(savedState)
+      
+      // Проверяем, что состояние не слишком старое (например, не старше 1 часа)
+      const maxAge = 60 * 60 * 1000 // 1 час
+      if (Date.now() - searchState.timestamp > maxAge) {
+        logger.info('Saved search state is too old, ignoring')
+        sessionStorage.removeItem('searchState')
+        return false
+      }
+
+      // Восстанавливаем состояние
+      searchForm.value = searchState.searchForm || searchForm.value
+      selectedFilters.value = searchState.selectedFilters || selectedFilters.value
+      searchResults.value = searchState.searchResults || null
+      allLoadedResults.value = searchState.allLoadedResults || null
+      totalResults.value = searchState.totalResults || 0
+      currentPage.value = searchState.currentPage || 1
+      lastSearchParams.value = searchState.lastSearchParams || null
+      loadedPages.value = new Set(searchState.loadedPages || [])
+      
+      logger.info('🔄 Search state restored from sessionStorage')
+      return true
+    } catch (error) {
+      logger.warn('Failed to restore search state:', error)
+      sessionStorage.removeItem('searchState')
+      return false
+    }
+  }
+
+  // Очистка сохраненного состояния
+  const clearSearchState = () => {
+    try {
+      sessionStorage.removeItem('searchState')
+      logger.info('🗑️ Search state cleared from sessionStorage')
+    } catch (error) {
+      logger.warn('Failed to clear search state:', error)
+    }
   }
 
   // Метод инициализации данных
@@ -816,6 +901,9 @@ export const useSearchForm = () => {
       await searchData.initializeData()
       logger.info('✅ Search data initialized')
       logger.info(`🏙️ Departure cities loaded: ${searchData.departureCitiesOptions.value.length}`)
+      
+      // Пытаемся восстановить состояние поиска
+      restoreSearchState()
     } catch (err) {
       logger.error('❌ Failed to initialize search data:', err)
     }
@@ -853,5 +941,10 @@ export const useSearchForm = () => {
     initializeData,
     loadMoreData,
     groupResultsByHotel,
+    
+    // State management
+    saveSearchState,
+    restoreSearchState,
+    clearSearchState,
   }
 }

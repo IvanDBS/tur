@@ -111,9 +111,6 @@ backend/config/credentials.yml.enc
 # Documentation folder
 docs/
 
-# Documentation files
-docs.part1.md
-docs.part2.md
-docs.part3.md
-search_post_dok.md
-categoty_dok.md
+# Documentation files (excluding README.md)
+*.md
+!README.md

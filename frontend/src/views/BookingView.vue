@@ -33,7 +33,10 @@
       <!-- Booking Content -->
       <div v-else-if="hasSearchResult" class="booking-content">
         <!-- Hotel Information Block -->
-        <HotelInfoBlock :search-result="searchResult" />
+        <HotelInfoBlock 
+          :search-result="searchResult" 
+          :selected-flight="bookingData.selectedFlight"
+        />
 
         <!-- Flight Selection Block -->
         <FlightSelectionBlock 
@@ -62,40 +65,41 @@
           <div class="summary-content">
             <div class="price-breakdown">
               <div class="price-item">
-                <span class="price-label">Базовая стоимость:</span>
-                <span class="price-value">{{ searchResult.price?.amount }} {{ searchResult.price?.currency }}</span>
+                <div class="price-name">Базовая стоимость</div>
+                <div class="price-description">{{ getBasePriceDescription() }}</div>
+                <div class="price-value">{{ basePrice }} {{ searchResult.price?.currency }}</div>
               </div>
               
-              <div v-if="!bookingData.additionalServices.insurance.included" class="price-item">
-                <span class="price-label">Страховка:</span>
-                <span class="price-value">+ {{ bookingData.additionalServices.insurance.price }} €</span>
+              <div class="price-item">
+                <div class="price-name">Страховка</div>
+                <div class="price-description">{{ getInsuranceName() }} - {{ getInsuranceDescription() }}</div>
+                <div class="price-value">
+                  {{ bookingData.additionalServices.insurance.included ? '0' : '+' + bookingData.additionalServices.insurance.price }}
+                </div>
+              </div>
+              
+              <div class="price-item">
+                <div class="price-name">Трансфер</div>
+                <div class="price-description">{{ getTransferName() }} - {{ getTransferDescription() }}</div>
+                <div class="price-value">
+                  {{ bookingData.additionalServices.transfer.included ? '0' : '+' + bookingData.additionalServices.transfer.price }}
+                </div>
               </div>
               
               <div v-if="bookingData.additionalServices.covidInsurance.type === 'COVID_19'" class="price-item">
-                <span class="price-label">COVID-19 страховка:</span>
-                <span class="price-value">+ {{ bookingData.additionalServices.covidInsurance.price }} €</span>
-              </div>
-              
-              <div v-if="!bookingData.additionalServices.transfer.included" class="price-item">
-                <span class="price-label">Трансфер:</span>
-                <span class="price-value">+ {{ bookingData.additionalServices.transfer.price }} €</span>
+                <div class="price-name">COVID-19 страховка</div>
+                <div class="price-description">Дополнительная страховка COVID-19</div>
+                <div class="price-value">+ {{ bookingData.additionalServices.covidInsurance.price }} €</div>
               </div>
               
               <div class="price-item total">
-                <span class="price-label">Итого:</span>
-                <span class="price-value">{{ totalPrice }} {{ searchResult.price?.currency }}</span>
+                <div class="price-name">Итого</div>
+                <div class="price-description"></div>
+                <div class="price-value">{{ totalPrice }} {{ searchResult.price?.currency }}</div>
               </div>
             </div>
 
             <div class="booking-actions">
-              <button 
-                class="calculate-button"
-                @click="handleCalculate"
-                :disabled="!canProceedToBooking"
-              >
-                Рассчитать стоимость
-              </button>
-              
               <button 
                 class="book-button"
                 @click="handleBook"
@@ -149,6 +153,7 @@ const {
   error, 
   hasSearchResult, 
   canProceedToBooking, 
+  basePrice,
   totalPrice,
   searchResult,
   bookingData,
@@ -245,6 +250,92 @@ const handleBook = async () => {
 
 const updateBookingNotes = (notes: Partial<BookingNotes>) => {
   bookingNotes.value = { ...bookingNotes.value, ...notes }
+}
+
+// Helper methods for getting service names and descriptions
+const getInsuranceName = () => {
+  const insurance = bookingData.value.additionalServices.insurance
+  switch (insurance.type) {
+    case 'STANDARD':
+      return 'STANDARD 10000 EUR'
+    case 'STANDARD_PLUS':
+      return 'STANDARD PLUS TR 30 000 EUR'
+    case 'NONE':
+      return 'Без страховки'
+    default:
+      return insurance.type
+  }
+}
+
+const getInsuranceDescription = () => {
+  const insurance = bookingData.value.additionalServices.insurance
+  switch (insurance.type) {
+    case 'STANDARD':
+      return 'Стандартная страховка'
+    case 'STANDARD_PLUS':
+      return 'Расширенная страховка'
+    case 'NONE':
+      return 'Отказ от страховки'
+    default:
+      return insurance.coverage || ''
+  }
+}
+
+const getTransferName = () => {
+  const transfer = bookingData.value.additionalServices.transfer
+  switch (transfer.type) {
+    case 'GROUP':
+      return 'GROUP (BUS)'
+    case 'INDIVIDUAL':
+      return 'INDIVIDUAL TRANSFER'
+    case 'VIP':
+      return 'VIP IND TRANSFER'
+    default:
+      return transfer.type
+  }
+}
+
+const getTransferDescription = () => {
+  const transfer = bookingData.value.additionalServices.transfer
+  switch (transfer.type) {
+    case 'GROUP':
+      return 'Групповой трансфер на автобусе'
+    case 'INDIVIDUAL':
+      return 'Индивидуальный трансфер'
+    case 'VIP':
+      return 'VIP индивидуальный трансфер'
+    default:
+      return ''
+  }
+}
+
+const getBasePriceDescription = () => {
+  const result = searchResult.value
+  if (!result) return ''
+  
+  const parts = []
+  
+  // Проверяем, есть ли перелет (для GroupedSearchResult)
+  if ('flightOptions' in result && result.flightOptions?.length > 0) {
+    parts.push('Перелет')
+  }
+  
+  // Добавляем проживание
+  parts.push('проживание')
+  
+  // Добавляем питание
+  let mealName = 'питание'
+  if ('meal' in result && result.meal) {
+    mealName = result.meal.name || 'питание'
+  } else if ('accommodation' in result && result.accommodation?.meal) {
+    mealName = result.accommodation.meal.name || 'питание'
+  }
+  
+  // Форматируем питание: "питание по системе {НАЗВАНИЕ}"
+  const mealDescription = `питание по системе ${mealName.toUpperCase()}`
+  parts.push(mealDescription)
+  
+  return parts.join(' + ')
 }
 
 // Validation
@@ -446,10 +537,11 @@ onMounted(() => {
 }
 
 .price-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
 }
 
 .price-item.total {
@@ -458,19 +550,26 @@ onMounted(() => {
   margin-top: 0.5rem;
 }
 
-.price-label {
+.price-name {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  font-weight: 500;
+  color: var(--color-secondary);
 }
 
-.price-item.total .price-label {
+.price-item.total .price-name {
   font-weight: 600;
   color: var(--color-secondary);
+}
+
+.price-description {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 .price-value {
   font-weight: 600;
   color: var(--color-secondary);
+  text-align: right;
 }
 
 .price-item.total .price-value {
@@ -484,7 +583,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.calculate-button,
 .book-button {
   padding: 0.875rem 1.5rem;
   border: none;
@@ -493,20 +591,6 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.calculate-button {
-  background: white;
-  color: var(--color-secondary);
-  border: 2px solid var(--color-border);
-}
-
-.calculate-button:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.book-button {
   background: var(--color-primary);
   color: white;
 }
@@ -515,7 +599,6 @@ onMounted(() => {
   background: var(--color-primary-dark);
 }
 
-.calculate-button:disabled,
 .book-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -540,9 +623,18 @@ onMounted(() => {
     flex-direction: column;
   }
   
-  .calculate-button,
   .book-button {
     width: 100%;
+  }
+  
+  .price-item {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    text-align: left;
+  }
+  
+  .price-value {
+    text-align: left;
   }
 }
 </style>

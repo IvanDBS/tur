@@ -222,6 +222,7 @@ const emit = defineEmits<{
   book: [result: GroupedSearchResult]
   details: [result: GroupedSearchResult]
   compare: [result: GroupedSearchResult]
+  saveSearchState: []
 }>()
 
 // Format flight date (show day of week)
@@ -385,6 +386,9 @@ const handleBook = () => {
   } catch (error) {
     console.warn('Failed to store search result in sessionStorage:', error)
   }
+  
+  // Emit event to parent to save search state before navigation
+  emit('saveSearchState')
   
   router.push({
     name: 'booking',

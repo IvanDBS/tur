@@ -59,10 +59,27 @@ export const useBooking = () => {
            )
   })
 
-  const totalPrice = computed(() => {
+  // Базовая стоимость тура (без дополнительных услуг)
+  const basePrice = computed(() => {
     if (!searchResult.value) return 0
     
-    let total = searchResult.value.price?.amount || 0
+    // Get price from selected flight or base price
+    if ('flightOptions' in searchResult.value && bookingData.selectedFlight) {
+      const groupedResult = searchResult.value as GroupedSearchResult
+      const selectedOption = groupedResult.flightOptions?.find(option => {
+        const outboundId = bookingData.selectedFlight?.outbound.id
+        const inboundId = bookingData.selectedFlight?.inbound.id
+        return option.from.id === outboundId && option.to.id === inboundId
+      })
+      return selectedOption?.price?.amount || groupedResult.price?.amount || 0
+    } else {
+      return searchResult.value.price?.amount || 0
+    }
+  })
+
+  // Полная стоимость с дополнительными услугами
+  const totalPrice = computed(() => {
+    let total = basePrice.value
     
     // Add additional services prices
     if (!bookingData.additionalServices.insurance.included) {
@@ -92,6 +109,23 @@ export const useBooking = () => {
   const initializeBooking = (result: SearchResult | GroupedSearchResult) => {
     searchResult.value = result
     bookingData.searchResult = result as SearchResult
+    
+    // Auto-select first flight if available
+    if ('flightOptions' in result && result.flightOptions?.length > 0) {
+      const firstFlight = result.flightOptions[0]
+      bookingData.selectedFlight = {
+        outbound: firstFlight.from,
+        inbound: firstFlight.to
+      }
+      logger.info('Auto-selected first flight:', bookingData.selectedFlight)
+    } else if ('tickets' in result && result.tickets) {
+      // For regular SearchResult
+      bookingData.selectedFlight = {
+        outbound: result.tickets.from,
+        inbound: result.tickets.to
+      }
+      logger.info('Auto-selected flight from regular result:', bookingData.selectedFlight)
+    }
     
     // Initialize tourists based on search result
     const adults = result.tourists?.adults || 1
@@ -204,6 +238,14 @@ export const useBooking = () => {
 
       logger.info('Booking created successfully:', response)
       
+      // Clear saved search state since booking is complete
+      try {
+        sessionStorage.removeItem('searchState')
+        logger.info('🗑️ Search state cleared after successful booking')
+      } catch (error) {
+        logger.warn('Failed to clear search state:', error)
+      }
+      
       // Redirect to bookings page or show success message
       router.push({ name: 'bookings' })
       
@@ -255,6 +297,7 @@ export const useBooking = () => {
     error: computed(() => error.value),
     hasSearchResult: computed(() => hasSearchResult.value),
     canProceedToBooking: computed(() => canProceedToBooking.value),
+    basePrice: computed(() => basePrice.value),
     totalPrice: computed(() => totalPrice.value),
     
     // Data

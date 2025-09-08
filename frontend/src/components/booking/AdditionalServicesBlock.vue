@@ -16,25 +16,16 @@
             :class="{ 'selected': services.insurance.type === option.type }"
             @click="selectInsurance(option)"
           >
-            <div class="option-header">
-              <div class="option-info">
-                <div class="option-name">{{ option.name }}</div>
-                <div class="option-description">{{ option.coverage }}</div>
-              </div>
-              <div class="option-price">
-                <span v-if="option.included" class="included">включен</span>
-                <span v-else class="price">+ {{ option.price }} €</span>
+            <div class="option-selector">
+              <div class="radio-button" :class="{ 'selected': services.insurance.type === option.type }">
+                <div class="radio-dot"></div>
               </div>
             </div>
-            <div class="option-footer">
-              <div class="price-impact" v-if="!option.included">
-                Влияет на стоимость
-              </div>
-              <div class="selection-indicator">
-                <div class="radio-button" :class="{ 'selected': services.insurance.type === option.type }">
-                  <div class="radio-dot"></div>
-                </div>
-              </div>
+            <div class="option-name">{{ option.name }}</div>
+            <div class="option-description">{{ option.coverage }}</div>
+            <div class="option-price">
+              <span v-if="option.included" class="included">включен</span>
+              <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
         </div>
@@ -51,26 +42,17 @@
             :class="{ 'selected': services.covidInsurance.type === option.type }"
             @click="selectCovidInsurance(option)"
           >
-            <div class="option-header">
-              <div class="option-info">
-                <div class="option-name">{{ option.name }}</div>
-                <div class="option-description">{{ option.description }}</div>
-              </div>
-              <div class="option-price">
-                <span v-if="option.type === 'INCLUDED'" class="included">включен</span>
-                <span v-else-if="option.type === 'OPT_OUT'" class="opt-out">Отказываюсь</span>
-                <span v-else class="price">+ {{ option.price }} €</span>
+            <div class="option-selector">
+              <div class="radio-button" :class="{ 'selected': services.covidInsurance.type === option.type }">
+                <div class="radio-dot"></div>
               </div>
             </div>
-            <div class="option-footer">
-              <div class="price-impact" v-if="option.type === 'COVID_19'">
-                Влияет на стоимость
-              </div>
-              <div class="selection-indicator">
-                <div class="radio-button" :class="{ 'selected': services.covidInsurance.type === option.type }">
-                  <div class="radio-dot"></div>
-                </div>
-              </div>
+            <div class="option-name">{{ option.name }}</div>
+            <div class="option-description">{{ option.description }}</div>
+            <div class="option-price">
+              <span v-if="option.type === 'INCLUDED'" class="included">включен</span>
+              <span v-else-if="option.type === 'OPT_OUT'" class="opt-out">Отказываюсь</span>
+              <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
         </div>
@@ -87,25 +69,16 @@
             :class="{ 'selected': services.transfer.type === option.type }"
             @click="selectTransfer(option)"
           >
-            <div class="option-header">
-              <div class="option-info">
-                <div class="option-name">{{ option.name }}</div>
-                <div class="option-description">{{ option.description }}</div>
-              </div>
-              <div class="option-price">
-                <span v-if="option.included" class="included">включен</span>
-                <span v-else class="price">+ {{ option.price }} €</span>
+            <div class="option-selector">
+              <div class="radio-button" :class="{ 'selected': services.transfer.type === option.type }">
+                <div class="radio-dot"></div>
               </div>
             </div>
-            <div class="option-footer">
-              <div class="price-impact" v-if="!option.included">
-                Влияет на стоимость
-              </div>
-              <div class="selection-indicator">
-                <div class="radio-button" :class="{ 'selected': services.transfer.type === option.type }">
-                  <div class="radio-dot"></div>
-                </div>
-              </div>
+            <div class="option-name">{{ option.name }}</div>
+            <div class="option-description">{{ option.description }}</div>
+            <div class="option-price">
+              <span v-if="option.included" class="included">включен</span>
+              <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
         </div>
@@ -337,6 +310,10 @@ const updateNote = (key: string, value: any) => {
   cursor: pointer;
   transition: all 0.2s ease;
   background: white;
+  display: grid;
+  grid-template-columns: auto 1fr 1fr auto;
+  gap: 1rem;
+  align-items: center;
 }
 
 .service-option:hover {
@@ -350,23 +327,16 @@ const updateNote = (key: string, value: any) => {
   box-shadow: 0 2px 8px rgba(26, 60, 97, 0.15);
 }
 
-.option-header {
+.option-selector {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.option-info {
-  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 .option-name {
   font-weight: 600;
   color: var(--color-secondary);
   font-size: 0.875rem;
-  margin-bottom: 0.25rem;
 }
 
 .option-description {
@@ -375,7 +345,6 @@ const updateNote = (key: string, value: any) => {
 }
 
 .option-price {
-  flex-shrink: 0;
   text-align: right;
 }
 
@@ -397,24 +366,6 @@ const updateNote = (key: string, value: any) => {
   font-size: 0.875rem;
 }
 
-.option-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border-light);
-}
-
-.price-impact {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.selection-indicator {
-  display: flex;
-  align-items: center;
-}
 
 .radio-button {
   width: 20px;
@@ -513,14 +464,33 @@ const updateNote = (key: string, value: any) => {
     grid-template-columns: 1fr;
   }
   
-  .option-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .service-option {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
     gap: 0.5rem;
   }
   
+  .option-selector {
+    grid-row: 1 / 3;
+  }
+  
+  .option-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  
+  .option-description {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  
   .option-price {
+    grid-column: 1 / 3;
+    grid-row: 3;
     text-align: left;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border-light);
   }
 }
 </style>

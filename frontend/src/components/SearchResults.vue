@@ -13,6 +13,7 @@
         @book="handleBook"
         @details="handleDetails"
         @compare="handleCompare"
+        @save-search-state="handleSaveSearchState"
       />
     </div>
 
@@ -75,6 +76,7 @@
     compare: [result: GroupedSearchResult]
     loadMore: []
     'page-change': [page: number]
+    'save-search-state': []
   }>()
 
   // State
@@ -101,6 +103,10 @@
 
   const handleCompare = (result: GroupedSearchResult) => {
     emit('compare', result)
+  }
+
+  const handleSaveSearchState = () => {
+    emit('save-search-state')
   }
 
   const loadMore = () => {

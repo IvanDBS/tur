@@ -1,5 +1,5 @@
 <template>
-  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop }">
+  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop, [getAvailabilityClass()]: true }">
     <!-- Hotel Image Section -->
     <div class="hotel-image-section">
       <div class="hotel-image">
@@ -141,6 +141,30 @@
       </div>
 
       <div class="action-buttons">
+        <button 
+          class="action-btn availability availability-badge" 
+          :class="getAvailabilityClass()"
+          :title="getAvailabilityTooltip()"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/>
+          </svg>
+          <span>{{ getAvailabilityText() }}</span>
+        </button>
+        
+        <button class="action-btn details" title="Детали отеля">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 5V3a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+        
+        <button class="action-btn compare" title="Сравнить">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 19c-5 0-7-2-7-7s2-7 7-7 7 2 7 7-2 7-7 7z" stroke="currentColor" stroke-width="2"/>
+            <path d="M15 5c5 0 7 2 7 7s-2 7-7 7" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
         
         <button 
           class="action-btn book" 

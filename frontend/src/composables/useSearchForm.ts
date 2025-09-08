@@ -168,7 +168,7 @@ export const useSearchForm = () => {
   // Пагинация
   const currentPage = ref(1)
   const itemsPerPage = 20 // Показываем по 20 на странице
-  const serverPageSize = 100 // Загружаем все результаты сразу (per_page >= 100)
+  const serverPageSize = 1000 // Загружаем все результаты сразу (per_page > 500)
   const lastSearchParams = ref<Record<string, unknown> | null>(null)
   const allLoadedResults = ref<Record<string, ObsSearchResult> | null>(null) // Все загруженные результаты
   const loadedPages = ref<Set<number>>(new Set()) // Отслеживаем загруженные страницы сервера
@@ -176,37 +176,71 @@ export const useSearchForm = () => {
   
   // Client-side pagination based on loaded results
   const totalPages = computed(() => {
-    if (!allLoadedResults.value) return 0
-    const allResults = Object.values(allLoadedResults.value)
-    const groupedResults = groupResultsByHotel(allResults)
-    const pages = Math.ceil(groupedResults.length / itemsPerPage)
-    logger.debug(`totalPages computed: groupedResults.length=${groupedResults.length}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
-    return pages
+    if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') return 0
+    
+    try {
+      const allResults = Object.values(allLoadedResults.value)
+      if (allResults.length === 0) return 0
+      
+      let groupedResults = groupResultsByHotel(allResults)
+      
+      // Применяем фильтрацию по регионам и категориям
+      if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
+        groupedResults = filterResultsByRegionsAndCategories(groupedResults)
+      }
+      
+      const pages = Math.ceil(groupedResults.length / itemsPerPage)
+      logger.debug(`totalPages computed: groupedResults.length=${groupedResults.length}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
+      return pages
+    } catch (error) {
+      logger.error('Error in totalPages computed:', error)
+      return 0
+    }
   })
   
   // Hybrid pagination: server loads 100, frontend shows 20
   const paginatedResults = computed(() => {
+    logger.info(`🔄 paginatedResults computed called: allLoadedResults = ${allLoadedResults.value ? 'EXISTS' : 'NULL'}`)
+    
     if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') {
-      logger.debug('paginatedResults: no allLoadedResults')
+      logger.info('❌ paginatedResults: no allLoadedResults')
       return []
     }
     
-    // Get all loaded results as array
-    const allResults = Object.values(allLoadedResults.value)
-    logger.debug(`paginatedResults: allResults.length = ${allResults.length}, currentPage = ${currentPage.value}`)
-    
-    // Группируем результаты по отелям
-    const groupedResults = groupResultsByHotel(allResults)
-    logger.debug(`paginatedResults: groupedResults.length = ${groupedResults.length}`)
-    
-    // Calculate pagination for current page (20 items per page)
-    const startIndex = (currentPage.value - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    
-    const paginated = groupedResults.slice(startIndex, endIndex)
-    logger.debug(`paginatedResults: startIndex = ${startIndex}, endIndex = ${endIndex}, paginated.length = ${paginated.length}`)
-    
-    return paginated
+    try {
+      // Get all loaded results as array
+      const allResults = Object.values(allLoadedResults.value)
+      logger.info(`📊 paginatedResults: allResults.length = ${allResults.length}, currentPage = ${currentPage.value}`)
+      
+      // Проверяем, что у нас есть валидные результаты
+      if (allResults.length === 0) {
+        logger.debug('paginatedResults: no results to process')
+        return []
+      }
+      
+      // Группируем результаты по отелям
+      let groupedResults = groupResultsByHotel(allResults)
+      logger.debug(`paginatedResults: groupedResults.length = ${groupedResults.length}`)
+      
+      // Применяем фильтрацию по регионам и категориям
+      if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
+        groupedResults = filterResultsByRegionsAndCategories(groupedResults)
+        logger.debug(`paginatedResults: after filtering groupedResults.length = ${groupedResults.length}`)
+      }
+      
+      // Calculate pagination for current page (20 items per page)
+      const startIndex = (currentPage.value - 1) * itemsPerPage
+      const endIndex = startIndex + itemsPerPage
+      
+      const paginated = groupedResults.slice(startIndex, endIndex)
+      logger.info(`📄 paginatedResults: startIndex = ${startIndex}, endIndex = ${endIndex}, paginated.length = ${paginated.length}`)
+      logger.info(`📄 Final paginated results:`, paginated.length > 0 ? 'HAS RESULTS' : 'NO RESULTS')
+      
+      return paginated
+    } catch (error) {
+      logger.error('Error in paginatedResults computed:', error)
+      return []
+    }
   })
 
   // Простая клиентская пагинация - загружаем все результаты сразу
@@ -448,6 +482,9 @@ export const useSearchForm = () => {
 
   // Helper function to get hotels for search
   const getSelectedHotelsForSearch = () => {
+    logger.debug(`🏨 getSelectedHotelsForSearch called. Available hotels: ${searchData.hotels.value.length}`)
+    logger.debug(`🏨 Selected hotel filters: ${selectedFilters.value.hotels.length}`)
+    
     // Если пользователь выбрал отели вручную, используем их
     if (selectedFilters.value.hotels.length > 0) {
       // Если выбран ID=1 (все отели), возвращаем все доступные отели
@@ -504,16 +541,27 @@ export const useSearchForm = () => {
     }
     
     // Если ничего не выбрано, возвращаем все доступные отели
-    return searchData.hotels.value.map(hotel => Number(hotel.id))
+    const allHotels = searchData.hotels.value.map(hotel => Number(hotel.id))
+    logger.debug(`🏨 Returning all hotels for search: ${allHotels.length} hotels`)
+    return allHotels
   }
 
   // Функция для группировки результатов по отелям с поддержкой вариантов комнат
   const groupResultsByHotel = (results: ObsSearchResult[]): GroupedSearchResult[] => {
+    if (!results || results.length === 0) {
+      return []
+    }
+    
     const groupedMap = new Map<string, GroupedSearchResult>()
     
     results.forEach(result => {
-      // Группируем только по отелю
-      const hotelKey = `${result.accommodation.hotel.id}`
+      // Проверяем, что у нас есть все необходимые данные
+      if (!result.accommodation?.hotel?.id || !result.accommodation?.room?.id || !result.accommodation?.meal?.id) {
+        logger.warn('Skipping result with missing accommodation data:', result)
+        return
+      }
+      
+      const hotelKey = `${result.accommodation.hotel.id}-${result.accommodation.room.id}-${result.accommodation.meal.id}`
       
       if (groupedMap.has(hotelKey)) {
         const existing = groupedMap.get(hotelKey)!
@@ -548,7 +596,7 @@ export const useSearchForm = () => {
         }
         
         // Обновляем минимальную и максимальную цены
-        const currentPrice = result.price.amount
+        const currentPrice = result.price?.amount || 0
         if (currentPrice < existing.minPrice) {
           existing.minPrice = currentPrice
         }
@@ -578,9 +626,9 @@ export const useSearchForm = () => {
               price: result.price
             }]
           }],
-          minPrice: result.price.amount,
-          maxPrice: result.price.amount,
-          currency: result.price.currency
+          minPrice: result.price?.amount || 0,
+          maxPrice: result.price?.amount || 0,
+          currency: result.price?.currency || 'EUR'
         }
         groupedMap.set(hotelKey, grouped)
       }
@@ -590,8 +638,73 @@ export const useSearchForm = () => {
     return Array.from(groupedMap.values()).sort((a, b) => a.minPrice - b.minPrice)
   }
 
+  // Функция для фильтрации результатов по регионам и категориям
+  const filterResultsByRegionsAndCategories = (results: GroupedSearchResult[]): GroupedSearchResult[] => {
+    let filteredResults = results
+    
+    // Фильтрация по регионам
+    if (selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
+      // Создаем маппинг регионов к городам
+      const regionCitiesMap = new Map<number, number[]>()
+      searchData.regions.value.forEach(region => {
+        if (region.cities && Array.isArray(region.cities)) {
+          const cityIds = region.cities.map(city => city.id)
+          regionCitiesMap.set(region.id, cityIds)
+        }
+      })
+      
+      // Получаем все города для выбранных регионов
+      const selectedCities = new Set<number>()
+      selectedFilters.value.regions.forEach(regionId => {
+        const cities = regionCitiesMap.get(regionId)
+        if (cities) {
+          cities.forEach(cityId => selectedCities.add(cityId))
+        }
+      })
+      
+      // Фильтруем результаты по городам отелей
+      filteredResults = filteredResults.filter(result => {
+        // Находим отель в данных searchData по ID
+        const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
+        if (hotel && hotel.city_id) {
+          return selectedCities.has(hotel.city_id)
+        }
+        return false
+      })
+    }
+    
+    // Фильтрация по категориям
+    if (selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
+      filteredResults = filteredResults.filter(result => {
+        // Находим отель в данных searchData по ID
+        const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
+        if (hotel && hotel.category_id) {
+          return selectedFilters.value.categories.includes(hotel.category_id)
+        }
+        return false
+      })
+    }
+    
+    return filteredResults
+  }
+
   // Methods
   const handleSearch = () => {
+    // Получаем календарные подсказки для проверки доступности дат
+    const { isDateAvailable, availableDates } = calendarHints
+    
+    logger.info('🔍 Starting search with form data:', {
+      departureCity: searchForm.value.departureCity?.id,
+      destination: searchForm.value.destination?.id,
+      package: searchForm.value.package?.id,
+      checkInDate: searchForm.value.checkInDate,
+      checkOutDate: searchForm.value.checkOutDate,
+      nights: searchForm.value.nights,
+      adults: searchForm.value.adults,
+      children: searchForm.value.children,
+      availableDatesCount: availableDates.value.length
+    })
+    
     // Добавляем выбранные отели в форму поиска (используем правильную логику)
     searchForm.value.selectedHotels = getSelectedHotelsForSearch()
 
@@ -639,13 +752,91 @@ export const useSearchForm = () => {
       return
     }
 
-    // Форматируем даты в формат DD.MM.YYYY для API
+    // Проверяем доступность выбранных дат (используем уже полученные данные)
+    
+    logger.info('🔍 Checking date availability:', {
+      checkInDate: searchForm.value.checkInDate,
+      checkOutDate: searchForm.value.checkOutDate,
+      checkInAvailable: searchForm.value.checkInDate ? isDateAvailable(searchForm.value.checkInDate) : 'no date',
+      checkOutAvailable: searchForm.value.checkOutDate ? isDateAvailable(searchForm.value.checkOutDate) : 'no date',
+      availableDatesCount: availableDates.value.length
+    })
+    
+    if (!searchForm.value.checkInDate) {
+      logger.warn('❌ No check-in date selected')
+      showError('Ошибка поиска', 'Выберите дату заезда')
+      return
+    }
+    if (!searchForm.value.checkOutDate) {
+      logger.warn('❌ No check-out date selected')
+      showError('Ошибка поиска', 'Выберите дату выезда')
+      return
+    }
+    
+    if (!isDateAvailable(searchForm.value.checkInDate)) {
+      logger.warn('❌ Check-in date not available:', searchForm.value.checkInDate)
+      
+      // Попробуем автоматически выбрать доступную дату
+      if (availableDates.value.length > 0) {
+        const firstAvailableDate = availableDates.value[0]
+        logger.info('🔄 Auto-selecting first available date:', firstAvailableDate)
+        
+        searchForm.value.checkInDate = firstAvailableDate
+        
+        // Обновляем дату выезда
+        const nights = searchForm.value.nights || 7
+        const checkOutDate = new Date(firstAvailableDate)
+        checkOutDate.setDate(checkOutDate.getDate() + nights)
+        searchForm.value.checkOutDate = checkOutDate
+        
+        logger.info('✅ Auto-selected dates:', {
+          checkIn: firstAvailableDate,
+          checkOut: checkOutDate
+        })
+      } else {
+        logger.warn('❌ No available dates found in calendar hints')
+        showError('Ошибка поиска', 'Выбранная дата заезда недоступна для бронирования. Нет доступных дат.')
+        return
+      }
+    }
+    if (!isDateAvailable(searchForm.value.checkOutDate)) {
+      logger.warn('❌ Check-out date not available:', searchForm.value.checkOutDate)
+      
+      // Автоматически пересчитываем дату выезда на основе даты заезда
+      if (searchForm.value.checkInDate) {
+        const nights = searchForm.value.nights || 7
+        const checkOutDate = new Date(searchForm.value.checkInDate)
+        checkOutDate.setDate(checkOutDate.getDate() + nights)
+        searchForm.value.checkOutDate = checkOutDate
+        
+        logger.info('🔄 Auto-calculated check-out date:', checkOutDate)
+        
+        // Проверяем, доступна ли новая дата выезда
+        if (!isDateAvailable(checkOutDate)) {
+          logger.warn('❌ Auto-calculated check-out date also not available:', checkOutDate)
+          showError('Ошибка поиска', 'Не удалось найти доступные даты для выбранного количества ночей')
+          return
+        }
+      } else {
+        showError('Ошибка поиска', 'Выбранная дата выезда недоступна для бронирования')
+        return
+      }
+    }
+    
+    logger.info('✅ Date validation passed, proceeding with search...')
+
+    // Форматируем даты в формат DD.MM.YYYY для API (как требует документация)
     const formatDate = (date: Date) => {
       const day = date.getDate().toString().padStart(2, '0')
       const month = (date.getMonth() + 1).toString().padStart(2, '0')
       const year = date.getFullYear()
       return `${day}.${month}.${year}`
     }
+    
+    logger.info('📅 Formatted dates for API:', {
+      checkIn: formatDate(searchForm.value.checkInDate),
+      checkOut: formatDate(searchForm.value.checkOutDate)
+    })
 
     // Подготавливаем параметры для API
     const airportCityTo = searchForm.value.arrivalCity?.id ? [Number(searchForm.value.arrivalCity.id)] : []
@@ -662,7 +853,11 @@ export const useSearchForm = () => {
       adults: Number(searchForm.value.adults),
       children: searchForm.value.children !== null ? Number(searchForm.value.children) : undefined,
       children_age: searchForm.value.children !== null && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
-      selected_hotels: getSelectedHotelsForSearch(),
+      selected_hotels: (() => {
+        const hotels = getSelectedHotelsForSearch()
+        logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
+        return hotels
+      })(),
       meals: selectedFilters.value.meals.length > 0 ? selectedFilters.value.meals.map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
         return meal?.name || meal?.label || mealId.toString()
@@ -671,6 +866,22 @@ export const useSearchForm = () => {
         return optionId.toString()
       }) : undefined
     }
+    
+    logger.info('🔍 Search parameters prepared:', {
+      country: searchParams.country,
+      package_template: searchParams.package_template,
+      airport_city_from: searchParams.airport_city_from,
+      airport_city_to: searchParams.airport_city_to,
+      date_from: searchParams.date_from,
+      date_to: searchParams.date_to,
+      nights_from: searchParams.nights_from,
+      nights_to: searchParams.nights_to,
+      adults: searchParams.adults,
+      children: searchParams.children,
+      selected_hotels: searchParams.selected_hotels,
+      meals: searchParams.meals,
+      options: searchParams.options
+    })
 
     isLoading.value = true
     
@@ -680,11 +891,11 @@ export const useSearchForm = () => {
     currentPage.value = 1
     loadedPages.value.clear() // Очищаем отслеживание загруженных страниц
     
-    // Добавляем параметры пагинации (загружаем по 100 туров)
+    // Добавляем параметры пагинации (загружаем все туры, per_page > 500)
     const searchParamsWithPagination = {
       ...searchParams,
       page: 1, // Всегда начинаем с первой страницы
-      per_page: serverPageSize // Загружаем по 100 туров
+      per_page: serverPageSize // Загружаем все туры (per_page > 500)
     }
     
     logger.debug(`Search params with pagination:`, searchParamsWithPagination)
@@ -705,18 +916,62 @@ export const useSearchForm = () => {
         logger.debug('Result type:', typeof result)
         logger.debug('Result keys:', result ? Object.keys(result) : 'null')
         
-        // Сохраняем результаты поиска
-        if (result && result.results) {
-          searchResults.value = result.results
-          totalResults.value = result.total_results || 0
-          allLoadedResults.value = result.results // Сохраняем все загруженные результаты
-          loadedPages.value.add(1) // Отмечаем первую страницу как загруженную
+        // Обработка результатов поиска
+        if (result) {
+          logger.debug('Full search result structure:', result)
+          logger.debug('Result keys:', Object.keys(result))
           
-          logger.debug(`Search completed: total_results = ${totalResults.value}, results keys = ${Object.keys(result.results).length}`)
-          logger.debug(`Search completed: allLoadedResults keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0}`)
-          logger.debug(`Search completed: first few keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).slice(0, 5) : []}`)
+          // Проверяем разные возможные структуры ответа
+          let resultsData: Record<string, ObsSearchResult> | null = null
+          let totalCount = 0
+          
+          if (result.results && typeof result.results === 'object') {
+            // Стандартная структура: { results: {...}, total_results: N }
+            resultsData = result.results
+            totalCount = result.total_results || 0
+            logger.debug('Using standard structure: result.results')
+          } else if (typeof result === 'object' && !result.results) {
+            // Прямая структура: результаты в корне объекта
+            // Исключаем служебные поля
+            const excludeKeys = ['search_id', 'total_results', 'page', 'per_page', 'total_pages', 'prev_page', 'next_page', 'message']
+            const resultKeys = Object.keys(result).filter(key => !excludeKeys.includes(key))
+            
+            if (resultKeys.length > 0) {
+              resultsData = {}
+              resultKeys.forEach(key => {
+                if (resultsData) {
+                  resultsData[key] = result[key]
+                }
+              })
+              totalCount = resultKeys.length
+              logger.debug('Using direct structure: results in root object')
+            }
+          }
+          
+          if (resultsData && Object.keys(resultsData).length > 0) {
+            searchResults.value = resultsData
+            totalResults.value = totalCount
+            allLoadedResults.value = resultsData
+            loadedPages.value.add(1)
+            
+            logger.info(`✅ Search completed successfully: total_results = ${totalResults.value}`)
+            logger.info(`✅ Results stored: allLoadedResults keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).length : 0}`)
+            logger.info(`✅ First few result keys = ${allLoadedResults.value ? Object.keys(allLoadedResults.value).slice(0, 5) : []}`)
+            logger.info(`✅ searchResults.value = ${searchResults.value ? 'SET' : 'NULL'}`)
+            logger.info(`✅ totalResults.value = ${totalResults.value}`)
+          } else {
+            logger.warn('❌ No valid results found in search response:', result)
+            logger.warn('❌ resultsData =', resultsData)
+            logger.warn('❌ resultKeys length =', result ? Object.keys(result).length : 'no result')
+            searchResults.value = null
+            allLoadedResults.value = null
+            totalResults.value = 0
+          }
         } else {
-          logger.warn('No results in search response:', result)
+          logger.warn('Empty search response')
+          searchResults.value = null
+          allLoadedResults.value = null
+          totalResults.value = 0
         }
       })
       .catch((error) => {
@@ -738,43 +993,50 @@ export const useSearchForm = () => {
       })
   }
 
-  const handleReset = () => {
-    searchForm.value = {
-      departureCity: null,
-      destination: null,
-      package: null,
-      arrivalCity: null,
-      date: null,
-      checkInDate: null,
-      checkOutDate: null,
-      nights: null,
-      nights2: null,
-      adults: null,
-      children: null,
-      childrenAges: [],
-      priceFrom: null,
-      priceTo: null,
-      selectedHotels: [],
+  const handleReset = async () => {
+    try {
+      // Используем nextTick для безопасного обновления компонентов
+      await nextTick()
+      
+      searchForm.value = {
+        departureCity: null,
+        destination: null,
+        package: null,
+        arrivalCity: null,
+        date: null,
+        checkInDate: null,
+        checkOutDate: null,
+        nights: null,
+        nights2: null,
+        adults: null,
+        children: null,
+        childrenAges: [],
+        priceFrom: null,
+        priceTo: null,
+        selectedHotels: [],
+      }
+      selectedFilters.value = {
+        regions: [],
+        categories: [],
+        hotels: [],
+        meals: [],
+        options: [],
+      }
+      
+      // Очищаем результаты поиска
+      searchResults.value = null
+      allLoadedResults.value = null
+      totalResults.value = 0
+      currentPage.value = 1
+      lastSearchParams.value = null
+      loadedPages.value.clear()
+      isLoadingMore.value = false
+      
+      // Очищаем сохраненное состояние
+      clearSearchState()
+    } catch (error) {
+      logger.error('Error in handleReset:', error)
     }
-    selectedFilters.value = {
-      regions: [],
-      categories: [],
-      hotels: [],
-      meals: [],
-      options: [],
-    }
-    
-    // Очищаем результаты поиска
-    searchResults.value = null
-    allLoadedResults.value = null
-    totalResults.value = 0
-    currentPage.value = 1
-    lastSearchParams.value = null
-    loadedPages.value.clear()
-    isLoadingMore.value = false
-    
-    // Очищаем сохраненное состояние
-    clearSearchState()
   }
 
   // Метод для обновления минимального значения для nights2
@@ -784,36 +1046,43 @@ export const useSearchForm = () => {
     }
   }
 
-  // Метод для загрузки дополнительных данных
-  const loadMoreData = async () => {
-    if (!lastSearchParams.value || isLoadingMore.value) return
-
-    isLoadingMore.value = true
+  // Метод для автоматического выбора доступной даты
+  const selectAvailableDate = () => {
+    const { availableDates } = useCalendarHints()
     
-    try {
-      // Определяем следующую страницу сервера для загрузки
-      const currentServerPage = Math.ceil((currentPage.value * itemsPerPage) / serverPageSize)
+    if (availableDates.value.length > 0) {
+      // Выбираем первую доступную дату
+      const firstAvailableDate = availableDates.value[0]
+      searchForm.value.checkInDate = firstAvailableDate
       
-      // Загружаем следующую порцию данных
-      const result = await searchData.performSearch({
-        ...lastSearchParams.value,
-        page: currentServerPage,
-        per_page: serverPageSize
-      } as Parameters<typeof searchData.performSearch>[0])
+      // Устанавливаем дату выезда через 7 дней (или минимальное количество ночей)
+      const nights = searchForm.value.nights || 7
+      const checkOutDate = new Date(firstAvailableDate)
+      checkOutDate.setDate(checkOutDate.getDate() + nights)
+      searchForm.value.checkOutDate = checkOutDate
       
-      if (result && result.results) {
-        // Объединяем новые результаты с существующими
-        const newResults = { ...allLoadedResults.value, ...result.results }
-        allLoadedResults.value = newResults
-        loadedPages.value.add(currentServerPage)
-        
-        logger.info(`Loaded page ${currentServerPage}, total results: ${Object.keys(newResults).length}`)
-      }
-    } catch (error) {
-      logger.error('Failed to load more data:', error)
-    } finally {
-      isLoadingMore.value = false
+      logger.info(`Auto-selected available dates: ${firstAvailableDate.toLocaleDateString()} - ${checkOutDate.toLocaleDateString()}`)
+    } else {
+      // Если нет доступных дат, устанавливаем дату через неделю
+      const nextWeek = new Date()
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      searchForm.value.checkInDate = nextWeek
+      
+      const nights = searchForm.value.nights || 7
+      const checkOutDate = new Date(nextWeek)
+      checkOutDate.setDate(checkOutDate.getDate() + nights)
+      searchForm.value.checkOutDate = checkOutDate
+      
+      logger.info(`No available dates found, using default: ${nextWeek.toLocaleDateString()} - ${checkOutDate.toLocaleDateString()}`)
     }
+  }
+
+  // Метод для загрузки дополнительных данных (упрощенная версия)
+  const loadMoreData = async () => {
+    // Поскольку мы загружаем все результаты сразу (per_page > 500), 
+    // этот метод больше не нужен, но оставляем для совместимости
+    logger.debug('loadMoreData called - no additional loading needed (all results loaded at once)')
+    return Promise.resolve()
   }
 
   // Метод для обработки смены страницы
@@ -823,23 +1092,31 @@ export const useSearchForm = () => {
       return
     }
     
+    // Проверяем, что страница в допустимых пределах
+    if (page < 1 || page > totalPages.value) {
+      logger.warn(`Invalid page number: ${page}, total pages: ${totalPages.value}`)
+      return
+    }
+    
     logger.debug(`handlePageChange: changing from page ${currentPage.value} to page ${page}`)
     currentPage.value = page
     
     // Прокручиваем к началу результатов с отступом сверху
-    const resultsSection = document.querySelector('.search-results-section')
-    if (resultsSection) {
-      const elementTop = resultsSection.getBoundingClientRect().top + window.pageYOffset
-      // Адаптивный отступ: больше на мобильных, меньше на десктопе
-      const isMobile = window.innerWidth <= 768
-      const offset = isMobile ? 80 : 100
-      const offsetPosition = elementTop - offset
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      })
-    }
+    setTimeout(() => {
+      const resultsSection = document.querySelector('.search-results-section')
+      if (resultsSection) {
+        const elementTop = resultsSection.getBoundingClientRect().top + window.pageYOffset
+        // Адаптивный отступ: больше на мобильных, меньше на десктопе
+        const isMobile = window.innerWidth <= 768
+        const offset = isMobile ? 80 : 100
+        const offsetPosition = elementTop - offset
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+      }
+    }, 100) // Небольшая задержка для обновления DOM
   }
 
   // Обработчик бронирования тура
@@ -963,6 +1240,7 @@ export const useSearchForm = () => {
     handleSearch,
     handleReset,
     updateNights2Min,
+    selectAvailableDate,
     handlePageChange,
     handleBook,
     initializeData,

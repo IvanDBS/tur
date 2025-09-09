@@ -99,6 +99,9 @@
               @change="updateNote(note.key, $event.target.checked)"
               class="note-checkbox"
             />
+            <div class="radio-button" :class="{ selected: notes[note.key] }">
+              <div class="radio-dot"></div>
+            </div>
             <span class="note-label">{{ note.label }}</span>
           </label>
         </div>
@@ -368,34 +371,7 @@ const updateNote = (key: string, value: any) => {
 }
 
 
-.radio-button {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.radio-button.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-}
-
-.radio-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.radio-button.selected .radio-dot {
-  opacity: 1;
-}
+/* Стили radio-button и radio-dot перенесены в buttons-consolidated.css */
 
 .notes-grid {
   display: grid;
@@ -412,6 +388,11 @@ const updateNote = (key: string, value: any) => {
   padding: 0.5rem;
   border-radius: 6px;
   transition: background-color 0.2s ease;
+  min-width: 0;
+}
+
+.note-option .radio-button {
+  flex-shrink: 0;
 }
 
 .note-option:hover {
@@ -419,9 +400,7 @@ const updateNote = (key: string, value: any) => {
 }
 
 .note-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--color-primary);
+  display: none;
 }
 
 .note-label {

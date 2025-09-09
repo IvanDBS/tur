@@ -326,34 +326,7 @@ const selectFlightPair = (flightPair: any) => {
   padding-top: 0.25rem;
 }
 
-.radio-button {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.radio-button.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-}
-
-.radio-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.radio-button.selected .radio-dot {
-  opacity: 1;
-}
+/* Стили radio-button и radio-dot перенесены в buttons-consolidated.css */
 
 .flight-pair-content {
   display: grid;

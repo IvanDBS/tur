@@ -1,0 +1,377 @@
+/* ========================================
+   КОНСОЛИДИРОВАННЫЕ СТИЛИ КНОПОК
+   Объединяет все стили кнопок в одном файле
+   ======================================== */
+
+/* ========================================
+   БАЗОВЫЕ СТИЛИ КНОПОК
+   ======================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  min-height: var(--button-height);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ========================================
+   ВАРИАНТЫ КНОПОК
+   ======================================== */
+
+/* Primary Button */
+.btn--primary {
+  background: var(--color-secondary);
+  color: white;
+  border-color: var(--color-secondary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+  border-color: var(--color-secondary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Secondary Button */
+.btn--secondary {
+  background: white;
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-secondary-muted);
+}
+
+/* Danger Button */
+.btn--danger {
+  background: var(--color-danger);
+  color: white;
+  border-color: var(--color-danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #DC2626;
+  border-color: #DC2626;
+}
+
+/* Success Button */
+.btn--success {
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+
+.btn--success:hover:not(:disabled) {
+  background: #059669;
+  border-color: #059669;
+}
+
+/* ========================================
+   РАЗМЕРЫ КНОПОК
+   ======================================== */
+
+.btn--sm {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  min-height: var(--button-height-sm);
+}
+
+.btn--lg {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  min-height: var(--button-height-lg);
+}
+
+.btn--full {
+  width: 100%;
+}
+
+/* ========================================
+   СПЕЦИАЛЬНЫЕ КНОПКИ ДЛЯ ПОИСКОВОЙ ФОРМЫ
+   ======================================== */
+
+.search-form .reset-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-dark-gray);
+  color: var(--color-dark-gray);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  min-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.search-form .reset-btn:hover {
+  background: var(--color-dark-gray-muted);
+}
+
+.search-form .search-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition);
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.search-form .search-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.search-form .search-btn svg {
+  transition: var(--transition);
+}
+
+.search-form .search-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* ========================================
+   СПЕЦИАЛЬНЫЕ КНОПКИ ДЛЯ БРОНИРОВАНИЯ
+   ======================================== */
+
+.back-button {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.back-button:hover {
+  background: var(--color-background-soft);
+  border-color: var(--color-secondary);
+}
+
+.retry-button {
+  background: var(--color-warning);
+  border: 1px solid var(--color-warning);
+  color: white;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.retry-button:hover {
+  background: #D97706;
+  border-color: #D97706;
+}
+
+.back-to-search-button {
+  background: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+  color: white;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.back-to-search-button:hover {
+  background: var(--color-secondary-hover);
+  border-color: var(--color-secondary-hover);
+}
+
+/* ========================================
+   КНОПКИ ДЕЙСТВИЙ В КАРТОЧКАХ
+   ======================================== */
+
+.action-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-soft);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.action-btn:hover {
+  background: var(--color-background-soft);
+  border-color: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.action-btn.details {
+  color: var(--color-secondary);
+}
+
+.action-btn.details:hover {
+  background: var(--color-secondary-muted);
+}
+
+.action-btn.compare {
+  color: var(--color-primary);
+}
+
+.action-btn.compare:hover {
+  background: var(--color-primary-muted);
+}
+
+/* ========================================
+   РАДИО КНОПКИ ДЛЯ ВЫБОРА
+   ======================================== */
+
+.radio-button {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.radio-button:hover {
+  border-color: var(--color-primary);
+}
+
+.radio-button.selected {
+  border-color: #ff6b6b;
+  background: transparent;
+}
+
+.radio-dot {
+  width: 4px;
+  height: 8px;
+  border: solid #ff6b6b;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  left: 6px;
+  top: 3px;
+}
+
+.radio-button.selected .radio-dot {
+  opacity: 1;
+}
+
+/* ========================================
+   КНОПКИ ПАГИНАЦИИ
+   ======================================== */
+
+.pagination-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  min-width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: var(--color-background-soft);
+  border-color: var(--color-secondary);
+}
+
+.pagination-btn.active {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: white;
+}
+
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ========================================
+   МОБИЛЬНАЯ АДАПТИВНОСТЬ
+   ======================================== */
+
+@media (max-width: 768px) {
+  .search-form .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-form .results-count {
+    text-align: center;
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .search-form .reset-btn,
+  .search-form .search-btn {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .btn--full {
+    width: 100%;
+  }
+}

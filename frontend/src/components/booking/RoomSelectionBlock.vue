@@ -198,35 +198,7 @@ const selectRoomOption = (roomOption: RoomOption) => {
   margin-top: 0.25rem;
 }
 
-.radio-button {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  background: var(--color-background);
-}
-
-.radio-button.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-}
-
-.radio-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-background);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.radio-button.selected .radio-dot {
-  opacity: 1;
-}
+/* Стили radio-button и radio-dot перенесены в buttons-consolidated.css */
 
 .room-details {
   flex: 1;

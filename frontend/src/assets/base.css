@@ -1,20 +1,12 @@
 /* Минималистичные базовые стили */
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
 
-/* Design System */
-@import '../styles/design-tokens.css';
-@import '../styles/components/base.css';
+/* Design System - Консолидированные стили */
+@import '../styles/consolidated.css';
 
-/* Legacy styles */
-@import '../styles/animations.css';
-@import '../styles/spinner.css';
-@import '../styles/layout.css';
-@import '@vuepic/vue-datepicker/dist/main.css';
-@import '../styles/datepicker.css';
-@import '../styles/components/multiselect.css';
-@import '../styles/components/forms.css';
-@import '../styles/components/search-form.css';
+/* Дополнительные стили */
 @import '../styles/components/hotel-cards.css';
+@import '@vuepic/vue-datepicker/dist/main.css';
 
 /* CSS Custom Properties - Business Minimalist Theme */
 :root {

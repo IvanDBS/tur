@@ -1,4 +1,6 @@
 # User model for OBS API integration and Devise authentication
+require 'jwt'
+
 class User < ApplicationRecord
   # Include default devise modules
   devise :database_authenticatable, :registerable,
@@ -24,6 +26,29 @@ class User < ApplicationRecord
   before_validation :set_uid, on: :create
 
   # Instance methods
+  def generate_jwt
+    JWT.encode(
+      {
+        user_id: id,
+        exp: 24.hours.from_now.to_i,
+        iat: Time.current.to_i
+      },
+      Rails.application.credentials.secret_key_base
+    )
+  end
+
+  def generate_refresh_jwt
+    JWT.encode(
+      {
+        user_id: id,
+        exp: 7.days.from_now.to_i,
+        iat: Time.current.to_i,
+        type: 'refresh'
+      },
+      Rails.application.credentials.secret_key_base
+    )
+  end
+
   def obs_tokens_valid?
     obs_access_token.present? &&
       obs_refresh_token.present? &&

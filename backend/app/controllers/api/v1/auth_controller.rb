@@ -10,6 +10,10 @@ module Api
         @user = User.new(sign_up_params)
 
         if @user.save
+          # Генерируем JWT токены
+          access_token = @user.generate_jwt
+          refresh_token = @user.generate_refresh_jwt
+          
           render json: {
             success: true,
             message: 'User registered successfully',
@@ -19,6 +23,11 @@ module Api
               firstName: @user.first_name,
               lastName: @user.last_name,
               phone: @user.phone
+            },
+            tokens: {
+              accessToken: access_token,
+              refreshToken: refresh_token,
+              expiresIn: 24.hours.to_i
             }
           }, status: :created
         else
@@ -34,17 +43,45 @@ module Api
         @user = User.find_by(email: sign_in_params[:email])
 
         if @user&.valid_password?(sign_in_params[:password])
-          render json: {
-            success: true,
-            message: 'Signed in successfully',
-            user: {
-              id: @user.id,
-              email: @user.email,
-              firstName: @user.first_name,
-              lastName: @user.last_name,
-              phone: @user.phone
+          begin
+            # Генерируем JWT токены
+            access_token = @user.generate_jwt
+            refresh_token = @user.generate_refresh_jwt
+            
+            Rails.logger.info "Generated tokens for user #{@user.id}: access_token=#{access_token[0..20]}..."
+            
+            render json: {
+              success: true,
+              message: 'Signed in successfully',
+              user: {
+                id: @user.id,
+                email: @user.email,
+                firstName: @user.first_name,
+                lastName: @user.last_name,
+                phone: @user.phone
+              },
+              tokens: {
+                accessToken: access_token,
+                refreshToken: refresh_token,
+                expiresIn: 24.hours.to_i
+              }
             }
-          }
+          rescue => e
+            Rails.logger.error "Error generating JWT tokens: #{e.message}"
+            Rails.logger.error e.backtrace.join("\n")
+            
+            render json: {
+              success: true,
+              message: 'Signed in successfully',
+              user: {
+                id: @user.id,
+                email: @user.email,
+                firstName: @user.first_name,
+                lastName: @user.last_name,
+                phone: @user.phone
+              }
+            }
+          end
         else
           render json: {
             success: false,

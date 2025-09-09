@@ -183,7 +183,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatDate, getNightWord } from '../../utils/dateUtils'
+import { formatDate, getNightWord, formatDateShort } from '../../utils/dateUtils'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 
 // Get router instance at the top level of setup()
@@ -209,13 +209,7 @@ const formatFlightDate = (dateString: string) => {
   return `${day} ${month} ${dayOfWeek}`
 }
 
-// Format short date for duration period
-const formatDateShort = (dateString: string) => {
-  const date = new Date(dateString)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  return `${day}.${month}`
-}
+// Функция formatDateShort теперь импортируется из dateUtils
 
 
 // Check if has additional services

@@ -91,6 +91,7 @@
 import { computed, ref } from 'vue'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 import type { SelectedFlight, SelectedRoom } from '../../types/booking'
+import { formatDateFull, formatDate } from '../../utils/dateUtils'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
@@ -221,19 +222,7 @@ const hotelImageUrl = computed(() => {
 })
 
 // Methods
-const formatDate = (dateString: string) => {
-  if (!dateString) return ''
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  } catch {
-    return dateString
-  }
-}
+// Функция formatDate теперь импортируется из dateUtils
 
 
 const handleImageError = () => {

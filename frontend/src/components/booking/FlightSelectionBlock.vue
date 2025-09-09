@@ -139,6 +139,7 @@
 import { computed } from 'vue'
 import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice } from '../../types/search'
 import type { SelectedFlight, FlightSegment, SelectedRoom } from '../../types/booking'
+import { formatDateWithDay, calculateDuration } from '../../utils/dateUtils'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
@@ -201,7 +202,7 @@ const flightOptions = computed(() => {
 
 // Create flight pairs from flight options
 const flightPairs = computed(() => {
-  return flightOptions.value.map((option, index) => {
+  return flightOptions.value.map((option) => {
     const outbound = option.from
     const inbound = option.to
     
@@ -243,45 +244,7 @@ const selectedFlightPair = computed(() => {
 })
 
 // Methods
-
-const formatDateWithDay = (dateString: string) => {
-  if (!dateString) return ''
-  try {
-    const date = new Date(dateString)
-    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-    const dayName = dayNames[date.getDay()]
-    const formattedDate = date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-    return `${formattedDate} (${dayName})`
-  } catch {
-    return dateString
-  }
-}
-
-const calculateDuration = (departure: { time: string }, arrival: { time: string }) => {
-  if (!departure?.time || !arrival?.time) return ''
-  
-  try {
-    const depTime = new Date(`2000-01-01T${departure.time}`)
-    const arrTime = new Date(`2000-01-01T${arrival.time}`)
-    
-    // Handle overnight flights
-    if (arrTime < depTime) {
-      arrTime.setDate(arrTime.getDate() + 1)
-    }
-    
-    const diffMs = arrTime.getTime() - depTime.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    
-    return `${diffHours}ч ${diffMinutes}м`
-  } catch {
-    return ''
-  }
-}
+// Функции formatDateWithDay и calculateDuration теперь импортируются из dateUtils
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectFlightPair = (flightPair: any) => {

@@ -6,98 +6,61 @@
     </div>
 
     <form @submit.prevent="handleSubmit" class="auth-form__content">
-      <div class="form-group">
-        <label for="email" class="form-label">Email</label>
-        <input
-          id="email"
-          v-model="form.email"
-          type="email"
-          class="form-input"
-          :class="{ 'form-input--error': errors.email }"
-          placeholder="Введите ваш email"
-          required
-        />
-        <span v-if="errors.email" class="form-error">{{ errors.email }}</span>
-      </div>
+      <FormField
+        v-model="form.email"
+        type="email"
+        label="Email"
+        placeholder="Введите ваш email"
+        :error="errors.email"
+        required
+      />
 
       <div class="form-row">
-        <div class="form-group form-group--half">
-          <label for="firstName" class="form-label">Имя</label>
-          <input
-            id="firstName"
-            v-model="form.firstName"
-            type="text"
-            class="form-input"
-            :class="{ 'form-input--error': errors.firstName }"
-            placeholder="Имя"
-          />
-          <span v-if="errors.firstName" class="form-error">{{
-            errors.firstName
-          }}</span>
-        </div>
-
-        <div class="form-group form-group--half">
-          <label for="lastName" class="form-label">Фамилия</label>
-          <input
-            id="lastName"
-            v-model="form.lastName"
-            type="text"
-            class="form-input"
-            :class="{ 'form-input--error': errors.lastName }"
-            placeholder="Фамилия"
-          />
-          <span v-if="errors.lastName" class="form-error">{{
-            errors.lastName
-          }}</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="phone" class="form-label">Телефон (необязательно)</label>
-        <input
-          id="phone"
-          v-model="form.phone"
-          type="tel"
-          class="form-input"
-          :class="{ 'form-input--error': errors.phone }"
-          placeholder="+7 (999) 123-45-67"
+        <FormField
+          v-model="form.firstName"
+          type="text"
+          label="Имя"
+          placeholder="Имя"
+          :error="errors.firstName"
+          class="form-group--half"
         />
-        <span v-if="errors.phone" class="form-error">{{ errors.phone }}</span>
+
+        <FormField
+          v-model="form.lastName"
+          type="text"
+          label="Фамилия"
+          placeholder="Фамилия"
+          :error="errors.lastName"
+          class="form-group--half"
+        />
       </div>
 
-      <div class="form-group">
-        <label for="password" class="form-label">Пароль</label>
-        <input
-          id="password"
-          v-model="form.password"
-          type="password"
-          class="form-input"
-          :class="{ 'form-input--error': errors.password }"
-          placeholder="Введите пароль"
-          required
-        />
-        <span v-if="errors.password" class="form-error">{{
-          errors.password
-        }}</span>
-      </div>
+      <FormField
+        v-model="form.phone"
+        type="tel"
+        label="Телефон (необязательно)"
+        placeholder="+7 (999) 123-45-67"
+        :error="errors.phone"
+        hint="Необязательное поле"
+      />
 
-      <div class="form-group">
-        <label for="passwordConfirmation" class="form-label"
-          >Подтверждение пароля</label
-        >
-        <input
-          id="passwordConfirmation"
-          v-model="form.passwordConfirmation"
-          type="password"
-          class="form-input"
-          :class="{ 'form-input--error': errors.passwordConfirmation }"
-          placeholder="Повторите пароль"
-          required
-        />
-        <span v-if="errors.passwordConfirmation" class="form-error">{{
-          errors.passwordConfirmation
-        }}</span>
-      </div>
+      <FormField
+        v-model="form.password"
+        type="password"
+        label="Пароль"
+        placeholder="Введите пароль"
+        :error="errors.password"
+        required
+      />
+
+      <FormField
+        v-model="form.passwordConfirmation"
+        type="password"
+        label="Подтверждение пароля"
+        placeholder="Повторите пароль"
+        :error="errors.passwordConfirmation"
+        required
+      />
 
       <div v-if="authStore.error" class="form-error-message">
         {{ authStore.error }}
@@ -153,6 +116,8 @@
 <script setup lang="ts">
   import { reactive } from 'vue'
   import { useAuthStore } from '@/stores/auth'
+  import { useFormValidation, validationRules } from '@/composables/useFormValidation'
+  import FormField from '@/components/ui/FormField.vue'
   import type { RegisterCredentials } from '@/types/auth'
 
   const emit = defineEmits<{
@@ -171,58 +136,26 @@
     phone: '',
   })
 
-  const errors = reactive({
-    email: '',
-    password: '',
-    passwordConfirmation: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-  })
-
-  const validateForm = (): boolean => {
-    let isValid = true
-
-    // Reset errors
-    Object.keys(errors).forEach(key => {
-      errors[key as keyof typeof errors] = ''
-    })
-
-    // Email validation
-    if (!form.email) {
-      errors.email = 'Email обязателен'
-      isValid = false
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = 'Введите корректный email'
-      isValid = false
-    }
-
-    // Password validation
-    if (!form.password) {
-      errors.password = 'Пароль обязателен'
-      isValid = false
-    } else if (form.password.length < 6) {
-      errors.password = 'Пароль должен содержать минимум 6 символов'
-      isValid = false
-    }
-
-    // Password confirmation validation
-    if (!form.passwordConfirmation) {
-      errors.passwordConfirmation = 'Подтверждение пароля обязательно'
-      isValid = false
-    } else if (form.password !== form.passwordConfirmation) {
-      errors.passwordConfirmation = 'Пароли не совпадают'
-      isValid = false
-    }
-
-    // Phone validation (optional)
-    if (form.phone && !/^\+?[\d\s\-\(\)]+$/.test(form.phone)) {
-      errors.phone = 'Введите корректный номер телефона'
-      isValid = false
-    }
-
-    return isValid
+  // Validation schema
+  const validationSchema = {
+    email: validationRules.email,
+    password: validationRules.password,
+    passwordConfirmation: {
+      required: true,
+      custom: (value: string) => {
+        if (value !== form.password) {
+          return 'Пароли не совпадают'
+        }
+        return null
+      }
+    },
+    firstName: validationRules.required,
+    lastName: validationRules.required,
+    phone: validationRules.phone
   }
+
+  // Use validation composable
+  const { errors, validateForm } = useFormValidation(form, validationSchema)
 
   const handleSubmit = async () => {
     if (!validateForm()) return

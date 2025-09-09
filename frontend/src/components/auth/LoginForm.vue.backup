@@ -6,23 +6,35 @@
     </div>
 
     <form @submit.prevent="handleSubmit" class="auth-form__content">
-      <FormField
-        v-model="form.email"
-        type="email"
-        label="Email"
-        placeholder="Введите ваш email"
-        :error="errors.email"
-        required
-      />
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input
+          id="email"
+          v-model="form.email"
+          type="email"
+          class="form-input"
+          :class="{ 'form-input--error': errors.email }"
+          placeholder="Введите ваш email"
+          required
+        />
+        <span v-if="errors.email" class="form-error">{{ errors.email }}</span>
+      </div>
 
-      <FormField
-        v-model="form.password"
-        type="password"
-        label="Пароль"
-        placeholder="Введите ваш пароль"
-        :error="errors.password"
-        required
-      />
+      <div class="form-group">
+        <label for="password" class="form-label">Пароль</label>
+        <input
+          id="password"
+          v-model="form.password"
+          type="password"
+          class="form-input"
+          :class="{ 'form-input--error': errors.password }"
+          placeholder="Введите ваш пароль"
+          required
+        />
+        <span v-if="errors.password" class="form-error">{{
+          errors.password
+        }}</span>
+      </div>
 
       <div v-if="authStore.error" class="form-error-message">
         {{ authStore.error }}
@@ -81,8 +93,6 @@
 <script setup lang="ts">
   import { reactive } from 'vue'
   import { useAuthStore } from '@/stores/auth'
-  import { useFormValidation, validationRules } from '@/composables/useFormValidation'
-  import FormField from '@/components/ui/FormField.vue'
   import type { LoginCredentials } from '@/types/auth'
 
   const emit = defineEmits<{
@@ -97,14 +107,38 @@
     password: '',
   })
 
-  // Validation schema
-  const validationSchema = {
-    email: validationRules.email,
-    password: validationRules.password
-  }
+  const errors = reactive({
+    email: '',
+    password: '',
+  })
 
-  // Use validation composable
-  const { errors, validateForm } = useFormValidation(form, validationSchema)
+  const validateForm = (): boolean => {
+    let isValid = true
+
+    // Reset errors
+    errors.email = ''
+    errors.password = ''
+
+    // Email validation
+    if (!form.email) {
+      errors.email = 'Email обязателен'
+      isValid = false
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Введите корректный email'
+      isValid = false
+    }
+
+    // Password validation
+    if (!form.password) {
+      errors.password = 'Пароль обязателен'
+      isValid = false
+    } else if (form.password.length < 6) {
+      errors.password = 'Пароль должен содержать минимум 6 символов'
+      isValid = false
+    }
+
+    return isValid
+  }
 
   const handleSubmit = async () => {
     if (!validateForm()) return

@@ -104,7 +104,6 @@
     color: var(--color-secondary);
     margin-bottom: 1rem;
     line-height: 1.2;
-    opacity: 0.8;
   }
 
   .hero-subtitle {
@@ -114,7 +113,6 @@
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.6;
-    opacity: 0.8;
   }
 
   .brand-bold {

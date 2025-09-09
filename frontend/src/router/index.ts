@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/AuthTestView.vue'),
     },
     {
+      path: '/form-field-test',
+      name: 'form-field-test',
+      component: () => import('../views/FormFieldTest.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),

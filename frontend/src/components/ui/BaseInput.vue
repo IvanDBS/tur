@@ -30,17 +30,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { BaseFieldProps, BaseFieldEmits } from '@/types/ui'
 
-interface Props {
-  modelValue?: string | number
+interface Props extends BaseFieldProps {
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url'
-  label?: string
-  placeholder?: string
-  hint?: string
-  error?: string
-  disabled?: boolean
-  required?: boolean
-  size?: 'sm' | 'md' | 'lg'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -50,11 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md'
 })
 
-const emit = defineEmits<{
-  'update:modelValue': [value: string | number]
-  blur: [event: FocusEvent]
-  focus: [event: FocusEvent]
-}>()
+const emit = defineEmits<BaseFieldEmits>()
 
 const inputId = ref(`input-${Math.random().toString(36).substr(2, 9)}`)
 

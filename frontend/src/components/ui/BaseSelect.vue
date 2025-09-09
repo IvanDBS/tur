@@ -34,29 +34,9 @@
 import { computed, ref } from 'vue'
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
+import type { BaseSelectProps, BaseFieldEmits } from '@/types/ui'
 
-interface SelectOption {
-  value: unknown
-  label: string
-  disabled?: boolean
-}
-
-interface Props {
-  modelValue?: unknown
-  options: SelectOption[]
-  label?: string
-  placeholder?: string
-  hint?: string
-  error?: string
-  disabled?: boolean
-  required?: boolean
-  searchable?: boolean
-  canClear?: boolean
-  canDeselect?: boolean
-  labelProp?: string
-  valueProp?: string
-  size?: 'sm' | 'md' | 'lg'
-}
+interface Props extends BaseSelectProps {}
 
 const props = withDefaults(defineProps<Props>(), {
   disabled: false,
@@ -69,9 +49,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md'
 })
 
-const emit = defineEmits<{
-  'update:modelValue': [value: unknown]
-}>()
+const emit = defineEmits<BaseFieldEmits>()
 
 const selectId = ref(`select-${Math.random().toString(36).substr(2, 9)}`)
 

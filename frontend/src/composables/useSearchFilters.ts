@@ -1,247 +1,214 @@
-import { ref, computed, watch } from 'vue'
-import { arraysEqual } from '../utils/objectUtils'
+import { ref, computed } from 'vue'
 import { logger } from '../utils/logger'
-import { debounce } from '../utils/debounce'
-import type { SelectedFilters, Region, Hotel } from '../types/search'
+import type { SelectedFilters } from '../types/search'
 
-/**
- * Composable для управления фильтрами поиска
- * Централизует логику работы с фильтрами
- */
-export function useSearchFilters(initialFilters: SelectedFilters, availableData?: {
-  regions?: Region[]
-  categories?: unknown[]
-  hotels?: Hotel[] | (() => Hotel[])
-  meals?: unknown[]
-  options?: unknown[]
-}) {
-  const selectedFilters = ref<SelectedFilters>({ ...initialFilters })
-
-  // Debounced функция для синхронизации (оптимизация)
-  const debouncedSync = debounce((newFilters: unknown) => {
-    selectedFilters.value = { ...(newFilters as SelectedFilters) }
-    logger.debug('Filters synchronized with external changes')
-  }, 100)
-
-  // Синхронизируем с внешними изменениями (оптимизированно)
-  watch(() => initialFilters, (newFilters) => {
-    // Проверяем, действительно ли изменились фильтры
-    if (!arraysEqual(selectedFilters.value.regions, newFilters.regions) ||
-        !arraysEqual(selectedFilters.value.categories, newFilters.categories) ||
-        !arraysEqual(selectedFilters.value.hotels, newFilters.hotels) ||
-        !arraysEqual(selectedFilters.value.meals, newFilters.meals) ||
-        !arraysEqual(selectedFilters.value.options, newFilters.options)) {
-      debouncedSync(newFilters)
-    }
-  }, { deep: true })
-
-  // Computed для проверки "все выбрано"
-  const allRegionsSelected = computed(() => {
-    if (!availableData?.regions) return selectedFilters.value.regions.length > 0
-    
-    const hasAllRegions = selectedFilters.value.regions.includes(1) || 
-                         selectedFilters.value.regions.length === availableData.regions.length
-    
-    
-    return hasAllRegions
+export const useSearchFilters = () => {
+  const selectedFilters = ref<SelectedFilters>({
+    regions: [],
+    categories: [],
+    hotels: [],
+    meals: [],
+    options: [],
   })
 
-  const allCategoriesSelected = computed(() => {
-    if (!availableData?.categories) return selectedFilters.value.categories.length > 0
-    // Проверяем, выбраны ли все категории (включая ID=1 "все категории" или все доступные категории)
-    return selectedFilters.value.categories.includes(1) || 
-           selectedFilters.value.categories.length === availableData.categories.length
-  })
-
-  const allHotelsSelected = computed(() => {
-    if (!availableData?.hotels) return selectedFilters.value.hotels.length > 0
-    // Проверяем, выбраны ли все отели (включая ID=1 "все отели" или все доступные отели)
-    // Учитываем только отфильтрованные отели, если они переданы
-    const hotelsToCheck = typeof availableData.hotels === 'function' ? availableData.hotels() : availableData.hotels
-    return selectedFilters.value.hotels.includes(1) || 
-           selectedFilters.value.hotels.length === hotelsToCheck.length
-  })
-
-  const allMealsSelected = computed(() => {
-    if (!availableData?.meals) return selectedFilters.value.meals.length > 0
-    // Проверяем, выбраны ли все типы питания (включая ID=1 "все типы питания" или все доступные типы питания)
-    return selectedFilters.value.meals.includes(1) || 
-           selectedFilters.value.meals.length === availableData.meals.length
-  })
-
-  const allOptionsSelected = computed(() => {
-    if (!availableData?.options) return selectedFilters.value.options.length > 0
-    return selectedFilters.value.options.length === availableData.options.length
-  })
-
-  // Методы для работы с регионами
-  const toggleRegion = (regionId: number) => {
-    const currentRegions = [...selectedFilters.value.regions]
-    const index = currentRegions.indexOf(regionId)
+  // Helper function to get hotels for search
+  const getSelectedHotelsForSearch = (searchData: { hotels: { value: Array<{ id: number }> } }) => {
+    logger.debug(`🏨 getSelectedHotelsForSearch called. Available hotels: ${searchData.hotels.value.length}`)
+    logger.debug(`🏨 Selected hotel filters: ${selectedFilters.value.hotels.length}`)
     
-    if (index > -1) {
-      currentRegions.splice(index, 1)
-    } else {
-      currentRegions.push(regionId)
-    }
-    
-    selectedFilters.value.regions = currentRegions
-  }
-
-  const toggleAllRegions = (regions: Region[]) => {
-    
-    if (allRegionsSelected.value) {
-      selectedFilters.value.regions = []
-    } else {
-      // Выбираем все регионы включая ID=1 "все регионы"
-      selectedFilters.value.regions = [1, ...regions.map(r => r.id)]
-    }
-  }
-
-  // Методы для работы с категориями
-  const toggleCategory = (categoryId: number) => {
-    const currentCategories = [...selectedFilters.value.categories]
-    const index = currentCategories.indexOf(categoryId)
-    
-    if (index > -1) {
-      currentCategories.splice(index, 1)
-    } else {
-      currentCategories.push(categoryId)
-    }
-    
-    selectedFilters.value.categories = currentCategories
-  }
-
-  const toggleAllCategories = (categories: unknown[]) => {
-    if (allCategoriesSelected.value) {
-      selectedFilters.value.categories = []
-    } else {
-      // Выбираем все категории включая ID=1 "все категории"
-      selectedFilters.value.categories = [1, ...categories.map((c: unknown) => (c as { id: number }).id)]
-    }
-  }
-
-  // Методы для работы с отелями
-  const toggleHotel = (hotelId: number) => {
-    const currentHotels = [...selectedFilters.value.hotels]
-    const index = currentHotels.indexOf(hotelId)
-    
-    if (index > -1) {
-      currentHotels.splice(index, 1)
-    } else {
-      currentHotels.push(hotelId)
-    }
-    
-    selectedFilters.value.hotels = currentHotels
-  }
-
-  const toggleAllHotels = (hotels: Hotel[]) => {
-    if (allHotelsSelected.value) {
-      selectedFilters.value.hotels = []
-    } else {
-      // Выбираем все отели включая ID=1 "все отели"
-      selectedFilters.value.hotels = [1, ...hotels.map(h => h.id)]
-    }
-  }
-
-  // Методы для работы с питанием
-  const toggleMeal = (mealId: number) => {
-    const currentMeals = [...selectedFilters.value.meals]
-    const index = currentMeals.indexOf(mealId)
-    const hasAllSelected = currentMeals.includes(1)
-    
-    if (index > -1) {
-      // Убираем конкретный тип питания
-      currentMeals.splice(index, 1)
-      // Если был выбран "Любой" (ID=1), убираем его тоже
-      if (hasAllSelected) {
-        const allIndex = currentMeals.indexOf(1)
-        if (allIndex > -1) {
-          currentMeals.splice(allIndex, 1)
-        }
+    // Если пользователь выбрал отели вручную, используем их
+    if (selectedFilters.value.hotels.length > 0) {
+      // Если выбран ID=1 (все отели), возвращаем все доступные отели
+      if (selectedFilters.value.hotels.includes(1)) {
+        return searchData.hotels.value.map((hotel) => Number(hotel.id))
       }
-    } else {
-      // Добавляем конкретный тип питания
-      currentMeals.push(mealId)
-      // Если теперь выбраны все доступные типы питания, добавляем "Любой" (ID=1)
-      if (availableData?.meals && currentMeals.length === availableData.meals.length) {
-        currentMeals.push(1)
-      }
+      // Иначе возвращаем выбранные отели (исключая ID=1)
+      return selectedFilters.value.hotels
+        .filter(id => id !== 1)
+        .map(id => Number(id))
     }
     
-    selectedFilters.value.meals = currentMeals
+    // Если ничего не выбрано, возвращаем все доступные отели
+    const allHotels = searchData.hotels.value.map((hotel) => Number(hotel.id))
+    logger.debug(`🏨 Returning all hotels for search: ${allHotels.length} hotels`)
+    return allHotels
   }
 
-  const toggleAllMeals = (meals: unknown[]) => {
-    if (allMealsSelected.value) {
-      selectedFilters.value.meals = []
-    } else {
-      // Выбираем все типы питания включая ID=1 "все типы питания"
-      selectedFilters.value.meals = [1, ...meals.map((m: unknown) => (m as { id: number }).id)]
-    }
-  }
-
-  // Методы для работы с опциями
-  const toggleOption = (optionId: number) => {
-    const currentOptions = [...selectedFilters.value.options]
-    const index = currentOptions.indexOf(optionId)
-    
-    if (index > -1) {
-      currentOptions.splice(index, 1)
-    } else {
-      currentOptions.push(optionId)
-    }
-    
-    selectedFilters.value.options = currentOptions
-  }
-
-  const toggleAllOptions = (options: unknown[]) => {
-    if (allOptionsSelected.value) {
-      selectedFilters.value.options = []
-    } else {
-      selectedFilters.value.options = options.map((o: unknown) => (o as { id: number }).id)
-    }
-  }
-
-  // Сброс всех фильтров
+  // Сброс фильтров
   const resetFilters = () => {
     selectedFilters.value = {
       regions: [],
       categories: [],
       hotels: [],
       meals: [],
-      options: []
+      options: [],
     }
   }
 
-  // Установка фильтров по умолчанию
-  const setDefaultFilters = (regions: Region[], categories: unknown[], meals: unknown[], hotels?: Hotel[]) => {
-    selectedFilters.value.regions = [1, ...regions.map(r => r.id)]
-    selectedFilters.value.categories = [1, ...categories.map((c: unknown) => (c as { id: number }).id)]
-    selectedFilters.value.meals = [1, ...meals.map((m: unknown) => (m as { id: number }).id)] // Добавляем ID=1 для "все типы питания"
-    if (hotels) {
-      selectedFilters.value.hotels = [1, ...hotels.map(h => h.id)]
+  // Функции для переключения "Любой" (ID=1)
+  const toggleAllHotels = () => {
+    const isAnySelected = selectedFilters.value.hotels.includes(1)
+    
+    if (isAnySelected) {
+      // Если "Любой" выбран, снимаем выбор
+      selectedFilters.value.hotels = []
+    } else {
+      // Если "Любой" не выбран, выбираем "Любой" и очищаем все остальные
+      selectedFilters.value.hotels = [1]
     }
   }
+
+  const toggleAllCategories = () => {
+    const isAnySelected = selectedFilters.value.categories.includes(1)
+    
+    if (isAnySelected) {
+      // Если "Любой" выбран, снимаем выбор
+      selectedFilters.value.categories = []
+    } else {
+      // Если "Любой" не выбран, выбираем "Любой" и очищаем все остальные
+      selectedFilters.value.categories = [1]
+    }
+  }
+
+  const toggleAllRegions = () => {
+    const isAnySelected = selectedFilters.value.regions.includes(1)
+    
+    if (isAnySelected) {
+      // Если "Любой" выбран, снимаем выбор
+      selectedFilters.value.regions = []
+    } else {
+      // Если "Любой" не выбран, выбираем "Любой" и очищаем все остальные
+      selectedFilters.value.regions = [1]
+    }
+  }
+
+  // Функции для переключения отдельных элементов
+  const toggleRegion = (regionId: number) => {
+    // Если выбран "Любой" (ID=1), сначала снимаем его
+    if (selectedFilters.value.regions.includes(1)) {
+      selectedFilters.value.regions = []
+    }
+    
+    const index = selectedFilters.value.regions.indexOf(regionId)
+    if (index > -1) {
+      selectedFilters.value.regions.splice(index, 1)
+    } else {
+      selectedFilters.value.regions.push(regionId)
+    }
+  }
+
+  const toggleCategory = (categoryId: number) => {
+    // Если выбран "Любой" (ID=1), сначала снимаем его
+    if (selectedFilters.value.categories.includes(1)) {
+      selectedFilters.value.categories = []
+    }
+    
+    const index = selectedFilters.value.categories.indexOf(categoryId)
+    if (index > -1) {
+      selectedFilters.value.categories.splice(index, 1)
+    } else {
+      selectedFilters.value.categories.push(categoryId)
+    }
+  }
+
+  const toggleHotel = (hotelId: number) => {
+    // Если выбран "Любой" (ID=1), сначала снимаем его
+    if (selectedFilters.value.hotels.includes(1)) {
+      selectedFilters.value.hotels = []
+    }
+    
+    const index = selectedFilters.value.hotels.indexOf(hotelId)
+    if (index > -1) {
+      selectedFilters.value.hotels.splice(index, 1)
+    } else {
+      selectedFilters.value.hotels.push(hotelId)
+    }
+  }
+
+  const toggleMeal = (mealId: number) => {
+    const index = selectedFilters.value.meals.indexOf(mealId)
+    if (index > -1) {
+      selectedFilters.value.meals.splice(index, 1)
+    } else {
+      selectedFilters.value.meals.push(mealId)
+    }
+  }
+
+  const toggleOption = (optionId: number) => {
+    const index = selectedFilters.value.options.indexOf(optionId)
+    if (index > -1) {
+      selectedFilters.value.options.splice(index, 1)
+    } else {
+      selectedFilters.value.options.push(optionId)
+    }
+  }
+
+  const toggleAllMeals = (meals: Array<{ id: number }>) => {
+    const allMealIds = meals.map(meal => meal.id)
+    const isAllSelected = allMealIds.every(id => selectedFilters.value.meals.includes(id))
+    
+    if (isAllSelected) {
+      selectedFilters.value.meals = []
+    } else {
+      selectedFilters.value.meals = [...allMealIds]
+    }
+  }
+
+  const toggleAllOptions = (options: Array<{ id: number }>) => {
+    const allOptionIds = options.map(option => option.id)
+    const isAllSelected = allOptionIds.every(id => selectedFilters.value.options.includes(id))
+    
+    if (isAllSelected) {
+      selectedFilters.value.options = []
+    } else {
+      selectedFilters.value.options = [...allOptionIds]
+    }
+  }
+
+  // Computed свойства для проверки состояния "Любой" выбран
+  const allRegionsSelected = computed(() => {
+    // Если выбран "Любой" (ID=1)
+    return selectedFilters.value.regions.includes(1)
+  })
+
+  const allCategoriesSelected = computed(() => {
+    // Если выбран "Любой" (ID=1)
+    return selectedFilters.value.categories.includes(1)
+  })
+
+  const allHotelsSelected = computed(() => {
+    // Если выбран "Любой" (ID=1)
+    return selectedFilters.value.hotels.includes(1)
+  })
+
+  const allMealsSelected = computed(() => {
+    // Если выбран "Любой" (ID=1)
+    return selectedFilters.value.meals.includes(1)
+  })
+
+  const allOptionsSelected = computed(() => {
+    // Если выбран "Любой" (ID=1)
+    return selectedFilters.value.options.includes(1)
+  })
 
   return {
     selectedFilters,
+    getSelectedHotelsForSearch,
+    resetFilters,
+    toggleAllHotels,
+    toggleAllCategories,
+    toggleAllRegions,
+    toggleRegion,
+    toggleCategory,
+    toggleHotel,
+    toggleMeal,
+    toggleOption,
+    toggleAllMeals,
+    toggleAllOptions,
     allRegionsSelected,
     allCategoriesSelected,
     allHotelsSelected,
     allMealsSelected,
-    allOptionsSelected,
-    toggleRegion,
-    toggleAllRegions,
-    toggleCategory,
-    toggleAllCategories,
-    toggleHotel,
-    toggleAllHotels,
-    toggleMeal,
-    toggleAllMeals,
-    toggleOption,
-    toggleAllOptions,
-    resetFilters,
-    setDefaultFilters
+    allOptionsSelected
   }
 }

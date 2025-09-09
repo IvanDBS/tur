@@ -88,10 +88,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, computed } from 'vue'
+import { formatDate } from '../../utils/dateUtils'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 import type { SelectedFlight, SelectedRoom } from '../../types/booking'
-import { formatDateFull, formatDate } from '../../utils/dateUtils'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
@@ -113,20 +113,6 @@ const hotel = computed(() => {
   }
 })
 
-const room = computed(() => {
-  // Если выбрана комната, используем её
-  if (props.selectedRoom) {
-    return props.selectedRoom.room
-  }
-  
-  if (isGroupedResult.value) {
-    const groupedResult = props.searchResult as GroupedSearchResult
-    // Используем первую доступную комнату
-    return groupedResult.roomOptions?.[0]?.room || {}
-  } else {
-    return (props.searchResult as SearchResult).accommodation?.room || {}
-  }
-})
 
 const placement = computed(() => {
   // Если выбрана комната, используем её размещение
@@ -209,7 +195,7 @@ const price = computed(() => {
 })
 
 const starRating = computed(() => {
-  const category = (hotel.value as any)?.category || ''
+  const category = (hotel.value as { category?: string })?.category || ''
   const match = category.match(/(\d+)/)
   return match ? parseInt(match[1]) : 0
 })

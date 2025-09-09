@@ -125,13 +125,11 @@
     totalResults,
     currentPage,
     totalPages,
-    formattedResults,
     activeSelector,
     filteredNights2Options,
     dynamicNightsOptions,
     paginatedResults,
     isLoadingMore,
-    needsMoreData,
     searchData,
     calendarHints,
     handleSearch,
@@ -140,7 +138,6 @@
     handlePageChange,
     handleBook,
     initializeData,
-    loadMoreData,
     saveSearchState,
   } = useSearchForm()
 
@@ -156,7 +153,7 @@
       await originalHandleSearch()
       // Эмитим событие после поиска (независимо от результатов)
       emit('search', searchForm.value)
-    } catch (error) {
+    } catch {
       // Search failed
     }
   }

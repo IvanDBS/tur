@@ -79,6 +79,31 @@
         </div>
       </div>
 
+      <!-- Button Test -->
+      <div class="button-test">
+        <h2>Тест кнопки "Войти" в коралловом стиле</h2>
+        
+        <div class="variant-section">
+          <h3>Кнопка "Войти" в коралловом стиле</h3>
+          <div class="button-group">
+            <button class="auth-btn coral-style" title="Войти">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Войти
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Checkbox Variants -->
       <div class="checkbox-variants">
         <h2>Варианты чекбоксов</h2>
@@ -482,6 +507,45 @@
   .btn--outline:hover {
     background: #f9fafb;
     border-color: #9ca3af;
+  }
+
+  /* Button Test */
+  .button-test {
+    margin-bottom: 2rem;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* Base auth-btn styles */
+  .auth-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  /* Coral style for auth button */
+  .auth-btn.coral-style {
+    background: #ff6b6b;
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  }
+
+  .auth-btn.coral-style:hover {
+    transform: scale(1.02);
+    background: #ff5252;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
   }
 
   /* Checkbox Variants */

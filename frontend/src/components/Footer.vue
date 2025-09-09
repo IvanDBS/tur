@@ -123,6 +123,7 @@
 </template>
 
 <script setup lang="ts">
+ 
   import { computed } from 'vue'
 
   // Footer component for the application

@@ -79,7 +79,7 @@ const testFetchCountries = async () => {
 onMounted(async () => {
   try {
     await fetchDepartureCities()
-  } catch (err) {
+  } catch {
     // Failed to initialize OBS API test
   }
 })

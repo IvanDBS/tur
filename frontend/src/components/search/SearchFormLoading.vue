@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<SearchFormLoadingProps>(), {
 
 .spinner-text {
   font-size: 16px;
-  color: var(--color-text-soft);
+  color: var(--color-text);
   font-weight: 500;
   margin: 0;
   text-align: center;

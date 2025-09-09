@@ -34,9 +34,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, defineAsyncComponent, watch } from 'vue'
-  import { formatDate, getNightWord } from '../utils/dateUtils'
-  import type { SearchResult, GroupedSearchResult } from '../types/search'
+  import { defineAsyncComponent } from 'vue'
+  import type { GroupedSearchResult } from '../types/search'
   
   // Динамический импорт компонентов
   const Pagination = defineAsyncComponent(() => import('./Pagination.vue'))
@@ -54,7 +53,7 @@
     isLoadingMore?: boolean
   }
 
-  const props = withDefaults(defineProps<Props>(), {
+  withDefaults(defineProps<Props>(), {
     results: () => [],
     isLoading: false,
     hasMore: false,
@@ -75,8 +74,6 @@
     'save-search-state': []
   }>()
 
-  // State
-  const isLoadingMore = ref(false)
 
   // Debug logging removed for production
 
@@ -91,14 +88,6 @@
     emit('save-search-state')
   }
 
-  const loadMore = () => {
-    isLoadingMore.value = true
-    emit('loadMore')
-    // Reset loading state after parent handles the event
-    setTimeout(() => {
-      isLoadingMore.value = false
-    }, 1000)
-  }
 
   // Явный экспорт для TypeScript
   defineExpose({})

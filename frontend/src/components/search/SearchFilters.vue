@@ -364,19 +364,14 @@
     toggleAllMeals,
     toggleOption,
     toggleAllOptions
-  } = useSearchFilters({
-    regions: selectedRegions.value,
-    categories: selectedCategories.value,
-    hotels: selectedHotels.value,
-    meals: selectedMeals.value,
-    options: selectedOptions.value
-  }, {
-    regions: props.regions,
-    categories: props.categories,
-    hotels: () => filteredHotels.value, // Передаем функцию для получения отфильтрованных отелей
-    meals: props.meals,
-    options: props.options
-  })
+  } = useSearchFilters()
+
+  // Инициализируем selectedFilters с переданными значениями
+  selectedFilters.value.regions = [...selectedRegions.value]
+  selectedFilters.value.categories = [...selectedCategories.value]
+  selectedFilters.value.hotels = [...selectedHotels.value]
+  selectedFilters.value.meals = [...selectedMeals.value]
+  selectedFilters.value.options = [...selectedOptions.value]
 
   // Логирование при получении данных
   onMounted(() => {
@@ -436,19 +431,17 @@
 
   // Обертки для методов composable с emit
   const handleToggleAllHotels = () => {
-    // Используем отфильтрованные отели вместо всех отелей
-    toggleAllHotels(filteredHotels.value)
+    toggleAllHotels()
     emit('update:hotels', selectedFilters.value.hotels)
   }
 
   const handleToggleAllCategories = () => {
-    toggleAllCategories(props.categories)
+    toggleAllCategories()
     emit('update:categories', selectedFilters.value.categories)
   }
 
   const handleToggleAllRegions = () => {
-    toggleAllRegions(props.regions)
-    
+    toggleAllRegions()
     emit('update:regions', selectedFilters.value.regions)
   }
 

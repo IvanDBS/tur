@@ -122,7 +122,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { AdditionalServices, BookingNotes } from '../../types/booking'
 
 interface Props {
@@ -130,13 +129,11 @@ interface Props {
   notes: BookingNotes
 }
 
-interface Emits {
-  (e: 'update:services', services: Partial<AdditionalServices>): void
-  (e: 'update:notes', notes: Partial<BookingNotes>): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+defineProps<Props>()
+const emit = defineEmits<{
+  'update:services': [services: Partial<AdditionalServices>]
+  'update:notes': [notes: Partial<BookingNotes>]
+}>()
 
 // Insurance options
 const insuranceOptions = [
@@ -253,7 +250,7 @@ const selectTransfer = (option: typeof transferOptions[0]) => {
   })
 }
 
-const updateNote = (key: string, value: any) => {
+const updateNote = (key: string, value: string | number | boolean) => {
   emit('update:notes', { [key]: value })
 }
 </script>

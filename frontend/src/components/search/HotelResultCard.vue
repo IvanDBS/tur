@@ -183,7 +183,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatDate, getNightWord, formatDateShort } from '../../utils/dateUtils'
+import { getNightWord, formatDateShort } from '../../utils/dateUtils'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 
 // Get router instance at the top level of setup()
@@ -200,14 +200,6 @@ const emit = defineEmits<{
   saveSearchState: []
 }>()
 
-// Format flight date (show day of week)
-const formatFlightDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const day = date.getDate()
-  const month = date.toLocaleDateString('ru-RU', { month: 'short' })
-  const dayOfWeek = date.toLocaleDateString('ru-RU', { weekday: 'short' })
-  return `${day} ${month} ${dayOfWeek}`
-}
 
 // Функция formatDateShort теперь импортируется из dateUtils
 
@@ -258,7 +250,7 @@ const handleBook = () => {
   // Store search result in sessionStorage for the booking page
   try {
     sessionStorage.setItem('bookingSearchResult', JSON.stringify(props.result))
-  } catch (error) {
+  } catch {
     // Failed to store search result in sessionStorage
   }
   
@@ -272,9 +264,9 @@ const handleBook = () => {
     }
   }).then(() => {
     // Navigation successful
-  }).catch((error) => {
+  }).catch(() => {
     // Navigation failed
-    alert('Ошибка перехода на страницу бронирования: ' + error.message)
+    alert('Ошибка перехода на страницу бронирования')
   })
 }
 

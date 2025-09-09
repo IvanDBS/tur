@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
+import { ref, onMounted, watch, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBooking } from '../composables/useBooking'
 import { useSearchData } from '../composables/useSearchData'
@@ -147,8 +147,7 @@ const RoomSelectionBlock = defineAsyncComponent(() => import('../components/book
 const FlightSelectionBlock = defineAsyncComponent(() => import('../components/booking/FlightSelectionBlock.vue'))
 const TouristDataBlock = defineAsyncComponent(() => import('../components/booking/TouristDataBlock.vue'))
 const AdditionalServicesBlock = defineAsyncComponent(() => import('../components/booking/AdditionalServicesBlock.vue'))
-import type { SearchResult, GroupedSearchResult } from '../types/search'
-import type { BookingNotes } from '../types/booking'
+import type { BookingNotes, TouristData } from '../types/booking'
 
 // Props
 interface Props {
@@ -160,6 +159,11 @@ const props = defineProps<Props>()
 // Composables
 const route = useRoute()
 const router = useRouter()
+
+// Wrapper for updateTourist to match TouristDataBlock emit signature
+const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
+  updateTouristOriginal(touristId, { [field]: value })
+}
 const { 
   loading, 
   error, 
@@ -173,7 +177,7 @@ const {
   updateSelectedFlight,
   updateSelectedRoom,
   resetSelectedFlight,
-  updateTourist,
+  updateTourist: updateTouristOriginal,
   updateAdditionalServices,
   calculateBooking,
   createBooking,

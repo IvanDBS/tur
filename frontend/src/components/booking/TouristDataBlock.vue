@@ -157,7 +157,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { TouristData } from '../../types/booking'
 
 interface Props {
@@ -165,12 +164,10 @@ interface Props {
   errors?: Record<string, Record<string, string>>
 }
 
-interface Emits {
-  (e: 'update:tourist', touristId: string, field: keyof TouristData, value: any): void
-}
-
 const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:tourist': [touristId: string, field: keyof TouristData, value: string | number | boolean]
+}>()
 
 // Options
 const titleOptions = [
@@ -193,7 +190,7 @@ const getTouristTitle = (index: number) => {
   return `Турист ${index + 1}`
 }
 
-const updateTourist = (touristId: string, field: keyof TouristData, value: any) => {
+const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
   emit('update:tourist', touristId, field, value)
 }
 

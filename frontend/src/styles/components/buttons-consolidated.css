@@ -375,3 +375,30 @@
     width: 100%;
   }
 }
+
+/* ========================================
+   КНОПКА "ЗАБРОНИРОВАТЬ" В СТИЛЕ "ВОЙТИ"
+   ======================================== */
+
+.btn--book {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--color-primary-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.btn--book:hover:not(:disabled) {
+  transform: scale(1.02);
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px var(--color-primary-muted);
+}

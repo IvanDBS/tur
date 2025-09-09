@@ -136,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+ 
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { useAuthStore } from '@/stores/auth'
   import { useAuthModal } from '@/composables/useAuthModal'

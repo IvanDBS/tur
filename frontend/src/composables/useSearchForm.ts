@@ -1,10 +1,14 @@
-import { ref, computed, watch, nextTick } from 'vue'
+import { computed, watch, nextTick } from 'vue'
 import { useSearchData } from './useSearchData'
 import { useCalendarHints } from './useCalendarHints'
 import { useNotifications } from './useNotifications'
+import { useSearchValidation } from './useSearchValidation'
+import { useSearchPagination } from './useSearchPagination'
+import { useSearchFilters } from './useSearchFilters'
+import { useSearchState } from './useSearchState'
 import { logger } from '../utils/logger'
 import { getAirportIdByPackageName } from '../constants/airports'
-import type { SearchForm, SelectedFilters, GroupedSearchResult } from '../types/search'
+import type { GroupedSearchResult } from '../types/search'
 
 // Интерфейс для результатов поиска от OBS API
 interface ObsSearchResult {
@@ -129,125 +133,58 @@ interface ObsSearchResult {
 }
 
 export const useSearchForm = () => {
-  // Получаем данные из composable
+  // Получаем данные из composables
   const searchData = useSearchData()
   const calendarHints = useCalendarHints()
   const { showError } = useNotifications()
-
-  // Reactive data
-  const searchForm = ref<SearchForm>({
-    departureCity: null,
-    destination: null,
-    package: null,
-    arrivalCity: null,
-    date: null,
-    checkInDate: null,
-    checkOutDate: null,
-    nights: null,
-    nights2: null,
-    adults: null,
-    children: null,
-    childrenAges: [],
-    priceFrom: null,
-    priceTo: null,
-    selectedHotels: [],
-  })
-
-  const selectedFilters = ref<SelectedFilters>({
-    regions: [],
-    categories: [],
-    hotels: [],
-    meals: [],
-    options: [],
-  })
-
-  const isLoading = ref(false)
-  const searchResults = ref<Record<string, ObsSearchResult> | null>(null)
-  const totalResults = ref(0)
   
-  // Пагинация
-  const currentPage = ref(1)
-  const itemsPerPage = 20 // Показываем по 20 на странице
-  const serverPageSize = 1000 // Загружаем все результаты сразу (per_page > 500)
-  const lastSearchParams = ref<Record<string, unknown> | null>(null)
-  const allLoadedResults = ref<Record<string, ObsSearchResult> | null>(null) // Все загруженные результаты
-  const loadedPages = ref<Set<number>>(new Set()) // Отслеживаем загруженные страницы сервера
-  const isLoadingMore = ref(false) // Загрузка дополнительных данных
-  
-  // Client-side pagination based on loaded results
-  const totalPages = computed(() => {
-    if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') return 0
-    
-    try {
-      const allResults = Object.values(allLoadedResults.value)
-      if (allResults.length === 0) return 0
-      
-      let groupedResults = groupResultsByHotel(allResults)
-      
-      // Применяем фильтрацию по регионам и категориям
-      if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
-        groupedResults = filterResultsByRegionsAndCategories(groupedResults)
-      }
-      
-      const pages = Math.ceil(groupedResults.length / itemsPerPage)
-      logger.debug(`totalPages computed: groupedResults.length=${groupedResults.length}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
-      return pages
-    } catch (error) {
-      logger.error('Error in totalPages computed:', error)
-      return 0
-    }
-  })
-  
-  // Hybrid pagination: server loads 100, frontend shows 20
-  const paginatedResults = computed(() => {
-    logger.info(`🔄 paginatedResults computed called: allLoadedResults = ${allLoadedResults.value ? 'EXISTS' : 'NULL'}`)
-    
-    if (!allLoadedResults.value || typeof allLoadedResults.value !== 'object') {
-      logger.info('❌ paginatedResults: no allLoadedResults')
-      return []
-    }
-    
-    try {
-      // Get all loaded results as array
-      const allResults = Object.values(allLoadedResults.value)
-      logger.info(`📊 paginatedResults: allResults.length = ${allResults.length}, currentPage = ${currentPage.value}`)
-      
-      // Проверяем, что у нас есть валидные результаты
-      if (allResults.length === 0) {
-        logger.debug('paginatedResults: no results to process')
-        return []
-      }
-      
-      // Группируем результаты по отелям
-      let groupedResults = groupResultsByHotel(allResults)
-      logger.debug(`paginatedResults: groupedResults.length = ${groupedResults.length}`)
-      
-      // Применяем фильтрацию по регионам и категориям
-      if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
-        groupedResults = filterResultsByRegionsAndCategories(groupedResults)
-        logger.debug(`paginatedResults: after filtering groupedResults.length = ${groupedResults.length}`)
-      }
-      
-      // Calculate pagination for current page (20 items per page)
-      const startIndex = (currentPage.value - 1) * itemsPerPage
-      const endIndex = startIndex + itemsPerPage
-      
-      const paginated = groupedResults.slice(startIndex, endIndex)
-      logger.info(`📄 paginatedResults: startIndex = ${startIndex}, endIndex = ${endIndex}, paginated.length = ${paginated.length}`)
-      logger.info(`📄 Final paginated results:`, paginated.length > 0 ? 'HAS RESULTS' : 'NO RESULTS')
-      
-      return paginated
-    } catch (error) {
-      logger.error('Error in paginatedResults computed:', error)
-      return []
-    }
-  })
-
-  // Простая клиентская пагинация - загружаем все результаты сразу
-  const needsMoreData = computed(() => {
-    // Всегда false - загружаем все результаты сразу
-    return false
-  })
+  // Используем новые composables
+  const { validateSearchForm, validateDates } = useSearchValidation()
+  const {
+    currentPage,
+    serverPageSize,
+    lastSearchParams,
+    allLoadedResults,
+    loadedPages,
+    isLoadingMore,
+    totalPages,
+    paginatedResults,
+    needsMoreData,
+    handlePageChange,
+    loadMoreData,
+    groupResultsByHotel,
+    resetPagination
+  } = useSearchPagination()
+  const { 
+    selectedFilters, 
+    getSelectedHotelsForSearch, 
+    resetFilters, 
+    toggleAllHotels, 
+    toggleAllCategories, 
+    toggleAllRegions,
+    toggleRegion,
+    toggleCategory,
+    toggleHotel,
+    toggleMeal,
+    toggleOption,
+    toggleAllMeals,
+    toggleAllOptions,
+    allRegionsSelected,
+    allCategoriesSelected,
+    allHotelsSelected,
+    allMealsSelected,
+    allOptionsSelected
+  } = useSearchFilters()
+  const {
+    searchForm,
+    isLoading,
+    searchResults,
+    totalResults,
+    saveSearchState,
+    restoreSearchState,
+    clearSearchState,
+    resetSearchForm
+  } = useSearchState()
 
   // Определяем активный селектор для показа стрелки
   const activeSelector = computed((): string | null => {
@@ -319,8 +256,8 @@ export const useSearchForm = () => {
     
     // Используем пагинированные результаты
     const formatted = paginatedResults.value.map((result: GroupedSearchResult) => ({
-      unique_key: `${result.hotel.id}-${result.room.id}-${result.meal.id}`,
-      rid: `${result.hotel.id}-${result.room.id}-${result.meal.id}`,
+      unique_key: `${result.hotel.id}-${result.roomOptions[0]?.room.id || 0}-${result.roomOptions[0]?.meal.id || 0}`,
+      rid: `${result.hotel.id}-${result.roomOptions[0]?.room.id || 0}-${result.roomOptions[0]?.meal.id || 0}`,
       accommodation: {
         hotel: {
           name: result.hotel?.name || 'Название отеля',
@@ -328,10 +265,10 @@ export const useSearchForm = () => {
           city: result.hotel?.city || ''
         },
         room: {
-          name: result.room?.name || ''
+          name: result.roomOptions[0]?.room?.name || ''
         },
         meal: {
-          full_name: result.meal?.full_name || result.meal?.name || ''
+          full_name: result.roomOptions[0]?.meal?.full_name || result.roomOptions[0]?.meal?.name || ''
         }
       },
       dates: {
@@ -344,7 +281,7 @@ export const useSearchForm = () => {
       price: {
         amount: result.minPrice || 0,
         currency: result.currency || 'EUR',
-        type: result.price?.type || ''
+        type: result.roomOptions[0]?.price?.type || ''
       }
     }))
     
@@ -485,263 +422,11 @@ export const useSearchForm = () => {
   }, { immediate: true })
 
 
-  // Helper function to get hotels for search
-  const getSelectedHotelsForSearch = () => {
-    logger.debug(`🏨 getSelectedHotelsForSearch called. Available hotels: ${searchData.hotels.value.length}`)
-    logger.debug(`🏨 Selected hotel filters: ${selectedFilters.value.hotels.length}`)
-    
-    // Если пользователь выбрал отели вручную, используем их
-    if (selectedFilters.value.hotels.length > 0) {
-      // Если выбран ID=1 (все отели), возвращаем все доступные отели
-      if (selectedFilters.value.hotels.includes(1)) {
-        return searchData.hotels.value.map(hotel => Number(hotel.id))
-      }
-      // Иначе возвращаем выбранные отели (исключая ID=1)
-      return selectedFilters.value.hotels
-        .filter(id => id !== 1)
-        .map(id => Number(id))
-    }
-    
-    // Если выбраны регионы или категории, используем отфильтрованные отели
-    if (selectedFilters.value.regions.length > 0 || selectedFilters.value.categories.length > 0) {
-      // Получаем отфильтрованные отели из searchData
-      const allHotels = searchData.hotels.value
-      let filteredHotels = allHotels
-      
-      // Применяем фильтрацию по регионам
-      if (selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
-        // Создаем маппинг регионов к городам
-        const regionCitiesMap = new Map<number, number[]>()
-        searchData.regions.value.forEach(region => {
-          if (region.cities && Array.isArray(region.cities)) {
-            const cityIds = region.cities.map(city => city.id)
-            regionCitiesMap.set(region.id, cityIds)
-          }
-        })
-        
-        // Получаем все города для выбранных регионов
-        const selectedCities = new Set<number>()
-        selectedFilters.value.regions.forEach(regionId => {
-          const cities = regionCitiesMap.get(regionId)
-          if (cities) {
-            cities.forEach(cityId => selectedCities.add(cityId))
-          }
-        })
-        
-        // Фильтруем отели по городам
-        filteredHotels = filteredHotels.filter(hotel => {
-          return hotel.city_id && selectedCities.has(hotel.city_id)
-        })
-      }
-      
-      // Применяем фильтрацию по категориям
-      if (selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
-        filteredHotels = filteredHotels.filter(hotel => {
-          return hotel.category_id && selectedFilters.value.categories.includes(hotel.category_id)
-        })
-      }
-      
-      // Возвращаем ID отфильтрованных отелей
-      return filteredHotels.map(hotel => Number(hotel.id))
-    }
-    
-    // Если ничего не выбрано, возвращаем все доступные отели
-    const allHotels = searchData.hotels.value.map(hotel => Number(hotel.id))
-    logger.debug(`🏨 Returning all hotels for search: ${allHotels.length} hotels`)
-    return allHotels
-  }
 
-  // Функция для группировки результатов по отелям с поддержкой вариантов комнат
-  const groupResultsByHotel = (results: ObsSearchResult[]): GroupedSearchResult[] => {
-    if (!results || results.length === 0) {
-      return []
-    }
-    
-    const groupedMap = new Map<string, GroupedSearchResult>()
-    
-    results.forEach(result => {
-      // Проверяем, что у нас есть все необходимые данные
-      if (!result.accommodation?.hotel?.id || !result.accommodation?.room?.id || !result.accommodation?.meal?.id) {
-        logger.warn('Skipping result with missing accommodation data:', result)
-        return
-      }
-      
-      const hotelKey = `${result.accommodation.hotel.id}`
-      
-      if (groupedMap.has(hotelKey)) {
-        const existing = groupedMap.get(hotelKey)!
-        
-        // Ищем существующий вариант комнаты
-        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}-${result.accommodation.placement.id}`
-        const existingRoomOption = existing.roomOptions.find(option => 
-          `${option.room.id}-${option.meal.id}-${option.placement.id}` === roomKey
-        )
-        
-        if (existingRoomOption) {
-          // Добавляем вариант перелета к существующему варианту комнаты
-          const flightOptionWithPrice = {
-            ...result.tickets,
-            price: result.price
-          }
-          existingRoomOption.flightOptions.push(flightOptionWithPrice)
-        } else {
-          // Создаем новый вариант комнаты
-          const newRoomOption = {
-            id: roomKey,
-            room: result.accommodation.room,
-            meal: result.accommodation.meal,
-            placement: result.accommodation.placement,
-            price: result.price,
-            flightOptions: [{
-              ...result.tickets,
-              price: result.price
-            }]
-          }
-          existing.roomOptions.push(newRoomOption)
-        }
-        
-        // Обновляем минимальную и максимальную цены
-        const currentPrice = result.price?.amount || 0
-        if (currentPrice < existing.minPrice) {
-          existing.minPrice = currentPrice
-        }
-        if (currentPrice > existing.maxPrice) {
-          existing.maxPrice = currentPrice
-        }
-      } else {
-        // Создаем новый группированный результат
-        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}-${result.accommodation.placement.id}`
-        const grouped: GroupedSearchResult = {
-          hotel: result.accommodation.hotel,
-          dates: result.dates,
-          nights: result.nights,
-          transfers: result.transfers,
-          never_land_entrance: result.never_land_entrance,
-          gala_dinner: result.gala_dinner,
-          aquapark_services: result.aquapark_services,
-          tourists: result.tourists,
-          roomOptions: [{
-            id: roomKey,
-            room: result.accommodation.room,
-            meal: result.accommodation.meal,
-            placement: result.accommodation.placement,
-            price: result.price,
-            flightOptions: [{
-              ...result.tickets,
-              price: result.price
-            }]
-          }],
-          minPrice: result.price?.amount || 0,
-          maxPrice: result.price?.amount || 0,
-          currency: result.price?.currency || 'EUR'
-        }
-        groupedMap.set(hotelKey, grouped)
-      }
-    })
-    
-    // Сортируем по минимальной цене
-    return Array.from(groupedMap.values()).sort((a, b) => a.minPrice - b.minPrice)
-  }
 
-  // Функция для фильтрации результатов по регионам и категориям
-  const filterResultsByRegionsAndCategories = (results: GroupedSearchResult[]): GroupedSearchResult[] => {
-    logger.debug(`🔍 filterResultsByRegionsAndCategories: input results.length = ${results.length}`)
-    logger.debug(`🔍 selectedFilters.regions = ${selectedFilters.value.regions}`)
-    logger.debug(`🔍 selectedFilters.categories = ${selectedFilters.value.categories}`)
-    logger.debug(`🔍 searchData.hotels.value.length = ${searchData.hotels.value.length}`)
-    logger.debug(`🔍 searchData.cities = ${searchData.cities ? 'EXISTS' : 'NULL'}`)
-    if (searchData.cities && searchData.cities.value) {
-      logger.debug(`🔍 searchData.cities.value.length = ${searchData.cities.value.length}`)
-      logger.debug(`🔍 searchData.cities.value:`, searchData.cities.value.slice(0, 5))
-    }
-    
-    let filteredResults = results
-    
-    // Фильтрация по регионам - ВРЕМЕННО ОТКЛЮЧЕНА ДЛЯ ОТЛАДКИ
-    if (false && selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
-      // Создаем маппинг регионов к городам
-      const regionCitiesMap = new Map<number, number[]>()
-      searchData.regions.value.forEach(region => {
-        if (region.cities && Array.isArray(region.cities)) {
-          const cityIds = region.cities.map(city => city.id)
-          regionCitiesMap.set(region.id, cityIds)
-        }
-      })
-      
-      // Получаем все города для выбранных регионов
-      const selectedCities = new Set<number>()
-      selectedFilters.value.regions.forEach(regionId => {
-        const cities = regionCitiesMap.get(regionId)
-        logger.debug(`🔍 Region ${regionId}: cities=${cities}`)
-        if (cities) {
-          cities.forEach(cityId => selectedCities.add(cityId))
-        }
-      })
-      logger.debug(`🔍 selectedCities: ${Array.from(selectedCities)}`)
-      
-      // Фильтруем результаты по городам отелей
-      filteredResults = filteredResults.filter(result => {
-        // Находим отель в данных searchData по ID
-        const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
-        logger.debug(`🔍 Region filter: hotel.id=${result.hotel.id}, found=${!!hotel}, city_id=${hotel?.city_id}, selectedCities.has=${selectedCities.has(hotel?.city_id || 0)}`)
-        
-        // Если отель не найден в searchData.hotels, попробуем использовать данные из результата
-        if (!hotel && result.hotel.city && searchData.cities && searchData.cities.value) {
-          // Ищем город по названию в searchData.cities
-          const city = searchData.cities.value.find(c => c.name === result.hotel.city)
-          if (city && selectedCities.has(city.id)) {
-            logger.debug(`🔍 Using result.hotel.city="${result.hotel.city}" (id=${city.id}) for hotel.id=${result.hotel.id}`)
-            return true
-          }
-          logger.debug(`🔍 City "${result.hotel.city}" not found in selectedCities for hotel.id=${result.hotel.id}`)
-        }
-        
-        if (hotel && hotel.city_id) {
-          return selectedCities.has(hotel.city_id)
-        }
-        return false
-      })
-    }
-    
-    // Фильтрация по категориям - ВРЕМЕННО ОТКЛЮЧЕНА ДЛЯ ОТЛАДКИ
-    if (false && selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
-      filteredResults = filteredResults.filter(result => {
-        // Находим отель в данных searchData по ID
-        const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
-        logger.debug(`🔍 Category filter: hotel.id=${result.hotel.id}, found=${!!hotel}, category_id=${hotel?.category_id}, includes=${selectedFilters.value.categories.includes(hotel?.category_id || 0)}`)
-        
-        // Если отель не найден в searchData.hotels, попробуем использовать данные из результата
-        if (!hotel && result.hotel.category) {
-          // Парсим категорию из строки типа "5* / HV1" - берем первую часть до "/"
-          const categoryMatch = result.hotel.category.match(/^(\d+)\*/)
-          if (categoryMatch) {
-            const starRating = parseInt(categoryMatch[1])
-            // Маппинг звезд на ID категорий (примерный)
-            const categoryId = starRating === 5 ? 173 : starRating === 4 ? 172 : starRating === 3 ? 171 : 1
-            if (selectedFilters.value.categories.includes(categoryId)) {
-              logger.debug(`🔍 Using result.hotel.category="${result.hotel.category}" (mapped to id=${categoryId}) for hotel.id=${result.hotel.id}`)
-              return true
-            }
-          }
-          logger.debug(`🔍 Category "${result.hotel.category}" not found in selectedCategories for hotel.id=${result.hotel.id}`)
-        }
-        
-        if (hotel && hotel.category_id) {
-          return selectedFilters.value.categories.includes(hotel.category_id)
-        }
-        return false
-      })
-    }
-    
-    logger.debug(`🔍 filterResultsByRegionsAndCategories: output filteredResults.length = ${filteredResults.length}`)
-    return filteredResults
-  }
 
   // Methods
   const handleSearch = () => {
-    // Получаем календарные подсказки для проверки доступности дат
-    const { isDateAvailable, availableDates } = calendarHints
-    
     logger.info('🔍 Starting search with form data:', {
       departureCity: searchForm.value.departureCity?.id,
       destination: searchForm.value.destination?.id,
@@ -750,111 +435,27 @@ export const useSearchForm = () => {
       checkOutDate: searchForm.value.checkOutDate,
       nights: searchForm.value.nights,
       adults: searchForm.value.adults,
-      children: searchForm.value.children,
-      availableDatesCount: availableDates.value.length
+      children: searchForm.value.children
     })
     
     // Добавляем выбранные отели в форму поиска (используем правильную логику)
-    searchForm.value.selectedHotels = getSelectedHotelsForSearch()
+    searchForm.value.selectedHotels = getSelectedHotelsForSearch(searchData)
 
     // Проверяем обязательные поля
-    if (!searchForm.value.departureCity?.id) {
-      showError('Ошибка поиска', 'Выберите город отправления')
-      return
-    }
-    if (!searchForm.value.destination?.id) {
-      showError('Ошибка поиска', 'Выберите страну назначения')
-      return
-    }
-    if (!searchForm.value.package?.id) {
-      showError('Ошибка поиска', 'Выберите пакет тура')
-      return
-    }
-    if (!searchForm.value.arrivalCity?.id) {
-      showError('Ошибка поиска', 'Выберите город прилета')
-      return
-    }
-    if (!searchForm.value.checkInDate) {
-      showError('Ошибка поиска', 'Выберите дату заезда')
-      return
-    }
-    if (!searchForm.value.checkOutDate) {
-      showError('Ошибка поиска', 'Выберите максимальную дату заселения')
-      return
-    }
-    if (!searchForm.value.nights) {
-      showError('Ошибка поиска', 'Выберите количество ночей')
-      return
-    }
-    if (!searchForm.value.nights2) {
-      showError('Ошибка поиска', 'Выберите максимальное количество ночей')
-      return
-    }
-    if (searchForm.value.children === null) {
-      showError('Ошибка поиска', 'Укажите количество детей (можно выбрать "Без детей")')
+    if (!validateSearchForm(searchForm.value, selectedFilters.value)) {
       return
     }
 
-    // Проверяем, что выбраны отели или опция "Любой"
-    if (selectedFilters.value.hotels.length === 0) {
-      showError('Ошибка поиска', 'Выберите отели или опцию "Любой" в фильтрах')
-      return
-    }
-
-    // Проверяем доступность выбранных дат (используем уже полученные данные)
-    
-    logger.info('🔍 Checking date availability:', {
-      checkInDate: searchForm.value.checkInDate,
-      checkOutDate: searchForm.value.checkOutDate,
-      checkInAvailable: searchForm.value.checkInDate ? isDateAvailable(searchForm.value.checkInDate) : 'no date',
-      checkOutAvailable: searchForm.value.checkOutDate ? isDateAvailable(searchForm.value.checkOutDate) : 'no date',
-      availableDatesCount: availableDates.value.length
-    })
-    
-    if (!searchForm.value.checkInDate) {
-      logger.warn('❌ No check-in date selected')
-      showError('Ошибка поиска', 'Выберите дату заезда')
-      return
-    }
-    if (!searchForm.value.checkOutDate) {
-      logger.warn('❌ No max check-in date selected')
-      showError('Ошибка поиска', 'Выберите максимальную дату заселения')
+    // Проверяем доступность выбранных дат
+    if (!validateDates(searchForm.value)) {
       return
     }
     
-    if (!isDateAvailable(searchForm.value.checkInDate)) {
-      logger.warn('❌ Check-in date not available:', searchForm.value.checkInDate)
-      
-      // Попробуем автоматически выбрать доступную дату
-      if (availableDates.value.length > 0) {
-        const firstAvailableDate = availableDates.value[0]
-        logger.info('🔄 Auto-selecting first available date:', firstAvailableDate)
-        
-        searchForm.value.checkInDate = firstAvailableDate
-        
-        // Устанавливаем максимальную дату заселения равной минимальной дате заселения
-        searchForm.value.checkOutDate = new Date(firstAvailableDate)
-        
-        logger.info('✅ Auto-selected dates:', {
-          checkIn: firstAvailableDate,
-          maxCheckIn: searchForm.value.checkOutDate
-        })
-      } else {
-        logger.warn('❌ No available dates found in calendar hints')
-        showError('Ошибка поиска', 'Выбранная дата заезда недоступна для бронирования. Нет доступных дат.')
-        return
-      }
-    }
-    if (!isDateAvailable(searchForm.value.checkOutDate)) {
-      logger.warn('❌ Max check-in date not available:', searchForm.value.checkOutDate)
-      showError('Ошибка поиска', 'Выбранная максимальная дата заселения недоступна для бронирования')
-      return
-    }
-    
-    logger.info('✅ Date validation passed, proceeding with search...')
+    logger.info('✅ Validation passed, proceeding with search...')
 
     // Форматируем даты в формат DD.MM.YYYY для API (как требует документация)
-    const formatDate = (date: Date) => {
+    const formatDate = (date: Date | null) => {
+      if (!date) return ''
       const day = date.getDate().toString().padStart(2, '0')
       const month = (date.getMonth() + 1).toString().padStart(2, '0')
       const year = date.getFullYear()
@@ -870,13 +471,13 @@ export const useSearchForm = () => {
     const airportCityTo = searchForm.value.arrivalCity?.id ? [Number(searchForm.value.arrivalCity.id)] : []
     
     // Определяем диапазон дат заезда
-    const dateFrom = formatDate(searchForm.value.checkInDate)
+    const dateFrom = searchForm.value.checkInDate ? formatDate(searchForm.value.checkInDate) : ''
     const dateTo = searchForm.value.checkOutDate ? formatDate(searchForm.value.checkOutDate) : dateFrom
     
     const searchParams = {
-      country: Number(searchForm.value.destination.id),
-      package_template: Number(searchForm.value.package.id),
-      airport_city_from: Number(searchForm.value.departureCity.id),
+      country: Number(searchForm.value.destination?.id),
+      package_template: Number(searchForm.value.package?.id),
+      airport_city_from: Number(searchForm.value.departureCity?.id),
       airport_city_to: airportCityTo,
       date_from: dateFrom,
       date_to: dateTo, // Диапазон дат заезда для поиска
@@ -886,7 +487,7 @@ export const useSearchForm = () => {
       children: searchForm.value.children !== null ? Number(searchForm.value.children) : undefined,
       children_age: searchForm.value.children !== null && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
       selected_hotels: (() => {
-        const hotels = getSelectedHotelsForSearch()
+        const hotels = getSelectedHotelsForSearch(searchData)
         logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
         return hotels
       })(),
@@ -1038,45 +639,10 @@ export const useSearchForm = () => {
 
   const handleReset = async () => {
     try {
-      // Используем nextTick для безопасного обновления компонентов
-      await nextTick()
-      
-      searchForm.value = {
-        departureCity: null,
-        destination: null,
-        package: null,
-        arrivalCity: null,
-        date: null,
-        checkInDate: null,
-        checkOutDate: null,
-        nights: null,
-        nights2: null,
-        adults: null,
-        children: null,
-        childrenAges: [],
-        priceFrom: null,
-        priceTo: null,
-        selectedHotels: [],
-      }
-      selectedFilters.value = {
-        regions: [],
-        categories: [],
-        hotels: [],
-        meals: [],
-        options: [],
-      }
-      
-      // Очищаем результаты поиска
-      searchResults.value = null
-      allLoadedResults.value = null
-      totalResults.value = 0
-      currentPage.value = 1
-      lastSearchParams.value = null
-      loadedPages.value.clear()
-      isLoadingMore.value = false
-      
-      // Очищаем сохраненное состояние
-      clearSearchState()
+      // Используем новые composables для сброса
+      await resetSearchForm()
+      resetFilters()
+      resetPagination()
     } catch (error) {
       logger.error('Error in handleReset:', error)
     }
@@ -1091,7 +657,7 @@ export const useSearchForm = () => {
 
   // Метод для автоматического выбора доступной даты
   const selectAvailableDate = () => {
-    const { availableDates } = useCalendarHints()
+    const { availableDates } = calendarHints
     
     if (availableDates.value.length > 0) {
       // Выбираем первую доступную дату
@@ -1101,7 +667,7 @@ export const useSearchForm = () => {
       // Устанавливаем максимальную дату заселения равной минимальной дате заселения
       searchForm.value.checkOutDate = new Date(firstAvailableDate)
       
-      logger.info(`Auto-selected available dates: ${firstAvailableDate.toLocaleDateString()} - ${searchForm.value.checkOutDate.toLocaleDateString()}`)
+      logger.info(`Auto-selected available dates: ${firstAvailableDate.toLocaleDateString()} - ${searchForm.value.checkOutDate?.toLocaleDateString()}`)
     } else {
       // Если нет доступных дат, устанавливаем дату через неделю
       const nextWeek = new Date()
@@ -1111,130 +677,29 @@ export const useSearchForm = () => {
       // Устанавливаем максимальную дату заселения равной минимальной дате заселения
       searchForm.value.checkOutDate = new Date(nextWeek)
       
-      logger.info(`No available dates found, using default: ${nextWeek.toLocaleDateString()} - ${searchForm.value.checkOutDate.toLocaleDateString()}`)
+      logger.info(`No available dates found, using default: ${nextWeek.toLocaleDateString()} - ${searchForm.value.checkOutDate?.toLocaleDateString()}`)
     }
   }
 
-  // Метод для загрузки дополнительных данных (упрощенная версия)
-  const loadMoreData = async () => {
-    // Поскольку мы загружаем все результаты сразу (per_page > 500), 
-    // этот метод больше не нужен, но оставляем для совместимости
-    logger.debug('loadMoreData called - no additional loading needed (all results loaded at once)')
-    return Promise.resolve()
-  }
-
-  // Метод для обработки смены страницы
-  const handlePageChange = (page: number) => {
-    // Don't change page if it's the same
-    if (page === currentPage.value) {
-      return
-    }
-    
-    // Проверяем, что страница в допустимых пределах
-    if (page < 1 || page > totalPages.value) {
-      logger.warn(`Invalid page number: ${page}, total pages: ${totalPages.value}`)
-      return
-    }
-    
-    logger.debug(`handlePageChange: changing from page ${currentPage.value} to page ${page}`)
-    currentPage.value = page
-    
-    // Прокручиваем к началу результатов с отступом сверху
-    setTimeout(() => {
-      const resultsSection = document.querySelector('.search-results-section')
-      if (resultsSection) {
-        const elementTop = resultsSection.getBoundingClientRect().top + window.pageYOffset
-        // Адаптивный отступ: больше на мобильных, меньше на десктопе
-        const isMobile = window.innerWidth <= 768
-        const offset = isMobile ? 80 : 100
-        const offsetPosition = elementTop - offset
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        })
-      }
-    }, 100) // Небольшая задержка для обновления DOM
-  }
 
   // Обработчик бронирования тура
   const handleBook = (result: GroupedSearchResult) => {
     // Сохраняем состояние поиска перед переходом на бронирование
-    saveSearchState()
+    saveSearchState({
+      searchForm: searchForm.value,
+      selectedFilters: selectedFilters.value,
+      searchResults: searchResults.value,
+      allLoadedResults: allLoadedResults.value,
+      totalResults: totalResults.value,
+      currentPage: currentPage.value,
+      lastSearchParams: lastSearchParams.value,
+      loadedPages: Array.from(loadedPages.value)
+    })
     
     // Здесь можно добавить логику бронирования
     alert(`Бронирование тура: ${result.hotel.name} от ${result.minPrice} ${result.currency}`)
   }
 
-  // Сохранение состояния поиска
-  const saveSearchState = () => {
-    try {
-      const searchState = {
-        searchForm: searchForm.value,
-        selectedFilters: selectedFilters.value,
-        searchResults: searchResults.value,
-        allLoadedResults: allLoadedResults.value,
-        totalResults: totalResults.value,
-        currentPage: currentPage.value,
-        lastSearchParams: lastSearchParams.value,
-        loadedPages: Array.from(loadedPages.value),
-        timestamp: Date.now()
-      }
-      
-      sessionStorage.setItem('searchState', JSON.stringify(searchState))
-      logger.info('💾 Search state saved to sessionStorage')
-    } catch (error) {
-      logger.warn('Failed to save search state:', error)
-    }
-  }
-
-  // Восстановление состояния поиска
-  const restoreSearchState = () => {
-    try {
-      const savedState = sessionStorage.getItem('searchState')
-      if (!savedState) {
-        logger.info('No saved search state found')
-        return false
-      }
-
-      const searchState = JSON.parse(savedState)
-      
-      // Проверяем, что состояние не слишком старое (например, не старше 1 часа)
-      const maxAge = 60 * 60 * 1000 // 1 час
-      if (Date.now() - searchState.timestamp > maxAge) {
-        logger.info('Saved search state is too old, ignoring')
-        sessionStorage.removeItem('searchState')
-        return false
-      }
-
-      // Восстанавливаем состояние
-      searchForm.value = searchState.searchForm || searchForm.value
-      selectedFilters.value = searchState.selectedFilters || selectedFilters.value
-      searchResults.value = searchState.searchResults || null
-      allLoadedResults.value = searchState.allLoadedResults || null
-      totalResults.value = searchState.totalResults || 0
-      currentPage.value = searchState.currentPage || 1
-      lastSearchParams.value = searchState.lastSearchParams || null
-      loadedPages.value = new Set(searchState.loadedPages || [])
-      
-      logger.info('🔄 Search state restored from sessionStorage')
-      return true
-    } catch (error) {
-      logger.warn('Failed to restore search state:', error)
-      sessionStorage.removeItem('searchState')
-      return false
-    }
-  }
-
-  // Очистка сохраненного состояния
-  const clearSearchState = () => {
-    try {
-      sessionStorage.removeItem('searchState')
-      logger.info('🗑️ Search state cleared from sessionStorage')
-    } catch (error) {
-      logger.warn('Failed to clear search state:', error)
-    }
-  }
 
   // Метод инициализации данных
   const initializeData = async () => {
@@ -1245,7 +710,18 @@ export const useSearchForm = () => {
       logger.info(`🏙️ Departure cities loaded: ${searchData.departureCitiesOptions.value.length}`)
       
       // Пытаемся восстановить состояние поиска
-      restoreSearchState()
+      const restoredState = restoreSearchState()
+      if (restoredState) {
+        // Восстанавливаем состояние из сохраненных данных
+        searchForm.value = restoredState.searchForm || searchForm.value
+        selectedFilters.value = restoredState.selectedFilters || selectedFilters.value
+        searchResults.value = restoredState.searchResults || null
+        allLoadedResults.value = restoredState.allLoadedResults || null
+        totalResults.value = restoredState.totalResults || 0
+        currentPage.value = restoredState.currentPage || 1
+        lastSearchParams.value = restoredState.lastSearchParams || null
+        loadedPages.value = new Set(restoredState.loadedPages || [])
+      }
     } catch (err) {
       logger.error('❌ Failed to initialize search data:', err)
     }
@@ -1289,5 +765,24 @@ export const useSearchForm = () => {
     saveSearchState,
     restoreSearchState,
     clearSearchState,
+    
+    // Filter functions
+    toggleAllHotels,
+    toggleAllCategories,
+    toggleAllRegions,
+    toggleRegion,
+    toggleCategory,
+    toggleHotel,
+    toggleMeal,
+    toggleOption,
+    toggleAllMeals,
+    toggleAllOptions,
+    
+    // Filter computed properties
+    allRegionsSelected,
+    allCategoriesSelected,
+    allHotelsSelected,
+    allMealsSelected,
+    allOptionsSelected,
   }
 }

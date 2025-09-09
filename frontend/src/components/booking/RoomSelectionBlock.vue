@@ -65,13 +65,11 @@ interface Props {
   selectedFlight?: SelectedFlight
 }
 
-interface Emits {
-  (e: 'update:selectedRoom', room: SelectedRoom): void
-  (e: 'reset:selectedFlight'): void
-}
-
 const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  'update:selectedRoom': [room: SelectedRoom]
+  'reset:selectedFlight': []
+}>()
 
 // Computed
 const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)

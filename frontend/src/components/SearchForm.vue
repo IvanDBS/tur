@@ -153,14 +153,12 @@
   // Переопределяем handleSearch для эмита события
   const originalHandleSearch = handleSearch
   const handleSearchWithEmit = async () => {
-    console.log('🔍 Search button clicked, starting search...')
     try {
       await originalHandleSearch()
-      console.log('✅ Search completed, emitting search event')
       // Эмитим событие после поиска (независимо от результатов)
       emit('search', searchForm.value)
     } catch (error) {
-      console.error('❌ Search failed:', error)
+      // Search failed
     }
   }
 

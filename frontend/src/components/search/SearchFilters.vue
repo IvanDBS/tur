@@ -263,7 +263,6 @@
       if (region.cities && Array.isArray(region.cities)) {
         const cityIds = region.cities.map(city => city.id)
         map.set(region.id, cityIds)
-        // console.log(`Region ${region.label || region.name} (${region.id}) mapped to cities:`, cityIds)
       }
     })
     
@@ -271,8 +270,6 @@
     map.forEach((value, key) => {
       mapObj[key] = value
     })
-    // console.log('Dynamic region cities map:', mapObj)
-    // console.log('Available regions:', props.regions.map(r => ({ id: r.id, label: r.label || r.name })))
     return map
   })
 
@@ -281,22 +278,13 @@
 
   // Фильтрация отелей по поисковому запросу, выбранным регионам и категориям
   const filteredHotels = computed(() => {
-    // console.log('=== filteredHotels computed triggered ===')
-    // console.log('selectedFilters.regions changed to:', selectedFilters.value.regions)
-    // console.log('selectedFilters.categories changed to:', selectedFilters.value.categories)
-    // console.log('props.hotels count:', props.hotels.length)
     
     let hotels = props.hotels
-    // console.log('filteredHotels computed - total hotels:', hotels.length)
-    // console.log('Selected regions:', selectedFilters.value.regions)
-    // console.log('Selected categories:', selectedFilters.value.categories)
-    // console.log('Sample hotels with city_id and category_id:', hotels.slice(0, 5).map(h => ({ id: h.id, name: h.label || h.name, city_id: h.city_id, category_id: h.category_id })))
 
     // Фильтрация по выбранным регионам
     if (selectedFilters.value.regions.length > 0) {
       // Если выбран "Все" (id: 1), показываем все отели
       if (selectedFilters.value.regions.includes(1)) {
-        // console.log('All regions selected, showing all hotels')
         // Показываем все отели
       } else {
         // Фильтруем отели по выбранным регионам
@@ -310,23 +298,18 @@
           }
         })
         
-        // console.log('Selected cities for filtering:', Array.from(selectedCities))
-        // console.log('Region cities map keys:', Array.from(regionCitiesMap.value.keys()))
         
         hotels = hotels.filter(hotel => {
           // Проверяем, есть ли у отеля city_id и соответствует ли он выбранным городам
           if (hotel.city_id) {
             const matches = selectedCities.has(hotel.city_id)
             if (matches) {
-              // console.log(`Hotel ${hotel.label || hotel.name} (city_id: ${hotel.city_id}) matches selected cities`)
             }
             return matches
           }
           // Если у отеля нет city_id, НЕ показываем его (только отели с city_id)
-          // console.log(`Hotel ${hotel.label || hotel.name} has no city_id, filtering out`)
           return false
         })
-        // console.log(`Filtered hotels by regions: ${hotels.length}`)
       }
     }
     // Если не выбрано ни одного региона, показываем все отели (не фильтруем по регионам)
@@ -335,7 +318,6 @@
     if (selectedFilters.value.categories.length > 0) {
       // Если выбран "Все" (id: 1), показываем все отели
       if (selectedFilters.value.categories.includes(1)) {
-        // console.log('All categories selected, showing all hotels')
         // Показываем все отели
       } else {
         // Фильтруем отели по выбранным категориям
@@ -344,14 +326,11 @@
           // Проверяем, есть ли у отеля category_id и соответствует ли он выбранным категориям
           if (hotel.category_id) {
             const matches = selectedFilters.value.categories.includes(hotel.category_id)
-            // console.log(`Hotel ${hotel.label || hotel.name} (category_id: ${hotel.category_id}) matches selected categories ${selectedFilters.value.categories}: ${matches}`)
             return matches
           }
           // Если у отеля нет category_id, НЕ показываем его (только отели с category_id)
-          // console.log(`Hotel ${hotel.label || hotel.name} has no category_id, filtering out`)
           return false
         })
-        // console.log(`Filtered hotels by categories: ${hotels.length}`)
       }
     }
     // Если не выбрано ни одной категории, показываем все отели (не фильтруем по категориям)
@@ -362,11 +341,8 @@
       hotels = hotels.filter(hotel =>
         hotel.name?.toLowerCase().includes(query) || hotel.label?.toLowerCase().includes(query)
       )
-      // console.log(`Filtered hotels by search: ${beforeSearch} -> ${hotels.length}`)
     }
 
-    // console.log('Final filtered hotels:', hotels.length)
-    // console.log('=== filteredHotels computed finished ===')
     return hotels
   })
 
@@ -404,13 +380,6 @@
 
   // Логирование при получении данных
   onMounted(() => {
-    // console.log('SearchFilters mounted with props:', {
-    //   regions: props.regions.length,
-    //   categories: props.categories.length,
-    //   hotels: props.hotels.length,
-    //   meals: props.meals.length,
-    //   options: props.options.length
-    // })
   })
 
   // Удалены неиспользуемые watchers для логирования - они не влияют на функциональность
@@ -430,7 +399,6 @@
         // Очищаем выбранные отели при изменении регионов или категорий
         selectedFilters.value.hotels = []
         emit('update:hotels', [])
-        // console.log('Cleared selected hotels due to region/category change')
       }
     },
     { deep: true }
@@ -479,14 +447,7 @@
   }
 
   const handleToggleAllRegions = () => {
-    // console.log('handleToggleAllRegions called')
-    // console.log('Before toggle - selectedFilters.regions:', selectedFilters.value.regions)
-    // console.log('Available regions:', props.regions.map(r => ({ id: r.id, name: r.label || r.name })))
-    
     toggleAllRegions(props.regions)
-    
-    // console.log('After toggle - selectedFilters.regions:', selectedFilters.value.regions)
-    // console.log('Emitting update:regions with:', selectedFilters.value.regions)
     
     emit('update:regions', selectedFilters.value.regions)
   }

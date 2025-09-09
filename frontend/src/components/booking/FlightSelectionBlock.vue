@@ -157,13 +157,10 @@ const emit = defineEmits<Emits>()
 const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
 
 const flightOptions = computed(() => {
-  console.log('🔍 searchResult:', props.searchResult)
-  console.log('🔍 isGroupedResult:', isGroupedResult.value)
-  console.log('🔍 selectedRoom:', props.selectedRoom)
+  // Processing search result for flight options
   
   if (isGroupedResult.value) {
     const groupedResult = props.searchResult as GroupedSearchResult
-    console.log('🔍 groupedResult.roomOptions:', groupedResult.roomOptions)
     
     // Если выбрана комната, показываем только перелеты для этой комнаты
     if (props.selectedRoom) {
@@ -174,7 +171,6 @@ const flightOptions = computed(() => {
       )
       
       if (selectedRoomOption?.flightOptions) {
-        console.log('🔍 selectedRoomOption.flightOptions:', selectedRoomOption.flightOptions)
         return selectedRoomOption.flightOptions
       }
     }
@@ -195,21 +191,17 @@ const flightOptions = computed(() => {
       }
     })
     
-    console.log('🔍 allFlightOptions (unique):', allFlightOptions)
     return allFlightOptions
   } else {
     // For regular SearchResult, create a single flight option
     const regularResult = props.searchResult as SearchResult
-    console.log('🔍 regularResult.tickets:', regularResult.tickets)
     return regularResult.tickets ? [regularResult.tickets] : []
   }
 })
 
 // Create flight pairs from flight options
 const flightPairs = computed(() => {
-  console.log('🔍 flightOptions.value:', flightOptions.value)
   return flightOptions.value.map((option, index) => {
-    console.log(`🔍 Processing flight option ${index}:`, option)
     const outbound = option.from
     const inbound = option.to
     

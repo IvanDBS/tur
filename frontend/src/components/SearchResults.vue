@@ -78,15 +78,7 @@
   // State
   const isLoadingMore = ref(false)
 
-  // Debug logging
-  watch(() => props.results, (newResults) => {
-    console.log('SearchResults: results changed', {
-      results: newResults,
-      length: newResults?.length,
-      isLoading: props.isLoading,
-      currentPage: props.currentPage
-    })
-  }, { immediate: true })
+  // Debug logging removed for production
 
   // Methods
   const handleBook = (result: GroupedSearchResult) => {

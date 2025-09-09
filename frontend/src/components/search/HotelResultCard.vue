@@ -253,19 +253,19 @@ const canBook = computed(() => {
 
 // Handle booking
 const handleBook = () => {
-  console.log('Booking button clicked!', props.result)
+  // Booking button clicked
   
   // Create unique key for grouped result
   const uniqueKey = `${props.result.hotel.id}`
   
   // Navigate to booking page with search result data
-  console.log('Navigating to booking page with ID:', uniqueKey)
+  // Navigating to booking page
   
   // Store search result in sessionStorage for the booking page
   try {
     sessionStorage.setItem('bookingSearchResult', JSON.stringify(props.result))
   } catch (error) {
-    console.warn('Failed to store search result in sessionStorage:', error)
+    // Failed to store search result in sessionStorage
   }
   
   // Emit event to parent to save search state before navigation
@@ -277,9 +277,9 @@ const handleBook = () => {
       searchResultId: uniqueKey
     }
   }).then(() => {
-    console.log('Navigation successful')
+    // Navigation successful
   }).catch((error) => {
-    console.error('Navigation failed:', error)
+    // Navigation failed
     alert('Ошибка перехода на страницу бронирования: ' + error.message)
   })
 }

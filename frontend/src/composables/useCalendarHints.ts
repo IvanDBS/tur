@@ -27,10 +27,7 @@ export const useCalendarHints = () => {
   const availableDates = computed(() => {
     const keys = Object.keys(calendarHints.value)
     const dates = keys.map(date => new Date(date))
-    console.log('📅 availableDates computed - totalDates:', dates.length)
-    console.log('📅 availableDates computed - keys:', keys)
-    console.log('📅 availableDates computed - dates:', dates.map(d => d.toISOString().split('T')[0]))
-    console.log('📅 availableDates computed - calendarHints.value:', calendarHints.value)
+    // Available dates computed
     logger.info('📅 availableDates computed:', {
       totalDates: dates.length,
       firstFewDates: dates.slice(0, 3).map(d => d.toISOString().split('T')[0]),

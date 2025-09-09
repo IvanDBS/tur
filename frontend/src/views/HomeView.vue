@@ -48,7 +48,6 @@
   const { loading, error, initializeData, clearError } = useSearchData()
 
   const handleSearch = (searchParams: Record<string, unknown>) => {
-    console.log('Search params:', searchParams)
     // TODO: Implement search functionality
   }
 
@@ -61,7 +60,7 @@
     try {
       await initializeData()
     } catch (err) {
-      console.error('Failed to initialize search data:', err)
+      // Error handling is done by useSearchData composable
     }
   })
 </script>

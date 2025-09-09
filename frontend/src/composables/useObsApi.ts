@@ -214,7 +214,7 @@ export const useObsApi = () => {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch package templates'
-      console.error('fetchPackageTemplates error:', err)
+      // fetchPackageTemplates error
       setError(message)
       return []
     } finally {

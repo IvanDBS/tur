@@ -205,7 +205,7 @@ const loadSearchResult = async () => {
     if (storedSearchResult) {
       try {
         const searchResult = JSON.parse(storedSearchResult)
-        console.log('Loaded search result from sessionStorage:', searchResult)
+        // Loaded search result from sessionStorage
         
         // Validate search result structure
         if (!searchResult || typeof searchResult !== 'object') {
@@ -215,7 +215,7 @@ const loadSearchResult = async () => {
         initializeBooking(searchResult)
         return
       } catch (parseError) {
-        console.warn('Failed to parse stored search result:', parseError)
+        // Failed to parse stored search result
         sessionStorage.removeItem('bookingSearchResult')
       }
     }
@@ -231,7 +231,7 @@ const loadSearchResult = async () => {
     // For now, we'll need to get the search result from the search results
     // This should be implemented based on how search results are stored/managed
     
-    console.log('Loading search result for ID:', props.searchResultId)
+    // Loading search result for ID
     
     // For now, show error if no search result ID
     if (!props.searchResultId) {
@@ -243,11 +243,10 @@ const loadSearchResult = async () => {
     // initializeBooking(result)
     
   } catch (err) {
-    console.error('Failed to load search result:', err)
+    // Failed to load search result
     // Set error state to show error message to user
     if (err instanceof Error) {
       // You might want to set an error state here
-      console.error('Error details:', err.message)
     }
   }
 }
@@ -260,7 +259,7 @@ const retryLoad = () => {
 const handleCalculate = async () => {
   const result = await calculateBooking()
   if (result) {
-    console.log('Booking calculated:', result)
+    // Booking calculated
     // TODO: Show calculation results to user
   }
 }
@@ -268,7 +267,7 @@ const handleCalculate = async () => {
 const handleBook = async () => {
   const result = await createBooking()
   if (result) {
-    console.log('Booking created:', result)
+    // Booking created
     // User will be redirected to bookings page
   }
 }
@@ -417,7 +416,7 @@ onMounted(async () => {
   try {
     await loadSearchResult()
   } catch (error) {
-    console.error('Error in BookingView onMounted:', error)
+    // Error in BookingView onMounted
   }
 })
 </script>

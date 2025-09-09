@@ -80,7 +80,7 @@ onMounted(async () => {
   try {
     await fetchDepartureCities()
   } catch (err) {
-    console.error('Failed to initialize OBS API test:', err)
+    // Failed to initialize OBS API test
   }
 })
 </script>

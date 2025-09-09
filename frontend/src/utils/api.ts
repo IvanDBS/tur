@@ -45,7 +45,7 @@ class ApiClient {
 
       return await response.json()
     } catch (error) {
-      console.error('API request failed:', error)
+      // API request failed
       throw error
     }
   }
@@ -60,7 +60,7 @@ class ApiClient {
       const isExpired = Date.now() - cached.timestamp > this.CACHE_TTL
       
       if (!isExpired) {
-        console.log(`Cache hit: ${endpoint}`)
+        // Cache hit
         return cached.data as T
       } else {
         this.cache.delete(cacheKey)
@@ -72,7 +72,7 @@ class ApiClient {
     // Кешируем только успешные GET запросы
     if (useCache) {
       this.cache.set(cacheKey, { data: result, timestamp: Date.now() })
-      console.log(`Cached: ${endpoint}`)
+      // Cached
     }
     
     return result
@@ -112,7 +112,7 @@ class ApiClient {
       // Очищаем весь кеш
       this.cache.clear()
     }
-    console.log(`Cache cleared${pattern ? ` for pattern: ${pattern}` : ''}`)
+    // Cache cleared
   }
 
   // Получение статистики кеша

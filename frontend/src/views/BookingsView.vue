@@ -136,7 +136,7 @@
       await new Promise(resolve => setTimeout(resolve, 1000))
       bookings.value = mockBookings
     } catch (error) {
-      console.error('Failed to load bookings:', error)
+      // Error handling - bookings will remain empty
       bookings.value = []
     } finally {
       isLoading.value = false
@@ -164,7 +164,6 @@
 
   const viewDetails = (bookingId: number) => {
     // TODO: Navigate to booking details page
-    console.log('Viewing booking details:', bookingId)
   }
 
   // Lifecycle

@@ -69,18 +69,10 @@ const visiblePages = computed(() => {
 })
 
 const goToPage = (page: number) => {
-  // console.log('🔥 Pagination goToPage called with:', page)
-  // console.log('🔥 Current page:', props.currentPage)
-  // console.log('🔥 Total pages:', props.totalPages)
-  // console.log('🔥 Page >= 1:', page >= 1)
-  // console.log('🔥 Page <= totalPages:', page <= props.totalPages)
-  // console.log('🔥 Page !== currentPage:', page !== props.currentPage)
   
   if (page >= 1 && page <= props.totalPages && page !== props.currentPage) {
-    // console.log('🔥 Emitting page-change event with page:', page)
     emit('page-change', page)
   } else {
-    // console.log('🔥 Page change blocked - conditions not met')
   }
 }
 </script>

@@ -235,42 +235,7 @@ h1 {
   flex-wrap: wrap;
 }
 
-.btn {
-  padding: 0.875rem 1.75rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.2s;
-  min-width: 200px;
-}
-
-.btn-primary {
-  background: #667eea;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #5a6fd8;
-  transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
-  transform: translateY(-1px);
-}
+/* Button styles removed - using base.css styles */
 
 .status-section {
   background: #f8f9fa;

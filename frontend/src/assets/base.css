@@ -22,50 +22,15 @@
     'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
 
-  /* Minimalist Neutral Backgrounds */
-  --color-background: #ffffff;
-  --color-background-soft: #f7f7f7;
-  --color-background-muted: #efefef;
-
-  /* Border Colors */
-  --color-border: #dddddd;
-  --color-border-soft: #ebebeb;
-
-  /* Text Colors - Minimalist */
-  --color-text: #222222;
-  --color-text-soft: #333333;
-  --color-text-muted: #717171;
-
-  /* Primary Colors - Airbnb */
-  --color-primary: #ff5a5f;
-  --color-primary-hover: #e74e54;
+  /* Additional colors not in design-tokens.css */
   --color-primary-light: #ff8a8e;
-  --color-primary-muted: rgba(255, 90, 95, 0.1);
   --color-primary-dark: #d63d42;
-
-  /* Secondary Colors - Темно-синий (дополнительный к коралловому) */
-  --color-secondary: #1a3c61;
-  --color-secondary-hover: #132e4c;
   --color-secondary-light: #2d5a8a;
-  --color-secondary-muted: rgba(26, 60, 97, 0.1);
-
-  /* Dark Gray for UI Elements */
   --color-dark-gray: #484848;
   --color-dark-gray-hover: #333333;
   --color-dark-gray-muted: rgba(72, 72, 72, 0.1);
 
-  /* Semantic Colors */
-  --color-success: var(--color-secondary);
-  --color-warning: #ffb400;
-  --color-danger: #ff5a5f;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Additional shadows */
   --shadow-ocean: 0 4px 20px rgba(14, 165, 233, 0.15);
 }
 

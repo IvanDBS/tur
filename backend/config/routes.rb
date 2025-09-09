@@ -42,6 +42,12 @@ Rails.application.routes.draw do
           post :confirm
         end
       end
+      
+      # Admin routes
+      get 'admin/stats', to: 'admin#stats'
+      get 'admin/bookings', to: 'admin#bookings'
+      get 'admin/bookings/:id', to: 'admin#booking_details'
+      patch 'admin/bookings/:id/status', to: 'admin#update_booking_status'
     end
   end
   

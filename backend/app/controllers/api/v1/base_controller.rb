@@ -1,3 +1,5 @@
+require 'jwt'
+
 module Api
   module V1
     class BaseController < ApplicationController
@@ -19,21 +21,23 @@ module Api
           return
         end
 
-        @current_user = User.find_by(obs_access_token: token)
-
-        if @current_user.nil? || !@current_user.obs_tokens_valid?
+        begin
+          # Decode JWT token
+          decoded_token = JWT.decode(
+            token,
+            Rails.application.credentials.secret_key_base,
+            true,
+            { algorithm: 'HS256' }
+          )
+          
+          user_id = decoded_token[0]['user_id']
+          @current_user = User.find(user_id)
+          
+        rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound => e
+          Rails.logger.error "Authentication failed: #{e.message}"
           render_error('Invalid or expired token', :unauthorized)
           return
         end
-
-        # Refresh token if it's about to expire (within 5 minutes)
-        unless @current_user.obs_token_expires_at.present? && @current_user.obs_token_expires_at < 5.minutes.from_now
-          return
-        end
-
-        auth_service = ObsAuthService.new(user_id: @current_user.id)
-        auth_service.refresh_token
-        @current_user.reload
       end
 
       attr_reader :current_user

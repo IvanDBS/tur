@@ -1,8 +1,7 @@
 # Authentication controller for Devise JWT
 module Api
   module V1
-    class AuthController < ApplicationController
-      skip_before_action :verify_authenticity_token
+    class AuthController < Api::V1::BaseController
       before_action :authenticate_user!, only: %i[me update_profile change_password]
 
       # POST /api/v1/auth/sign_up

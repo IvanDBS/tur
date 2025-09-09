@@ -50,6 +50,22 @@ const router = createRouter({
       component: () => import('../views/BookingView.vue'),
       props: true,
     },
+    {
+      path: '/admin',
+      component: () => import('../views/admin/AdminDashboard.vue'),
+      children: [
+        {
+          path: '',
+          name: 'admin',
+          redirect: '/admin/bookings'
+        },
+        {
+          path: 'bookings',
+          name: 'admin-bookings',
+          component: () => import('../views/admin/AdminBookingsView.vue'),
+        },
+      ]
+    },
   ],
 })
 

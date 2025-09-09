@@ -22,6 +22,9 @@
           <router-link to="/obs-test" class="nav-link"
             >Тест OBS API</router-link
           >
+          <router-link to="/admin" class="nav-link"
+            >Админ-панель</router-link
+          >
           <router-link to="/about" class="nav-link">О нас</router-link>
           <router-link to="/contact" class="nav-link">Контакты</router-link>
         </div>
@@ -138,8 +141,8 @@
 <script setup lang="ts">
  
   import { ref, computed, onMounted, onUnmounted } from 'vue'
-  import { useAuthStore } from '@/stores/auth'
-  import { useAuthModal } from '@/composables/useAuthModal'
+  import { useAuthStore } from '../stores/auth'
+  import { useAuthModal } from '../composables/useAuthModal'
 
   // Header component for the application
 

@@ -1,0 +1,87 @@
+// Types for admin panel
+
+export interface AdminUser {
+  id: number
+  email: string
+  name: string
+  phone?: string
+}
+
+export interface AdminBooking {
+  id: number
+  user: AdminUser
+  status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
+  total_amount: number
+  tour_details: {
+    hotel_name: string
+    hotel_category: string
+    city: string
+    room_type: string
+    meal_plan: string
+    check_in: string
+    check_out: string
+    nights: number
+    currency: string
+    tourists: Array<{
+      name: string
+      category: string
+      birthday: string
+    }>
+    flight_info: {
+      departure: {
+        date: string
+        time: string
+        airport: string
+        city: string
+      }
+      arrival: {
+        date: string
+        time: string
+        airport: string
+        city: string
+      }
+    }
+  }
+  customer_data: Record<string, unknown>
+  created_at: string
+  confirmed_at?: string
+  cancelled_at?: string
+  obs_booking_hash?: string
+  obs_order_id?: string
+  search_query?: {
+    id: number
+    obs_search_id: string
+    created_at: string
+  }
+}
+
+export interface AdminBookingsResponse {
+  success: boolean
+  message: string
+  data: {
+    bookings: AdminBooking[]
+    pagination: {
+      current_page: number
+      total_pages: number
+      total_count: number
+      per_page: number
+    }
+  }
+}
+
+export interface AdminStats {
+  total_bookings: number
+  pending_bookings: number
+  confirmed_bookings: number
+  cancelled_bookings: number
+  recent_bookings: number
+  total_revenue: number
+}
+
+export interface AdminStatsResponse {
+  success: boolean
+  message: string
+  data: {
+    stats: AdminStats
+  }
+}

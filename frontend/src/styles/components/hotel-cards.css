@@ -196,7 +196,7 @@
   transform: translateY(-2px);
 }
 
-/* Stop sale styling */
+/* Stop sale styling - только для карточек отелей */
 .hotel-result-card.stop-sale {
   position: relative;
 }
@@ -213,27 +213,16 @@
   pointer-events: none;
 }
 
-/* No tickets styling - красные карточки для отелей без мест */
+/* Available styling - отели с доступными местами */
+.hotel-result-card.available {
+  background: white;
+  border: 1px solid var(--color-border);
+  opacity: 1;
+}
+
+/* No tickets styling - отели без мест (без красной заливки) */
 .hotel-result-card.no-tickets {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 2px solid #fca5a5;
   opacity: 0.8;
-}
-
-.hotel-result-card.no-tickets .hotel-name {
-  color: #dc2626;
-  font-weight: 600;
-}
-
-.hotel-result-card.no-tickets .hotel-category {
-  color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-}
-
-.hotel-result-card.no-tickets .price-amount {
-  color: #dc2626;
-  text-decoration: line-through;
 }
 
 .hotel-result-card.no-tickets .availability-badge {
@@ -252,14 +241,6 @@
   background: #dc2626;
   transform: none;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-}
-
-.hotel-result-card.no-tickets .flight-section {
-  opacity: 0.7;
-}
-
-.hotel-result-card.no-tickets .airline-logo {
-  opacity: 0.6;
 }
 
 /* On request styling - желтые карточки для отелей на запрос */

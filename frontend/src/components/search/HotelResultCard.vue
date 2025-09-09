@@ -1,5 +1,5 @@
 <template>
-  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop, [getAvailabilityClass()]: true }">
+  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop === true, [getAvailabilityClass()]: true }">
     <!-- Hotel Image Section -->
     <div class="hotel-image-section">
       <div class="hotel-image">
@@ -17,7 +17,7 @@
       </div>
       <div class="hotel-badges-overlay">
         <span v-if="result.hotel?.is_exclusive" class="badge exclusive">Эксклюзив</span>
-        <span v-if="result.hotel?.in_stop" class="badge stop-sale">STOP SALE</span>
+        <span v-if="result.hotel?.in_stop === true" class="badge stop-sale">STOP SALE</span>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
       </div>
 
       <!-- STOP SALE Warning -->
-      <div v-if="result.hotel?.in_stop" class="stop-sale-warning">
+      <div v-if="result.hotel?.in_stop === true" class="stop-sale-warning">
         <div class="warning-icon">⚠️</div>
         <div class="warning-text">
           <strong>Внимание!</strong> Ограниченное количество мест. Бронирование может быть недоступно.
@@ -125,7 +125,7 @@
     <!-- Price and Actions Section -->
     <div class="price-section">
       <div class="price-info">
-        <div v-if="result.hotel?.in_stop" class="stop-sale-price">
+        <div v-if="result.hotel?.in_stop === true" class="stop-sale-price">
           <div class="stop-sale-label">STOP SALE</div>
           <div class="price">{{ result.minPrice }} {{ result.currency }}</div>
         </div>
@@ -242,7 +242,9 @@ const canBook = computed(() => {
   // For regular SearchResult, check tickets directly
   if ('accommodation' in props.result) {
     const regularResult = props.result as SearchResult
-    return regularResult.tickets.has_tickets !== false
+    const hasTicketsValue = regularResult.tickets.has_tickets
+    const hasTickets = hasTicketsValue !== false
+    return hasTickets
   }
   
   return true
@@ -316,10 +318,18 @@ const getRoomWord = (count: number) => {
 const getFlightOptionsCount = () => {
   if ('roomOptions' in props.result) {
     const groupedResult = props.result as GroupedSearchResult
-    // Считаем общее количество вариантов перелетов для всех комнат
-    return groupedResult.roomOptions.reduce((total, roomOption) => 
-      total + roomOption.flightOptions.length, 0
-    )
+    // Считаем уникальные комбинации перелетов (туда + обратно)
+    const uniqueFlights = new Set<string>()
+    
+    groupedResult.roomOptions.forEach(roomOption => {
+      roomOption.flightOptions.forEach(flightOption => {
+        // Создаем уникальный ключ для комбинации перелет туда + обратно
+        const flightKey = `${flightOption.from.id}_${flightOption.to.id}`
+        uniqueFlights.add(flightKey)
+      })
+    })
+    
+    return uniqueFlights.size
   }
   
   // For regular SearchResult, return 1
@@ -328,10 +338,7 @@ const getFlightOptionsCount = () => {
 
 // Availability methods
 const getAvailabilityClass = () => {
-  if (canBook.value) {
-    return 'available'
-  }
-  return 'not-available'
+  return canBook.value ? 'available' : 'no-tickets'
 }
 
 const getAvailabilityText = () => {

@@ -138,11 +138,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice } from '../../types/search'
-import type { SelectedFlight, FlightSegment } from '../../types/booking'
+import type { SelectedFlight, FlightSegment, SelectedRoom } from '../../types/booking'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
   selectedFlight?: SelectedFlight
+  selectedRoom?: SelectedRoom
 }
 
 interface Emits {
@@ -158,21 +159,43 @@ const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
 const flightOptions = computed(() => {
   console.log('🔍 searchResult:', props.searchResult)
   console.log('🔍 isGroupedResult:', isGroupedResult.value)
-  console.log('🔍 searchResult keys:', Object.keys(props.searchResult))
+  console.log('🔍 selectedRoom:', props.selectedRoom)
   
   if (isGroupedResult.value) {
     const groupedResult = props.searchResult as GroupedSearchResult
     console.log('🔍 groupedResult.roomOptions:', groupedResult.roomOptions)
     
-    // Собираем все flightOptions из всех roomOptions
+    // Если выбрана комната, показываем только перелеты для этой комнаты
+    if (props.selectedRoom) {
+      const selectedRoomOption = groupedResult.roomOptions?.find(option => 
+        option.room.id === props.selectedRoom?.room.id &&
+        option.meal.id === props.selectedRoom?.meal.id &&
+        option.placement.id === props.selectedRoom?.placement.id
+      )
+      
+      if (selectedRoomOption?.flightOptions) {
+        console.log('🔍 selectedRoomOption.flightOptions:', selectedRoomOption.flightOptions)
+        return selectedRoomOption.flightOptions
+      }
+    }
+    
+    // Если комната не выбрана, собираем все уникальные flightOptions
     const allFlightOptions: (SearchResultTickets & { price: SearchResultPrice })[] = []
+    const seenFlights = new Set<string>()
+    
     groupedResult.roomOptions?.forEach(roomOption => {
       if (roomOption.flightOptions) {
-        allFlightOptions.push(...roomOption.flightOptions)
+        roomOption.flightOptions.forEach(flightOption => {
+          const flightKey = `${flightOption.from.id}_${flightOption.to.id}`
+          if (!seenFlights.has(flightKey)) {
+            seenFlights.add(flightKey)
+            allFlightOptions.push(flightOption)
+          }
+        })
       }
     })
     
-    console.log('🔍 allFlightOptions:', allFlightOptions)
+    console.log('🔍 allFlightOptions (unique):', allFlightOptions)
     return allFlightOptions
   } else {
     // For regular SearchResult, create a single flight option
@@ -409,7 +432,7 @@ const selectFlightPair = (flightPair: any) => {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -449,7 +472,7 @@ const selectFlightPair = (flightPair: any) => {
 
 
 .city-name {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-secondary);
   margin-bottom: 0;
@@ -466,7 +489,7 @@ const selectFlightPair = (flightPair: any) => {
 .flight-info-line {
   display: flex;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   gap: 0.5rem;
   margin-bottom: 0.125rem;
 }

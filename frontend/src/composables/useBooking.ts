@@ -63,7 +63,36 @@ export const useBooking = () => {
   const basePrice = computed(() => {
     if (!searchResult.value) return 0
     
-    // Get price from selected flight or base price
+    // For grouped results, find the exact price for selected room + flight combination
+    if ('roomOptions' in searchResult.value && bookingData.selectedRoom && bookingData.selectedFlight) {
+      const groupedResult = searchResult.value as GroupedSearchResult
+      
+      // Find the selected room option
+      const selectedRoomOption = groupedResult.roomOptions?.find(option => 
+        option.room.id === bookingData.selectedRoom?.room.id &&
+        option.meal.id === bookingData.selectedRoom?.meal.id &&
+        option.placement.id === bookingData.selectedRoom?.placement.id
+      )
+      
+      if (selectedRoomOption) {
+        // Find the flight option with matching flight IDs
+        const selectedFlightOption = selectedRoomOption.flightOptions?.find(option => 
+          option.from.id === bookingData.selectedFlight?.outbound.id &&
+          option.to.id === bookingData.selectedFlight?.inbound.id
+        )
+        
+        if (selectedFlightOption?.price?.amount) {
+          return selectedFlightOption.price.amount
+        }
+      }
+    }
+    
+    // Fallback: Get price from selected room only
+    if (bookingData.selectedRoom?.price?.amount) {
+      return bookingData.selectedRoom.price.amount
+    }
+    
+    // Fallback: Get price from selected flight or base price
     if ('flightOptions' in searchResult.value && bookingData.selectedFlight) {
       const groupedResult = searchResult.value as GroupedSearchResult
       const selectedOption = groupedResult.flightOptions?.find(option => {
@@ -197,6 +226,12 @@ export const useBooking = () => {
   const updateSelectedRoom = (room: SelectedRoom) => {
     bookingData.selectedRoom = room
     logger.info('Selected room updated:', room)
+  }
+
+  // Reset selected flight (when room changes)
+  const resetSelectedFlight = () => {
+    bookingData.selectedFlight = undefined
+    logger.info('Selected flight reset due to room change')
   }
 
   // Update tourist data
@@ -335,6 +370,7 @@ export const useBooking = () => {
     initializeBooking,
     updateSelectedFlight,
     updateSelectedRoom,
+    resetSelectedFlight,
     updateTourist,
     updateAdditionalServices,
     calculateBooking,

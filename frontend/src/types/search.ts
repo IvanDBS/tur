@@ -277,6 +277,7 @@ export interface SearchResultTourists {
 
 // Вариант комнаты с ценой
 export interface RoomOption {
+  id: string
   room: SearchResultRoom
   meal: SearchResultMeal
   placement: SearchResultPlacement

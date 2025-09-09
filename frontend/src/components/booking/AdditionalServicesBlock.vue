@@ -323,6 +323,7 @@ const updateNote = (key: string, value: any) => {
 
 .service-option.selected {
   border-color: var(--color-primary);
+  border-width: 1px;
   background: #f8fafc;
   box-shadow: 0 2px 8px rgba(26, 60, 97, 0.15);
 }

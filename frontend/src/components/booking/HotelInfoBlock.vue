@@ -22,7 +22,7 @@
         </div>
         <div class="hotel-badges">
           <span v-if="hotel.is_exclusive" class="badge exclusive">Эксклюзив</span>
-          <span v-if="hotel.in_stop" class="badge stop-sale">STOP SALE</span>
+          <span v-if="hotel.in_stop === true" class="badge stop-sale">STOP SALE</span>
         </div>
       </div>
 
@@ -49,16 +49,12 @@
         <!-- Accommodation Details -->
         <div class="accommodation-details">
           <div class="detail-row">
-            <span class="detail-label">Тип комнаты:</span>
-            <span class="detail-value">{{ room.name }}</span>
-          </div>
-          <div class="detail-row">
             <span class="detail-label">Размещение:</span>
             <span class="detail-value">{{ placement.name }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Питание:</span>
-            <span class="detail-value meal-type" :class="getMealClass(meal.name)">
+            <span class="detail-value">
               {{ meal.full_name }}
             </span>
           </div>
@@ -168,7 +164,31 @@ const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
 
 // Calculate price based on selected room and flight
 const price = computed(() => {
-  // If room is selected, use its price
+  // For grouped results, find the exact price for selected room + flight combination
+  if (isGroupedResult.value && props.selectedRoom && props.selectedFlight) {
+    const groupedResult = props.searchResult as GroupedSearchResult
+    
+    // Find the selected room option
+    const selectedRoomOption = groupedResult.roomOptions?.find(option => 
+      option.room.id === props.selectedRoom?.room.id &&
+      option.meal.id === props.selectedRoom?.meal.id &&
+      option.placement.id === props.selectedRoom?.placement.id
+    )
+    
+    if (selectedRoomOption) {
+      // Find the flight option with matching flight IDs
+      const selectedFlightOption = selectedRoomOption.flightOptions?.find(option => 
+        option.from.id === props.selectedFlight?.outbound.id &&
+        option.to.id === props.selectedFlight?.inbound.id
+      )
+      
+      if (selectedFlightOption?.price) {
+        return selectedFlightOption.price
+      }
+    }
+  }
+  
+  // Fallback: If room is selected, use its price
   if (props.selectedRoom) {
     return props.selectedRoom.price
   }
@@ -215,16 +235,6 @@ const formatDate = (dateString: string) => {
   }
 }
 
-const getMealClass = (mealName: string) => {
-  if (!mealName) return ''
-  const name = mealName.toLowerCase()
-  if (name.includes('all inclusive')) return 'all-inclusive'
-  if (name.includes('ultra all inclusive')) return 'ultra-all-inclusive'
-  if (name.includes('half board')) return 'half-board'
-  if (name.includes('full board')) return 'full-board'
-  if (name.includes('breakfast')) return 'breakfast'
-  return 'standard'
-}
 
 const handleImageError = () => {
   imageError.value = true
@@ -398,36 +408,6 @@ const handleImageError = () => {
   text-align: right;
 }
 
-.meal-type {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-}
-
-.meal-type.all-inclusive {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.meal-type.ultra-all-inclusive {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.meal-type.half-board {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.meal-type.full-board {
-  background: #fce7f3;
-  color: #be185d;
-}
-
-.meal-type.breakfast {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
 
 .price-section {
   margin-top: auto;

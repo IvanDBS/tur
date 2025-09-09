@@ -43,13 +43,16 @@
         <RoomSelectionBlock 
           :search-result="searchResult"
           :selected-room="bookingData.selectedRoom"
+          :selected-flight="bookingData.selectedFlight"
           @update:selected-room="updateSelectedRoom"
+          @reset:selected-flight="resetSelectedFlight"
         />
 
         <!-- Flight Selection Block -->
         <FlightSelectionBlock 
           :search-result="searchResult"
           :selected-flight="bookingData.selectedFlight"
+          :selected-room="bookingData.selectedRoom"
           @update:selected-flight="updateSelectedFlight"
         />
 
@@ -75,7 +78,7 @@
               <div class="price-item">
                 <div class="price-name">Базовая стоимость</div>
                 <div class="price-description">{{ getBasePriceDescription() }}</div>
-                <div class="price-value">{{ basePrice }} {{ searchResult.price?.currency }}</div>
+                <div class="price-value">{{ basePrice }} €</div>
               </div>
               
               <div class="price-item">
@@ -90,7 +93,7 @@
                 <div class="price-name">Трансфер</div>
                 <div class="price-description">{{ getTransferName() }} - {{ getTransferDescription() }}</div>
                 <div class="price-value">
-                  {{ bookingData.additionalServices.transfer.included ? '0' : '+' + bookingData.additionalServices.transfer.price }}
+                  {{ bookingData.additionalServices.transfer.included ? '0' : '+' + bookingData.additionalServices.transfer.price + ' €' }}
                 </div>
               </div>
               
@@ -103,7 +106,7 @@
               <div class="price-item total">
                 <div class="price-name">Итого</div>
                 <div class="price-description"></div>
-                <div class="price-value">{{ totalPrice }} {{ searchResult.price?.currency }}</div>
+                <div class="price-value">{{ totalPrice }} €</div>
               </div>
             </div>
 
@@ -169,6 +172,7 @@ const {
   initializeBooking,
   updateSelectedFlight,
   updateSelectedRoom,
+  resetSelectedFlight,
   updateTourist,
   updateAdditionalServices,
   calculateBooking,
@@ -278,9 +282,9 @@ const getInsuranceName = () => {
   const insurance = bookingData.value.additionalServices.insurance
   switch (insurance.type) {
     case 'STANDARD':
-      return 'STANDARD 10000 EUR'
+      return 'STANDARD 10000 €'
     case 'STANDARD_PLUS':
-      return 'STANDARD PLUS TR 30 000 EUR'
+      return 'STANDARD PLUS TR 30 000 €'
     case 'NONE':
       return 'Без страховки'
     default:
@@ -344,12 +348,16 @@ const getBasePriceDescription = () => {
   // Добавляем проживание
   parts.push('проживание')
   
-  // Добавляем питание
+  // Добавляем питание из выбранной комнаты
   let mealName = 'питание'
-  if ('meal' in result && result.meal && typeof result.meal === 'object' && result.meal !== null) {
-    mealName = (result.meal as any).name || 'питание'
-  } else if ('accommodation' in result && result.accommodation?.meal) {
-    mealName = result.accommodation.meal.name || 'питание'
+  if (bookingData.value.selectedRoom?.meal?.full_name) {
+    mealName = bookingData.value.selectedRoom.meal.full_name
+  } else if (bookingData.value.selectedRoom?.meal?.name) {
+    mealName = bookingData.value.selectedRoom.meal.name
+  } else if ('accommodation' in result && result.accommodation?.meal?.full_name) {
+    mealName = result.accommodation.meal.full_name
+  } else if ('accommodation' in result && result.accommodation?.meal?.name) {
+    mealName = result.accommodation.meal.name
   }
   
   // Форматируем питание: "питание по системе {НАЗВАНИЕ}"

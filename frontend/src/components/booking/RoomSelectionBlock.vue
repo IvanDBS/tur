@@ -23,49 +23,29 @@
             
             <!-- Room Details -->
             <div class="room-details">
-              <div class="room-header">
-                <div class="room-name">{{ roomOption.room.name }}</div>
-                <div class="room-price">
-                  <span class="price-amount">{{ formatPrice(roomOption.price.amount) }}</span>
-                  <span class="price-currency">{{ roomOption.price.currency }}</span>
+              <div class="room-info-columns">
+                <div class="room-column">
+                  <div class="column-label">Тип номера</div>
+                  <div class="room-name">{{ roomOption.room.name }}</div>
                 </div>
-              </div>
-              
-              <div class="room-info">
-                <div class="info-row">
-                  <span class="info-label">Размещение:</span>
-                  <span class="info-value">{{ roomOption.placement.name }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Питание:</span>
-                  <span class="info-value meal-type" :class="getMealClass(roomOption.meal.name)">
+                <div class="room-column">
+                  <div class="column-label">Питание</div>
+                  <div class="info-item">
                     {{ roomOption.meal.full_name }}
-                  </span>
+                  </div>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">Тип цены:</span>
-                  <span class="info-value price-type">{{ roomOption.price.type }}</span>
+                <div class="room-column">
+                  <div class="column-label">Размещение</div>
+                  <div class="info-item">{{ roomOption.placement.name }}</div>
+                </div>
+                <div class="room-column price-column">
+                  <div class="room-price">
+                    <span class="price-amount">{{ formatPrice(getRoomPrice(roomOption)) }} €</span>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <!-- Price Details -->
-            <div class="price-details">
-              <div class="price-breakdown">
-                <div class="breakdown-row">
-                  <span class="breakdown-label">Базовая цена:</span>
-                  <span class="breakdown-value">{{ formatPrice(roomOption.price.netto) }} {{ roomOption.price.currency }}</span>
-                </div>
-                <div class="breakdown-row">
-                  <span class="breakdown-label">Комиссия:</span>
-                  <span class="breakdown-value">{{ formatPrice(roomOption.price.commission) }} {{ roomOption.price.currency }}</span>
-                </div>
-                <div class="breakdown-row total">
-                  <span class="breakdown-label">Итого:</span>
-                  <span class="breakdown-value">{{ formatPrice(roomOption.price.amount) }} {{ roomOption.price.currency }}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -76,16 +56,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { SearchResult, GroupedSearchResult, RoomOption } from '../../types/search'
-import type { SelectedRoom } from '../../types/booking'
+import type { SelectedRoom, SelectedFlight } from '../../types/booking'
 import { formatPrice } from '../../utils/stringUtils'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
   selectedRoom?: SelectedRoom
+  selectedFlight?: SelectedFlight
 }
 
 interface Emits {
   (e: 'update:selectedRoom', room: SelectedRoom): void
+  (e: 'reset:selectedFlight'): void
 }
 
 const props = defineProps<Props>()
@@ -123,6 +105,23 @@ const selectedRoomOption = computed(() => {
 })
 
 // Methods
+const getRoomPrice = (roomOption: RoomOption): number => {
+  // Если выбран перелет, ищем цену для комбинации комната + перелет
+  if (props.selectedFlight && isGroupedResult.value) {
+    const flightOption = roomOption.flightOptions?.find(option => 
+      option.from.id === props.selectedFlight?.outbound.id &&
+      option.to.id === props.selectedFlight?.inbound.id
+    )
+    
+    if (flightOption?.price?.amount) {
+      return flightOption.price.amount
+    }
+  }
+  
+  // Fallback: используем базовую цену комнаты
+  return roomOption.price.amount
+}
+
 const selectRoomOption = (roomOption: RoomOption) => {
   const selectedRoom: SelectedRoom = {
     room: roomOption.room,
@@ -132,21 +131,11 @@ const selectRoomOption = (roomOption: RoomOption) => {
   }
   
   emit('update:selectedRoom', selectedRoom)
+  
+  // Сбрасываем выбранный перелет при смене комнаты
+  emit('reset:selectedFlight')
 }
 
-const getMealClass = (mealName: string): string => {
-  const meal = mealName.toLowerCase()
-  if (meal.includes('all inclusive') || meal.includes('ultra all inclusive')) {
-    return 'all-inclusive'
-  } else if (meal.includes('half board') || meal.includes('hb')) {
-    return 'half-board'
-  } else if (meal.includes('bed and breakfast') || meal.includes('bb')) {
-    return 'bed-breakfast'
-  } else if (meal.includes('full board') || meal.includes('fb')) {
-    return 'full-board'
-  }
-  return 'other'
-}
 </script>
 
 <style scoped>
@@ -158,20 +147,18 @@ const getMealClass = (mealName: string): string => {
 }
 
 .block-header {
-  background: var(--color-background-secondary);
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+  padding: 1.5rem 1.5rem 0;
 }
 
 .block-title {
-  font-size: 1.125rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
+  color: var(--color-secondary);
+  margin: 0 0 1.5rem;
 }
 
 .room-content {
-  padding: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
 }
 
 .room-options {
@@ -181,7 +168,7 @@ const getMealClass = (mealName: string): string => {
 }
 
 .room-option {
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -195,15 +182,15 @@ const getMealClass = (mealName: string): string => {
 
 .room-option.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-light);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #f8fafc;
+  box-shadow: 0 2px 8px rgba(26, 60, 97, 0.15);
 }
 
 .room-option-content {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .selection-indicator {
@@ -245,45 +232,77 @@ const getMealClass = (mealName: string): string => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
-.room-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.room-info-columns {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
   gap: 1rem;
+  align-items: start;
+}
+
+.room-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.column-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-column {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .room-name {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .room-price {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .price-amount {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-primary);
-}
-
-.price-currency {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .room-info {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.room-info-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.info-item {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.info-separator {
+  color: var(--color-border);
+  font-weight: 300;
 }
 
 .info-row {
@@ -304,121 +323,44 @@ const getMealClass = (mealName: string): string => {
   font-weight: 500;
 }
 
-.meal-type {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.meal-type.all-inclusive {
-  background: var(--color-success-light);
-  color: var(--color-success);
-}
-
-.meal-type.half-board {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-}
-
-.meal-type.bed-breakfast {
-  background: var(--color-info-light);
-  color: var(--color-info);
-}
-
-.meal-type.full-board {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-.meal-type.other {
-  background: var(--color-background-secondary);
-  color: var(--color-text-muted);
-}
 
 .price-type {
   font-style: italic;
   color: var(--color-text-muted);
 }
 
-.price-details {
-  flex-shrink: 0;
-  min-width: 200px;
-}
-
-.price-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-background-secondary);
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-}
-
-.breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.875rem;
-}
-
-.breakdown-row.total {
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.5rem;
-  margin-top: 0.25rem;
-  font-weight: 600;
-}
-
-.breakdown-label {
-  color: var(--color-text-muted);
-}
-
-.breakdown-value {
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.breakdown-row.total .breakdown-value {
-  color: var(--color-primary);
-  font-weight: 700;
-}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .room-option-content {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
   
-  .room-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .room-info-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  
+  .price-column {
+    grid-column: 1 / -1;
+    align-items: center;
+    text-align: center;
+    margin-top: 0.5rem;
   }
   
   .room-price {
-    align-items: flex-start;
+    justify-content: center;
   }
   
-  .price-details {
-    min-width: auto;
-    width: 100%;
+  .column-label {
+    font-size: 0.7rem;
   }
   
-  .room-info {
-    gap: 0.375rem;
-  }
-  
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  
-  .info-label {
-    min-width: auto;
+  .room-name,
+  .info-item {
+    font-size: 0.8rem;
   }
 }
 </style>

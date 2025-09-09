@@ -79,6 +79,7 @@ export const useSearchData = () => {
   const packages = ref<Package[]>([])
   const arrivalCities = ref<ArrivalCity[]>([])
   const regions = ref<Region[]>([])
+  const cities = ref<Array<{ id: number, label: string, region_id: number }>>([])
   const categories = ref<Category[]>([])
   const hotels = ref<Hotel[]>([])
   const meals = ref<Meal[]>([])
@@ -202,11 +203,37 @@ export const useSearchData = () => {
 
   const loadLocations = async (packageTemplateId: number) => {
     try {
-      const loadedRegions = await obsApi.fetchLocations(packageTemplateId)
+      logger.debug(`Loading locations for package ${packageTemplateId}...`)
+      const loadedLocations = await obsApi.fetchLocations(packageTemplateId)
+      logger.debug(`🏙️ Received ${(loadedLocations || []).length} locations from obsApi.fetchLocations`)
+      
       // Синхронизируем данные между obsApi и searchData
-      regions.value = loadedRegions || []
+      regions.value = loadedLocations || []
+      
+      // Извлекаем все города из регионов
+      const allCities: Array<{ id: number, label: string, region_id: number }> = []
+      loadedLocations?.forEach(region => {
+        if (region.cities && Array.isArray(region.cities)) {
+          region.cities.forEach(city => {
+            allCities.push({
+              id: city.id,
+              label: city.label,
+              region_id: region.id
+            })
+          })
+        }
+      })
+      cities.value = allCities
+      
+      await nextTick() // Ждем обновления реактивности
+      logger.info(`🏙️ Locations synced to searchData. Total regions: ${regions.value.length}, Total cities: ${cities.value.length}`)
+      logger.debug(`🏙️ First 3 regions:`, regions.value.slice(0, 3))
+      logger.debug(`🏙️ First 3 cities:`, cities.value.slice(0, 3))
     } catch (err) {
       logger.warn('Using fallback locations data')
+      logger.error('Error loading locations:', err)
+      regions.value = fallbackRegions.value
+      cities.value = []
     }
   }
 
@@ -407,6 +434,7 @@ export const useSearchData = () => {
     packages: getPackages,
     arrivalCities: getArrivalCities,
     regions: getRegions,
+    cities,
     categories: getCategories,
     hotels: getHotels,
     meals: getMeals,

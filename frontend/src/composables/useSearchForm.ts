@@ -277,12 +277,17 @@ export const useSearchForm = () => {
       searchForm.value.children = null
       searchForm.value.childrenAges = []
       
-      // Устанавливаем дату выезда если она не установлена или меньше даты заезда
-      if (!searchForm.value.checkOutDate || searchForm.value.checkOutDate < newDate) {
-        searchForm.value.checkOutDate = newDate
-      }
+      // Устанавливаем "Период заезда до" равным "Период заезда от" по умолчанию
+      // Это означает, что можно заселиться только в выбранную дату
+      searchForm.value.checkOutDate = new Date(newDate)
+      logger.info('🔄 Set checkOutDate (max check-in date) equal to checkInDate (min check-in date):', newDate)
     }
   })
+
+  // Убрали автоматический расчет checkOutDate, так как это не дата выезда,
+  // а максимальная дата заселения в отеле
+  // checkOutDate теперь устанавливается равным checkInDate по умолчанию
+  // и пользователь может изменить его на более позднюю дату
 
   // Фильтрованные опции для второго селектора ночей
   const filteredNights2Options = computed(() => {
@@ -561,15 +566,15 @@ export const useSearchForm = () => {
         return
       }
       
-      const hotelKey = `${result.accommodation.hotel.id}-${result.accommodation.room.id}-${result.accommodation.meal.id}`
+      const hotelKey = `${result.accommodation.hotel.id}`
       
       if (groupedMap.has(hotelKey)) {
         const existing = groupedMap.get(hotelKey)!
         
         // Ищем существующий вариант комнаты
-        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}`
+        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}-${result.accommodation.placement.id}`
         const existingRoomOption = existing.roomOptions.find(option => 
-          `${option.room.id}-${option.meal.id}` === roomKey
+          `${option.room.id}-${option.meal.id}-${option.placement.id}` === roomKey
         )
         
         if (existingRoomOption) {
@@ -605,7 +610,7 @@ export const useSearchForm = () => {
         }
       } else {
         // Создаем новый группированный результат
-        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}`
+        const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}-${result.accommodation.placement.id}`
         const grouped: GroupedSearchResult = {
           hotel: result.accommodation.hotel,
           dates: result.dates,
@@ -640,10 +645,20 @@ export const useSearchForm = () => {
 
   // Функция для фильтрации результатов по регионам и категориям
   const filterResultsByRegionsAndCategories = (results: GroupedSearchResult[]): GroupedSearchResult[] => {
+    logger.debug(`🔍 filterResultsByRegionsAndCategories: input results.length = ${results.length}`)
+    logger.debug(`🔍 selectedFilters.regions = ${selectedFilters.value.regions}`)
+    logger.debug(`🔍 selectedFilters.categories = ${selectedFilters.value.categories}`)
+    logger.debug(`🔍 searchData.hotels.value.length = ${searchData.hotels.value.length}`)
+    logger.debug(`🔍 searchData.cities = ${searchData.cities ? 'EXISTS' : 'NULL'}`)
+    if (searchData.cities && searchData.cities.value) {
+      logger.debug(`🔍 searchData.cities.value.length = ${searchData.cities.value.length}`)
+      logger.debug(`🔍 searchData.cities.value:`, searchData.cities.value.slice(0, 5))
+    }
+    
     let filteredResults = results
     
-    // Фильтрация по регионам
-    if (selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
+    // Фильтрация по регионам - ВРЕМЕННО ОТКЛЮЧЕНА ДЛЯ ОТЛАДКИ
+    if (false && selectedFilters.value.regions.length > 0 && !selectedFilters.value.regions.includes(1)) {
       // Создаем маппинг регионов к городам
       const regionCitiesMap = new Map<number, number[]>()
       searchData.regions.value.forEach(region => {
@@ -657,15 +672,30 @@ export const useSearchForm = () => {
       const selectedCities = new Set<number>()
       selectedFilters.value.regions.forEach(regionId => {
         const cities = regionCitiesMap.get(regionId)
+        logger.debug(`🔍 Region ${regionId}: cities=${cities}`)
         if (cities) {
           cities.forEach(cityId => selectedCities.add(cityId))
         }
       })
+      logger.debug(`🔍 selectedCities: ${Array.from(selectedCities)}`)
       
       // Фильтруем результаты по городам отелей
       filteredResults = filteredResults.filter(result => {
         // Находим отель в данных searchData по ID
         const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
+        logger.debug(`🔍 Region filter: hotel.id=${result.hotel.id}, found=${!!hotel}, city_id=${hotel?.city_id}, selectedCities.has=${selectedCities.has(hotel?.city_id || 0)}`)
+        
+        // Если отель не найден в searchData.hotels, попробуем использовать данные из результата
+        if (!hotel && result.hotel.city && searchData.cities && searchData.cities.value) {
+          // Ищем город по названию в searchData.cities
+          const city = searchData.cities.value.find(c => c.name === result.hotel.city)
+          if (city && selectedCities.has(city.id)) {
+            logger.debug(`🔍 Using result.hotel.city="${result.hotel.city}" (id=${city.id}) for hotel.id=${result.hotel.id}`)
+            return true
+          }
+          logger.debug(`🔍 City "${result.hotel.city}" not found in selectedCities for hotel.id=${result.hotel.id}`)
+        }
+        
         if (hotel && hotel.city_id) {
           return selectedCities.has(hotel.city_id)
         }
@@ -673,11 +703,29 @@ export const useSearchForm = () => {
       })
     }
     
-    // Фильтрация по категориям
-    if (selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
+    // Фильтрация по категориям - ВРЕМЕННО ОТКЛЮЧЕНА ДЛЯ ОТЛАДКИ
+    if (false && selectedFilters.value.categories.length > 0 && !selectedFilters.value.categories.includes(1)) {
       filteredResults = filteredResults.filter(result => {
         // Находим отель в данных searchData по ID
         const hotel = searchData.hotels.value.find(h => h.id === result.hotel.id)
+        logger.debug(`🔍 Category filter: hotel.id=${result.hotel.id}, found=${!!hotel}, category_id=${hotel?.category_id}, includes=${selectedFilters.value.categories.includes(hotel?.category_id || 0)}`)
+        
+        // Если отель не найден в searchData.hotels, попробуем использовать данные из результата
+        if (!hotel && result.hotel.category) {
+          // Парсим категорию из строки типа "5* / HV1" - берем первую часть до "/"
+          const categoryMatch = result.hotel.category.match(/^(\d+)\*/)
+          if (categoryMatch) {
+            const starRating = parseInt(categoryMatch[1])
+            // Маппинг звезд на ID категорий (примерный)
+            const categoryId = starRating === 5 ? 173 : starRating === 4 ? 172 : starRating === 3 ? 171 : 1
+            if (selectedFilters.value.categories.includes(categoryId)) {
+              logger.debug(`🔍 Using result.hotel.category="${result.hotel.category}" (mapped to id=${categoryId}) for hotel.id=${result.hotel.id}`)
+              return true
+            }
+          }
+          logger.debug(`🔍 Category "${result.hotel.category}" not found in selectedCategories for hotel.id=${result.hotel.id}`)
+        }
+        
         if (hotel && hotel.category_id) {
           return selectedFilters.value.categories.includes(hotel.category_id)
         }
@@ -685,6 +733,7 @@ export const useSearchForm = () => {
       })
     }
     
+    logger.debug(`🔍 filterResultsByRegionsAndCategories: output filteredResults.length = ${filteredResults.length}`)
     return filteredResults
   }
 
@@ -730,7 +779,7 @@ export const useSearchForm = () => {
       return
     }
     if (!searchForm.value.checkOutDate) {
-      showError('Ошибка поиска', 'Выберите дату выезда')
+      showError('Ошибка поиска', 'Выберите максимальную дату заселения')
       return
     }
     if (!searchForm.value.nights) {
@@ -768,8 +817,8 @@ export const useSearchForm = () => {
       return
     }
     if (!searchForm.value.checkOutDate) {
-      logger.warn('❌ No check-out date selected')
-      showError('Ошибка поиска', 'Выберите дату выезда')
+      logger.warn('❌ No max check-in date selected')
+      showError('Ошибка поиска', 'Выберите максимальную дату заселения')
       return
     }
     
@@ -783,15 +832,12 @@ export const useSearchForm = () => {
         
         searchForm.value.checkInDate = firstAvailableDate
         
-        // Обновляем дату выезда
-        const nights = searchForm.value.nights || 7
-        const checkOutDate = new Date(firstAvailableDate)
-        checkOutDate.setDate(checkOutDate.getDate() + nights)
-        searchForm.value.checkOutDate = checkOutDate
+        // Устанавливаем максимальную дату заселения равной минимальной дате заселения
+        searchForm.value.checkOutDate = new Date(firstAvailableDate)
         
         logger.info('✅ Auto-selected dates:', {
           checkIn: firstAvailableDate,
-          checkOut: checkOutDate
+          maxCheckIn: searchForm.value.checkOutDate
         })
       } else {
         logger.warn('❌ No available dates found in calendar hints')
@@ -800,27 +846,9 @@ export const useSearchForm = () => {
       }
     }
     if (!isDateAvailable(searchForm.value.checkOutDate)) {
-      logger.warn('❌ Check-out date not available:', searchForm.value.checkOutDate)
-      
-      // Автоматически пересчитываем дату выезда на основе даты заезда
-      if (searchForm.value.checkInDate) {
-        const nights = searchForm.value.nights || 7
-        const checkOutDate = new Date(searchForm.value.checkInDate)
-        checkOutDate.setDate(checkOutDate.getDate() + nights)
-        searchForm.value.checkOutDate = checkOutDate
-        
-        logger.info('🔄 Auto-calculated check-out date:', checkOutDate)
-        
-        // Проверяем, доступна ли новая дата выезда
-        if (!isDateAvailable(checkOutDate)) {
-          logger.warn('❌ Auto-calculated check-out date also not available:', checkOutDate)
-          showError('Ошибка поиска', 'Не удалось найти доступные даты для выбранного количества ночей')
-          return
-        }
-      } else {
-        showError('Ошибка поиска', 'Выбранная дата выезда недоступна для бронирования')
-        return
-      }
+      logger.warn('❌ Max check-in date not available:', searchForm.value.checkOutDate)
+      showError('Ошибка поиска', 'Выбранная максимальная дата заселения недоступна для бронирования')
+      return
     }
     
     logger.info('✅ Date validation passed, proceeding with search...')
@@ -835,19 +863,23 @@ export const useSearchForm = () => {
     
     logger.info('📅 Formatted dates for API:', {
       checkIn: formatDate(searchForm.value.checkInDate),
-      checkOut: formatDate(searchForm.value.checkOutDate)
+      maxCheckIn: formatDate(searchForm.value.checkOutDate)
     })
 
     // Подготавливаем параметры для API
     const airportCityTo = searchForm.value.arrivalCity?.id ? [Number(searchForm.value.arrivalCity.id)] : []
+    
+    // Определяем диапазон дат заезда
+    const dateFrom = formatDate(searchForm.value.checkInDate)
+    const dateTo = searchForm.value.checkOutDate ? formatDate(searchForm.value.checkOutDate) : dateFrom
     
     const searchParams = {
       country: Number(searchForm.value.destination.id),
       package_template: Number(searchForm.value.package.id),
       airport_city_from: Number(searchForm.value.departureCity.id),
       airport_city_to: airportCityTo,
-      date_from: formatDate(searchForm.value.checkInDate),
-      date_to: formatDate(searchForm.value.checkOutDate),
+      date_from: dateFrom,
+      date_to: dateTo, // Диапазон дат заезда для поиска
       nights_from: Number(searchForm.value.nights),
       nights_to: Number(searchForm.value.nights2),
       adults: Number(searchForm.value.adults),
@@ -858,10 +890,10 @@ export const useSearchForm = () => {
         logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
         return hotels
       })(),
-      meals: selectedFilters.value.meals.length > 0 ? selectedFilters.value.meals.map(mealId => {
+      meals: selectedFilters.value.meals.length > 0 ? [...new Set(selectedFilters.value.meals)].map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
         return meal?.name || meal?.label || mealId.toString()
-      }) : searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean),
+      }) : searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index), // Убираем дубликаты
       options: selectedFilters.value.options.length > 0 ? selectedFilters.value.options.map(optionId => {
         return optionId.toString()
       }) : undefined
@@ -1066,25 +1098,20 @@ export const useSearchForm = () => {
       const firstAvailableDate = availableDates.value[0]
       searchForm.value.checkInDate = firstAvailableDate
       
-      // Устанавливаем дату выезда через 7 дней (или минимальное количество ночей)
-      const nights = searchForm.value.nights || 7
-      const checkOutDate = new Date(firstAvailableDate)
-      checkOutDate.setDate(checkOutDate.getDate() + nights)
-      searchForm.value.checkOutDate = checkOutDate
+      // Устанавливаем максимальную дату заселения равной минимальной дате заселения
+      searchForm.value.checkOutDate = new Date(firstAvailableDate)
       
-      logger.info(`Auto-selected available dates: ${firstAvailableDate.toLocaleDateString()} - ${checkOutDate.toLocaleDateString()}`)
+      logger.info(`Auto-selected available dates: ${firstAvailableDate.toLocaleDateString()} - ${searchForm.value.checkOutDate.toLocaleDateString()}`)
     } else {
       // Если нет доступных дат, устанавливаем дату через неделю
       const nextWeek = new Date()
       nextWeek.setDate(nextWeek.getDate() + 7)
       searchForm.value.checkInDate = nextWeek
       
-      const nights = searchForm.value.nights || 7
-      const checkOutDate = new Date(nextWeek)
-      checkOutDate.setDate(checkOutDate.getDate() + nights)
-      searchForm.value.checkOutDate = checkOutDate
+      // Устанавливаем максимальную дату заселения равной минимальной дате заселения
+      searchForm.value.checkOutDate = new Date(nextWeek)
       
-      logger.info(`No available dates found, using default: ${nextWeek.toLocaleDateString()} - ${checkOutDate.toLocaleDateString()}`)
+      logger.info(`No available dates found, using default: ${nextWeek.toLocaleDateString()} - ${searchForm.value.checkOutDate.toLocaleDateString()}`)
     }
   }
 

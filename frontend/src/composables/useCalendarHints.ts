@@ -151,8 +151,19 @@ export const useCalendarHints = () => {
   }
   
   // Проверка доступности даты
-  const isDateAvailable = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0]
+  const isDateAvailable = (date: Date | string | null) => {
+    if (!date) return false
+    
+    // Если это строка, преобразуем в Date
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    
+    // Проверяем, что это валидная дата
+    if (isNaN(dateObj.getTime())) {
+      logger.warn('❌ Invalid date passed to isDateAvailable:', date)
+      return false
+    }
+    
+    const dateString = dateObj.toISOString().split('T')[0]
     const isAvailable = dateString in calendarHints.value && Array.isArray(calendarHints.value[dateString])
     
     logger.info('🔍 isDateAvailable check:', {

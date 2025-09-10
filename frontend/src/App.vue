@@ -1,12 +1,12 @@
 <template>
   <div id="app">
-    <Header />
+    <AppHeader />
 
     <main class="main-content">
       <router-view />
     </main>
 
-    <Footer />
+    <AppFooter />
 
     <!-- Auth Modal -->
     <AuthModal :is-open="isAuthModalOpen" @close="closeAuthModal" />
@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-  import Header from '@/components/Header.vue'
-  import Footer from '@/components/Footer.vue'
+  import AppHeader from '@/components/AppHeader.vue'
+  import AppFooter from '@/components/AppFooter.vue'
   import AuthModal from '@/components/auth/AuthModal.vue'
   import { useAuthModal } from '@/composables/useAuthModal'
 

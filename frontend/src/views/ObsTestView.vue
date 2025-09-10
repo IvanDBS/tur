@@ -104,7 +104,7 @@ const checkBackendStatus = async () => {
   try {
     const response = await fetch('http://localhost:3000/api/v1/health')
     backendStatus.value = response.ok
-  } catch (err) {
+  } catch {
     backendStatus.value = false
   }
 }
@@ -113,7 +113,7 @@ onMounted(async () => {
   try {
     await checkBackendStatus()
     await fetchDepartureCities()
-  } catch (err) {
+  } catch {
     // Failed to initialize OBS API test
   }
 })

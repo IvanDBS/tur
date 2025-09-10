@@ -42,14 +42,14 @@ import type { SearchFormActionsProps, SearchFormActionsEmits } from '../../types
 import '../../styles/spinners.css'
 
 // Props
-const props = withDefaults(defineProps<SearchFormActionsProps>(), {
+withDefaults(defineProps<SearchFormActionsProps>(), {
   hasResults: false,
   totalResults: 0,
   isLoading: false
 })
 
 // Emits
-const emit = defineEmits<SearchFormActionsEmits>()
+defineEmits<SearchFormActionsEmits>()
 </script>
 
 <style scoped>

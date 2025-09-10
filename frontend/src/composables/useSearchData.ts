@@ -138,7 +138,7 @@ export const useSearchData = () => {
       logger.info(`Loaded ${departureCities.value.length} departure cities`)
       // Обновляем options
       updateDepartureCitiesOptions()
-    } catch (err) {
+    } catch {
       logger.warn('Using fallback departure cities data')
       departureCities.value = []
       updateDepartureCitiesOptions()
@@ -154,8 +154,8 @@ export const useSearchData = () => {
       logger.info(`Loaded ${countries.value.length} countries for city ${departureCityId}`)
       // Обновляем options
       updateCountriesOptions()
-    } catch (err) {
-      logger.warn('Using fallback countries data:', err)
+    } catch {
+      logger.warn('Using fallback countries data')
       countries.value = fallbackCountries.value
       updateCountriesOptions()
     }
@@ -184,7 +184,7 @@ export const useSearchData = () => {
       logger.info(`Loaded ${packages.value.length} packages for country ${countryId}`)
       // Обновляем options
       updatePackagesOptions()
-    } catch (err) {
+    } catch {
       logger.warn('Using fallback package templates data')
       packages.value = fallbackPackages.value
       updatePackagesOptions()
@@ -229,9 +229,8 @@ export const useSearchData = () => {
       logger.info(`🏙️ Locations synced to searchData. Total regions: ${regions.value.length}, Total cities: ${cities.value.length}`)
       logger.debug(`🏙️ First 3 regions:`, regions.value.slice(0, 3))
       logger.debug(`🏙️ First 3 cities:`, cities.value.slice(0, 3))
-    } catch (err) {
+    } catch {
       logger.warn('Using fallback locations data')
-      logger.error('Error loading locations:', err)
       regions.value = fallbackRegions.value
       cities.value = []
     }

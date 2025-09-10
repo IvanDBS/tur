@@ -12,7 +12,7 @@ import type { SearchFormLoadingProps } from '../../types/searchForm'
 import '../../styles/spinners.css'
 
 // Props
-const props = withDefaults(defineProps<SearchFormLoadingProps>(), {
+withDefaults(defineProps<SearchFormLoadingProps>(), {
   message: 'Ищем лучшие туры для вас...'
 })
 </script>

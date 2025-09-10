@@ -38,18 +38,11 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { onMounted } from 'vue'
   import SearchForm from '../components/SearchForm.vue'
   import { useSearchData } from '../composables/useSearchData'
-  import type { LocationQueryRaw } from 'vue-router'
 
-  const router = useRouter()
   const { loading, error, initializeData, clearError } = useSearchData()
-
-  const handleSearch = (searchParams: Record<string, unknown>) => {
-    // TODO: Implement search functionality
-  }
 
   const retryLoad = async () => {
     clearError()
@@ -59,7 +52,7 @@
   onMounted(async () => {
     try {
       await initializeData()
-    } catch (err) {
+    } catch {
       // Error handling is done by useSearchData composable
     }
   })

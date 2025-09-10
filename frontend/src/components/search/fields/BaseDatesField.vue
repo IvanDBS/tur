@@ -67,7 +67,7 @@
 <script setup lang="ts">
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { defineAsyncComponent, computed } from 'vue'
+import { defineAsyncComponent } from 'vue'
 import { useCalendarHints } from '../../../composables/useCalendarHints'
 const BaseSearchField = defineAsyncComponent(() => import('./BaseSearchField.vue'))
 
@@ -79,13 +79,13 @@ interface Props {
   disabled?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   activeSelector: null,
   disabled: false
 })
 
 // Emits
-const emit = defineEmits<{
+defineEmits<{
   'update:checkInDate': [value: Date | null]
   'update:checkOutDate': [value: Date | null]
 }>()

@@ -87,7 +87,7 @@ interface Props {
   disabled?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   activeSelector: null,
   disabled: false
 })
@@ -105,7 +105,7 @@ const childrenAgeOptions = computed(() => {
 })
 
 // Emits
-const emit = defineEmits<{
+defineEmits<{
   'update:adults': [value: number | null]
   'update:children': [value: number | null]
   'update:childrenAge': [data: { index: number; value: number }]

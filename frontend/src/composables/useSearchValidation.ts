@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+// Removed unused import: ref
 import { useNotifications } from './useNotifications'
 import { useCalendarHints } from './useCalendarHints'
 import type { SearchForm, SelectedFilters } from '../types/search'

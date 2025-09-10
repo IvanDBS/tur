@@ -26,13 +26,13 @@ interface Props {
   disabled?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   activeSelector: null,
   disabled: false
 })
 
 // Emits
-const emit = defineEmits<{
+defineEmits<{
   'update:nightsFrom': [value: number | null]
   'update:nightsTo': [value: number | null]
   'update-nights2-min': []

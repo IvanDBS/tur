@@ -29,16 +29,16 @@
             <label class="field-label">
               Обращение *
             </label>
-            <select
-              :value="tourist.title"
-              @change="updateTourist(tourist.id, 'title', $event.target.value)"
+            <Multiselect
+              :model-value="tourist.title"
+              :options="titleOptions"
+              placeholder="Выберите обращение"
+              :searchable="false"
+              :can-clear="false"
+              :can-deselect="false"
+              @update:model-value="updateTourist(tourist.id, 'title', $event)"
               class="form-select"
-            >
-              <option value="">Выберите обращение</option>
-              <option v-for="option in titleOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
+            />
           </div>
 
           <!-- Last Name -->
@@ -118,16 +118,16 @@
             <label class="field-label">
               Гражданство *
             </label>
-          <select
-            :value="tourist.nationality"
-            @change="updateTourist(tourist.id, 'nationality', $event.target.value)"
-            class="form-select"
-          >
-            <option value="">Выберите гражданство</option>
-            <option v-for="option in nationalityOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
+            <Multiselect
+              :model-value="tourist.nationality"
+              :options="nationalityOptions"
+              placeholder="Выберите гражданство"
+              :searchable="true"
+              :can-clear="false"
+              :can-deselect="false"
+              @update:model-value="updateTourist(tourist.id, 'nationality', $event)"
+              class="form-select"
+            />
           </div>
 
           <!-- Fiscal Code -->
@@ -157,6 +157,8 @@
 </template>
 
 <script setup lang="ts">
+import Multiselect from '@vueform/multiselect'
+import '@vueform/multiselect/themes/default.css'
 import type { TouristData } from '../../types/booking'
 
 interface Props {
@@ -324,8 +326,7 @@ const getPassportValidityWarning = (tourist: TouristData) => {
   font-weight: 500;
 }
 
-.form-input,
-.form-select {
+.form-input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--color-border);
@@ -339,37 +340,62 @@ const getPassportValidityWarning = (tourist: TouristData) => {
   min-height: var(--input-height);
 }
 
-.form-input:hover,
-.form-select:hover {
+.form-input:hover {
   border-color: var(--color-secondary);
 }
 
-.form-input:focus,
-.form-select:focus {
+.form-input:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(26, 60, 97, 0.1);
 }
 
-.form-input.error,
-.form-select.error {
+.form-input.error {
   border-color: #ef4444;
 }
 
-.form-input.error:focus,
-.form-select.error:focus {
+.form-input.error:focus {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-/* Стили для option элементов */
-.form-select option {
-  background: var(--color-background);
-  color: var(--color-text);
-  padding: 0.5rem;
+/* Стили для Multiselect компонентов */
+.form-select {
+  min-height: var(--input-height);
 }
 
-.form-select option:hover {
-  background: var(--color-secondary-muted);
+.form-select :deep(.multiselect) {
+  min-height: var(--input-height) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-family) !important;
+  background: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+.form-select :deep(.multiselect:hover) {
+  border-color: var(--color-secondary) !important;
+}
+
+.form-select :deep(.multiselect.is-active) {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(26, 60, 97, 0.1) !important;
+}
+
+.form-select :deep(.multiselect__content-wrapper) {
+  max-height: 280px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 6px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.form-select :deep(.multiselect__option--highlight) {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+.form-select :deep(.multiselect__option--selected) {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
 }
 
 @media (max-width: 768px) {

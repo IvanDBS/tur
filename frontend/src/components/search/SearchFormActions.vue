@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import type { SearchFormActionsProps, SearchFormActionsEmits } from '../../types/searchForm'
-import '../../styles/spinner.css'
+import '../../styles/spinners.css'
 
 // Props
 const props = withDefaults(defineProps<SearchFormActionsProps>(), {

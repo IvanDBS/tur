@@ -1,7 +1,4 @@
-/* ========================================
-   КОНСОЛИДИРОВАННЫЕ СТИЛИ КНОПОК
-   Объединяет все стили кнопок в одном файле
-   ======================================== */
+/* Buttons - Стили кнопок */
 
 /* ========================================
    БАЗОВЫЕ СТИЛИ КНОПОК
@@ -107,64 +104,34 @@
 }
 
 /* ========================================
-   СПЕЦИАЛЬНЫЕ КНОПКИ ДЛЯ ПОИСКОВОЙ ФОРМЫ
+   СПЕЦИАЛЬНЫЕ КНОПКИ
    ======================================== */
 
-.search-form .reset-btn {
-  background: var(--color-background);
-  border: 1px solid var(--color-dark-gray);
-  color: var(--color-dark-gray);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-weight: var(--font-weight-medium);
-  transition: var(--transition);
-  min-width: 180px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-}
-
-.search-form .reset-btn:hover {
-  background: var(--color-dark-gray-muted);
-}
-
-.search-form .search-btn {
-  background: var(--color-background);
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-sm) var(--spacing-xl);
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-weight: var(--font-weight-semibold);
-  transition: var(--transition);
-  min-width: 140px;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  justify-content: center;
-}
-
-.search-form .search-btn:hover {
+/* Кнопка "Забронировать" */
+.btn--book {
   background: var(--color-primary);
   color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--color-primary-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
 }
 
-.search-form .search-btn svg {
-  transition: var(--transition);
+.btn--book:hover:not(:disabled) {
+  transform: scale(1.02);
+  background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px var(--color-primary-muted);
 }
 
-.search-form .search-btn:hover svg {
-  transform: scale(1.1);
-}
-
-/* ========================================
-   СПЕЦИАЛЬНЫЕ КНОПКИ ДЛЯ БРОНИРОВАНИЯ
-   ======================================== */
-
+/* Кнопка "Назад" */
 .back-button {
   background: var(--color-background);
   border: 1px solid var(--color-border);
@@ -185,6 +152,7 @@
   border-color: var(--color-secondary);
 }
 
+/* Кнопка "Повторить" */
 .retry-button {
   background: var(--color-warning);
   border: 1px solid var(--color-warning);
@@ -205,6 +173,7 @@
   border-color: #D97706;
 }
 
+/* Кнопка "Вернуться к поиску" */
 .back-to-search-button {
   background: var(--color-secondary);
   border: 1px solid var(--color-secondary);
@@ -350,6 +319,61 @@
 }
 
 /* ========================================
+   СПЕЦИАЛЬНЫЕ КНОПКИ ДЛЯ ПОИСКОВОЙ ФОРМЫ
+   ======================================== */
+
+.search-form .reset-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-dark-gray);
+  color: var(--color-dark-gray);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition);
+  min-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.search-form .reset-btn:hover {
+  background: var(--color-dark-gray-muted);
+}
+
+.search-form .search-btn {
+  background: var(--color-background);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition);
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.search-form .search-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.search-form .search-btn svg {
+  transition: var(--transition);
+}
+
+.search-form .search-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* ========================================
    МОБИЛЬНАЯ АДАПТИВНОСТЬ
    ======================================== */
 
@@ -374,31 +398,4 @@
   .btn--full {
     width: 100%;
   }
-}
-
-/* ========================================
-   КНОПКА "ЗАБРОНИРОВАТЬ" В СТИЛЕ "ВОЙТИ"
-   ======================================== */
-
-.btn--book {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-family: var(--font-family);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px var(--color-primary-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-}
-
-.btn--book:hover:not(:disabled) {
-  transform: scale(1.02);
-  background: var(--color-primary-hover);
-  box-shadow: 0 4px 12px var(--color-primary-muted);
 }

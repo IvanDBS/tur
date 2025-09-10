@@ -1,110 +1,22 @@
-/* Минималистичные базовые стили */
+/* Главный файл стилей - импортирует все компоненты */
+
+/* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
 
-/* Design System - Консолидированные стили */
-@import '../styles/refactored/consolidated.css';
+/* 1. Дизайн-токены (переменные) */
+@import '../styles/tokens.css';
 
-/* Дополнительные стили */
+/* 2. Базовые стили и утилиты */
+@import '../styles/base.css';
+
+/* 3. Компоненты */
+@import '../styles/buttons.css';
+@import '../styles/forms.css';
+@import '../styles/multiselect.css';
+@import '../styles/datepicker.css';
+@import '../styles/hotel-cards.css';
+@import '../styles/spinners.css';
+@import '../styles/animations.css';
+
+/* 4. Внешние библиотеки */
 @import '@vuepic/vue-datepicker/dist/main.css';
-
-/* CSS Custom Properties - Business Minimalist Theme */
-:root {
-  --font-family:
-    'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
-
-  /* Additional colors not in design-tokens.css */
-  --color-primary-light: #ff8a8e;
-  --color-primary-dark: #d63d42;
-  --color-secondary-light: #2d5a8a;
-  --color-dark-gray: #484848;
-  --color-dark-gray-hover: #333333;
-  --color-dark-gray-muted: rgba(72, 72, 72, 0.1);
-
-  /* Additional shadows */
-  --shadow-ocean: 0 4px 20px rgba(14, 165, 233, 0.15);
-}
-
-/* Reset and base styles */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  line-height: 1.6;
-  font-family: var(--font-family);
-  font-size: 14px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-}
-
-/* Typography */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-/* Navigation with blurred transparent header */
-.nav-header {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* Links */
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-a:hover {
-  color: var(--color-primary-hover);
-}
-
-/* Focus styles */
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* Buttons */
-.btn {
-  font-family: var(--font-family);
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-/* Form elements */
-input,
-textarea,
-select {
-  font-family: var(--font-family);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-}

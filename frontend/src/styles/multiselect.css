@@ -1,6 +1,8 @@
-/* Консолидированные стили для Vue Multiselect */
+/* Multiselect - Стили для Vue Multiselect */
 
-/* Высокоприоритетные стили для переопределения дефолтных стилей */
+/* ========================================
+   БАЗОВЫЕ СТИЛИ MULTISELECT
+   ======================================== */
 
 /* Рамка при наведении */
 .multiselect:hover {
@@ -14,6 +16,17 @@
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* Дополнительные селекторы для полного контроля */
+.multiselect:focus,
+.multiselect:focus-within {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+/* ========================================
+   СТИЛИ ОПЦИЙ
+   ======================================== */
 
 /* Пункт при наведении */
 .multiselect .multiselect__option--highlight {
@@ -49,12 +62,9 @@
   color: #fff !important;
 }
 
-/* Дополнительные селекторы для полного контроля */
-.multiselect:focus,
-.multiselect:focus-within {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-}
+/* ========================================
+   ПЕРЕОПРЕДЕЛЕНИЕ ЗЕЛЕНЫХ ЦВЕТОВ
+   ======================================== */
 
 /* Убираем все возможные зеленые цвета */
 .multiselect[style*='green'],
@@ -71,6 +81,10 @@
   background: var(--color-secondary) !important;
   color: #fff !important;
 }
+
+/* ========================================
+   НАСТРОЙКА ВЫСОТЫ СПИСКА
+   ======================================== */
 
 /* Настройка для селектора "Куда:" - показывать 7 элементов */
 :root {

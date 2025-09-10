@@ -114,7 +114,7 @@
   const SearchFormFields = defineAsyncComponent(() => import('./search/SearchFormFields.vue'))
   const SearchFormActions = defineAsyncComponent(() => import('./search/SearchFormActions.vue'))
   const SearchResults = defineAsyncComponent(() => import('./SearchResults.vue'))
-  import '../styles/spinner.css'
+  import '../styles/spinners.css'
 
   // Используем композабл для всей логики формы
   const {

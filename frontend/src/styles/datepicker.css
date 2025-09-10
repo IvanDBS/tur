@@ -1,12 +1,18 @@
-/* Общие стили для Vue DatePicker */
+/* DatePicker - Стили для Vue DatePicker */
 
-/* Переопределяем CSS переменные календаря */
+/* ========================================
+   ПЕРЕМЕННЫЕ КАЛЕНДАРЯ
+   ======================================== */
+
 :root {
   --dp-border-color-hover: var(--color-secondary) !important;
   --dp-border-color-focus: var(--color-secondary) !important;
 }
 
-/* Основные стили DatePicker */
+/* ========================================
+   ОСНОВНЫЕ СТИЛИ
+   ======================================== */
+
 :deep(.dp__main) {
   width: 100% !important;
   font-family: var(--font-family) !important;
@@ -27,18 +33,9 @@
   font-family: var(--font-family) !important;
 }
 
-/* Улучшаем отображение месяцев */
-:deep(.dp__month_year_select option) {
-  font-family: var(--font-family) !important;
-  font-size: 14px !important;
-  padding: 8px !important;
-}
-
-/* Стили для заголовка календаря */
-:deep(.dp__calendar_header) {
-  font-family: var(--font-family) !important;
-  font-weight: 500 !important;
-}
+/* ========================================
+   СТИЛИ INPUT ПОЛЯ
+   ======================================== */
 
 :deep(.dp__input_wrap) {
   border: 1px solid #dddddd !important;
@@ -52,36 +49,13 @@
   overflow: hidden !important;
 }
 
-/* Максимально агрессивные стили для календаря */
+/* Hover и Focus состояния */
 :deep(.dp__input_wrap:hover),
 :deep(.dp__main:hover .dp__input_wrap),
-:deep(.dp__outer_menu_wrap:hover .dp__input_wrap) {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
+:deep(.dp__outer_menu_wrap:hover .dp__input_wrap),
 :deep(.dp__input_wrap:focus-within),
 :deep(.dp__main:focus-within .dp__input_wrap),
 :deep(.dp__outer_menu_wrap:focus-within .dp__input_wrap) {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
-/* Дополнительные селекторы для полного контроля */
-:deep(.dp__main:hover) .dp__input_wrap,
-:deep(.dp__outer_menu_wrap:hover) .dp__input_wrap {
-  border-color: var(--color-secondary) !important;
-  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
-:deep(.dp__main:focus-within) .dp__input_wrap,
-:deep(.dp__outer_menu_wrap:focus-within) .dp__input_wrap {
   border-color: var(--color-secondary) !important;
   box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
   border-radius: 4px !important;
@@ -105,41 +79,14 @@
   white-space: nowrap !important;
 }
 
-/* Стили для самого input поля при hover - ЭТО ГЛАВНОЕ! */
-:deep(.dp__input:hover) {
-  border-color: #1d3557 !important;
-  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
-:deep(.dp__input:focus) {
-  border-color: #1d3557 !important;
-  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
-/* Дополнительные селекторы для input */
-:deep(.dp__input:hover:not(.dp__input_focus)) {
-  border-color: #1d3557 !important;
-  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
-:deep(.dp__input_focus) {
-  border-color: #1d3557 !important;
-  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.2) !important;
-  border-radius: 4px !important;
-  outline: none !important;
-}
-
 :deep(.dp__input::placeholder) {
   color: #b0b0b0 !important;
 }
 
-/* Меню календаря */
+/* ========================================
+   МЕНЮ КАЛЕНДАРЯ
+   ======================================== */
+
 :deep(.dp__menu) {
   border: 1px solid #dddddd !important;
   border-radius: 4px !important;
@@ -158,24 +105,10 @@
   transform: none !important;
 }
 
-:deep(.dp__outer_menu_wrap:hover) {
-  left: 0 !important;
-  transform: none !important;
-}
+/* ========================================
+   НАВИГАЦИЯ КАЛЕНДАРЯ
+   ======================================== */
 
-:deep(.dp__menu:hover) {
-  left: 0 !important;
-  right: auto !important;
-  transform: none !important;
-}
-
-:deep(.dp__menu:focus-within) {
-  left: 0 !important;
-  right: auto !important;
-  transform: none !important;
-}
-
-/* Стили для селекторов года и месяца */
 :deep(.dp__month_year_row) {
   display: flex !important;
   align-items: center !important;
@@ -198,16 +131,12 @@
   transition: all 0.2s ease !important;
 }
 
-:deep(.dp__month_year_select:hover) {
-  background: rgba(26, 60, 97, 0.1) !important;
-}
-
+:deep(.dp__month_year_select:hover),
 :deep(.dp__month_year_select:focus) {
-  outline: none !important;
   background: rgba(26, 60, 97, 0.1) !important;
+  outline: none !important;
 }
 
-/* Делаем стрелки видимыми */
 :deep(.dp__inner_nav) {
   background: transparent !important;
   color: var(--color-secondary) !important;
@@ -234,143 +163,76 @@
   opacity: 1 !important;
 }
 
-/* Русские дни недели */
-:deep(.dp__weekday) {
-  color: #666 !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
-}
+/* ========================================
+   ДНИ НЕДЕЛИ И ЗАГОЛОВКИ
+   ======================================== */
 
-/* Показываем оригинальный текст дней недели */
+:deep(.dp__weekday),
 :deep(.dp__calendar_header_item) {
-  font-size: 12px !important;
   color: #666 !important;
   font-weight: 500 !important;
+  font-size: 12px !important;
 }
 
-/* Скрываем ненужные элементы */
-:deep(.dp__time_picker) {
-  display: none !important;
-}
+/* ========================================
+   ВЫБРАННАЯ ДАТА
+   ======================================== */
 
-/* Стили для выбранной даты */
 :deep(.dp__active_date) {
-  background: transparent !important; /* Убираем заливку */
-  border: 2px solid var(--color-primary) !important; /* Коралловый контур */
-  color: var(--color-primary) !important; /* Коралловый текст */
-}
-
-:deep(.dp__active_date:hover) {
-  background: transparent !important; /* Убираем заливку при hover */
-  border: 2px solid var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-
-:deep(.dp__active_date:focus) {
   background: transparent !important;
   border: 2px solid var(--color-primary) !important;
   color: var(--color-primary) !important;
 }
 
+:deep(.dp__active_date:hover),
+:deep(.dp__active_date:focus),
 :deep(.dp__active_date:active) {
   background: transparent !important;
   border: 2px solid var(--color-primary) !important;
   color: var(--color-primary) !important;
 }
 
-/* Дополнительные селекторы для переопределения дефолтных стилей */
-:deep(.dp__calendar_item.dp__active_date) {
-  background: transparent !important;
-  border: 2px solid var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
+/* ========================================
+   СКРЫТЫЕ ЭЛЕМЕНТЫ
+   ======================================== */
 
-:deep(.dp__calendar_item.dp__active_date:hover) {
-  background: transparent !important;
-  border: 2px solid var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-
-:deep(.dp__action_buttons) {
-  display: none !important;
-}
-
-:deep(.dp__select) {
-  display: none !important;
-}
-
-:deep(.dp__today) {
-  display: none !important;
-}
-
-:deep(.dp__clear_icon) {
-  display: none !important;
-}
-
-:deep(.dp__input_icon) {
-  display: none !important;
-}
-
-:deep(.dp__icon) {
-  display: none !important;
-}
-
-:deep(.dp__calendar_icon) {
-  display: none !important;
-}
-
+:deep(.dp__time_picker),
+:deep(.dp__action_buttons),
+:deep(.dp__select),
+:deep(.dp__today),
+:deep(.dp__clear_icon),
+:deep(.dp__input_icon),
+:deep(.dp__icon),
+:deep(.dp__calendar_icon),
 :deep(.dp__action_icon) {
   display: none !important;
 }
 
-/* Overlay и контейнеры */
-:deep(.dp__overlay_container) {
-  z-index: 95 !important;
-  position: fixed !important;
-}
+/* ========================================
+   Z-INDEX И ПОЗИЦИОНИРОВАНИЕ
+   ======================================== */
 
-:deep(.dp__menu_wrapper) {
-  z-index: 95 !important;
-}
-
-:deep(.dp__overlay) {
-  z-index: 95 !important;
-  position: fixed !important;
-}
-
+:deep(.dp__overlay_container),
+:deep(.dp__menu_wrapper),
+:deep(.dp__overlay),
 :deep(.dp__instance_calendar) {
   z-index: 95 !important;
+  position: fixed !important;
 }
 
-/* Убираем проблемные стили сетки, позволяем компоненту самому управлять */
-:deep(.dp__calendar) {
-  width: 100% !important;
-}
+/* ========================================
+   СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ КОМПАКТНОЙ ФОРМЫ
+   ======================================== */
 
-:deep(.dp__calendar_header) {
-  width: 100% !important;
-}
-
-:deep(.dp__calendar_row) {
-  width: 100% !important;
-}
-
-/* Базовые стили для ячеек */
-:deep(.dp__calendar_header_item),
-:deep(.dp__calendar_item) {
-  box-sizing: border-box !important;
-}
-
-/* Специфичные стили для компактной формы */
 .search-compact :deep(.dp__main) {
   z-index: 20 !important;
 }
 
 .search-compact :deep(.dp__input_wrap:focus-within),
 .search-compact :deep(.dp__main.is-open) {
-  z-index: 200 !important; /* Выше чем в расширенной форме */
+  z-index: 200 !important;
 }
 
 .search-compact :deep(.dp__menu) {
-  z-index: 2000 !important; /* Выше чем в расширенной форме */
+  z-index: 2000 !important;
 }

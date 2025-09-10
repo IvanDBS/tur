@@ -1,7 +1,58 @@
-/* ========================================
-   КОНСОЛИДИРОВАННЫЕ УТИЛИТАРНЫЕ СТИЛИ
-   Объединяет все утилитарные классы
-   ======================================== */
+/* Base Styles - Базовые стили и утилиты */
+
+/* Reset and base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.6;
+  font-family: var(--font-family);
+  font-size: 14px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  transition: color 0.5s, background-color 0.5s;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Form elements */
+input, textarea, select {
+  font-family: var(--font-family);
+}
 
 /* ========================================
    LAYOUT UTILITIES
@@ -19,58 +70,23 @@
   gap: var(--spacing-lg);
 }
 
-.grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
 
 /* Flexbox utilities */
-.flex {
-  display: flex;
-}
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
 
-.flex-col {
-  flex-direction: column;
-}
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
 
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.items-start {
-  align-items: flex-start;
-}
-
-.items-end {
-  align-items: flex-end;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-start {
-  justify-content: flex-start;
-}
-
-.justify-end {
-  justify-content: flex-end;
-}
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
 
 /* ========================================
    SPACING UTILITIES
@@ -82,10 +98,6 @@
 .gap-4 { gap: var(--spacing-lg); }
 .gap-6 { gap: var(--spacing-xl); }
 .gap-8 { gap: var(--spacing-2xl); }
-
-.gap-sm { gap: var(--spacing-sm); }
-.gap-md { gap: var(--spacing-md); }
-.gap-lg { gap: var(--spacing-lg); }
 
 /* ========================================
    TEXT UTILITIES
@@ -164,7 +176,6 @@
 
 .min-w-0 { min-width: 0; }
 .min-h-0 { min-height: 0; }
-
 .max-w-full { max-width: 100%; }
 .max-h-full { max-height: 100%; }
 
@@ -296,6 +307,92 @@
 }
 
 /* ========================================
+   PAGE LAYOUT
+   ======================================== */
+
+.page-layout {
+  min-height: calc(100vh - 72px - 200px);
+  padding-top: 7rem;
+  padding-bottom: 2rem;
+  background: var(--color-background-soft);
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
+
+.page-subtitle {
+  font-size: 1.25rem;
+  color: var(--color-text-soft);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.page-content {
+  font-size: 1.1rem;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
+/* ========================================
+   SECTIONS
+   ======================================== */
+
+.section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+
+.card {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.card-content {
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+
+.nav-header {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ========================================
    RESPONSIVE UTILITIES
    ======================================== */
 
@@ -310,6 +407,32 @@
   
   .mobile-w-full { width: 100%; }
   .mobile-h-full { height: 100%; }
+  
+  .page-layout {
+    min-height: calc(100vh - 64px - 200px);
+    padding-top: 5rem;
+    padding-bottom: 1rem;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .flex {
+    flex-direction: column;
+  }
+
+  .gap-6 {
+    gap: 1rem;
+  }
 }
 
 @media (min-width: 769px) {
@@ -317,4 +440,18 @@
   .desktop-block { display: block; }
   .desktop-flex { display: flex; }
   .desktop-grid { display: grid; }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
 }

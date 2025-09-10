@@ -1,7 +1,4 @@
-/* ========================================
-   КОНСОЛИДИРОВАННЫЕ СТИЛИ ФОРМ
-   Объединяет все стили форм в одном файле
-   ======================================== */
+/* Forms - Стили форм */
 
 /* ========================================
    БАЗОВЫЕ КОМПОНЕНТЫ ФОРМ
@@ -300,40 +297,6 @@
   min-height: var(--input-height) !important;
   height: var(--input-height) !important;
   box-sizing: border-box !important;
-}
-
-/* ========================================
-   АНИМАЦИИ И ИНДИКАТОРЫ
-   ======================================== */
-
-/* Анимированная стрелка для селекторов */
-@keyframes downarrow {
-  0% { 
-    transform: translateY(0); 
-    opacity: 0.4; 
-  }
-  100% { 
-    transform: translateY(0.4em); 
-    opacity: 1; 
-  }
-}
-
-/* Стрелка рядом с названием поля */
-.search-form .field-arrow {
-  display: inline-block;
-  margin-right: var(--spacing-sm);
-  vertical-align: top;
-  margin-top: -0.4em;
-}
-
-.search-form .field-arrow::before {
-  content: '';
-  display: inline-block;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 6px solid var(--color-success);
-  animation: downarrow 0.8s infinite alternate ease-in-out;
-  margin-right: var(--spacing-xs);
 }
 
 /* ========================================

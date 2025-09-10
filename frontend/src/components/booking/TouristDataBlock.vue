@@ -173,7 +173,7 @@ const emit = defineEmits<{
 const titleOptions = [
   { value: 'MR', label: 'MR' },
   { value: 'MRS', label: 'MRS' },
-  { value: 'MS', label: 'MS' }
+  { value: 'CHD', label: 'CHD' }
 ]
 
 const nationalityOptions = [
@@ -331,7 +331,17 @@ const getPassportValidityWarning = (tourist: TouristData) => {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.875rem;
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-text);
   transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  min-height: var(--input-height);
+}
+
+.form-input:hover,
+.form-select:hover {
+  border-color: var(--color-secondary);
 }
 
 .form-input:focus,
@@ -349,6 +359,17 @@ const getPassportValidityWarning = (tourist: TouristData) => {
 .form-input.error:focus,
 .form-select.error:focus {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Стили для option элементов */
+.form-select option {
+  background: var(--color-background);
+  color: var(--color-text);
+  padding: 0.5rem;
+}
+
+.form-select option:hover {
+  background: var(--color-secondary-muted);
 }
 
 @media (max-width: 768px) {

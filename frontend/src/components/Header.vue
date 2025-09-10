@@ -22,9 +22,13 @@
           <router-link to="/obs-test" class="nav-link"
             >Тест OBS API</router-link
           >
-          <router-link to="/admin" class="nav-link"
-            >Админ-панель</router-link
+          <router-link 
+            v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
+            to="/admin" 
+            class="nav-link"
           >
+            Админ-панель
+          </router-link>
           <router-link to="/about" class="nav-link">О нас</router-link>
           <router-link to="/contact" class="nav-link">Контакты</router-link>
         </div>
@@ -113,6 +117,14 @@
           @click="closeMobileMenu"
           >Тест авторизации</router-link
         >
+        <router-link 
+          v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
+          to="/admin" 
+          class="mobile-link" 
+          @click="closeMobileMenu"
+        >
+          Админ-панель
+        </router-link>
         <router-link to="/about" class="mobile-link" @click="closeMobileMenu"
           >О нас</router-link
         >

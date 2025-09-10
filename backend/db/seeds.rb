@@ -10,7 +10,8 @@ if Rails.env.development?
     user.password_confirmation = 'password123'
     user.first_name = 'Admin'
     user.last_name = 'User'
-    user.phone = '+37312345678'
+    user.phone = '+37312345678'    user.admin = true
+    user.banned = false
   end
 
   # Create regular user
@@ -20,6 +21,8 @@ if Rails.env.development?
     user.first_name = 'Regular'
     user.last_name = 'User'
     user.phone = '+37387654321'
+    user.admin = false
+    user.banned = false
   end
 
   puts "Created users:"

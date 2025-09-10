@@ -4,6 +4,16 @@ module Api
       def create
         user = User.find_by(email: params[:email])
 
+        # Проверяем, не заблокирован ли пользователь ДО проверки пароля
+        if user&.banned?
+          Rails.logger.info "Blocked user #{user.id} (#{user.email}) attempted to sign in via sessions"
+          render json: {
+            success: false,
+            errors: ['Your account has been suspended. Please contact support.']
+          }, status: :forbidden
+          return
+        end
+
         if user&.valid_password?(params[:password])
           begin
             # Генерируем JWT токены
@@ -18,7 +28,9 @@ module Api
                 email: user.email,
                 firstName: user.first_name,
                 lastName: user.last_name,
-                phone: user.phone
+                phone: user.phone,
+                admin: user.admin,
+                banned: user.banned
               },
               tokens: {
                 accessToken: access_token,
@@ -38,7 +50,9 @@ module Api
                 email: user.email,
                 firstName: user.first_name,
                 lastName: user.last_name,
-                phone: user.phone
+                phone: user.phone,
+                admin: user.admin,
+                banned: user.banned
               }
             }
           end

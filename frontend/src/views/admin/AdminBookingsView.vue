@@ -1,40 +1,5 @@
 <template>
   <div class="admin-bookings">
-    <!-- Filters -->
-    <div class="filters-section">
-      <div class="filters-row">
-        <div class="filter-group">
-          <BaseSelect
-            v-model="filters.status"
-            :options="statusOptions"
-            placeholder="Все статусы"
-            label="Статус"
-            size="sm"
-            @update:model-value="loadBookings"
-          />
-        </div>
-        
-        <div class="filter-group">
-          <BaseInput
-            v-model="filters.search"
-            placeholder="Поиск по ID или email..."
-            label="Поиск"
-            size="sm"
-            @input="debouncedSearch"
-          />
-        </div>
-
-        <div class="filter-actions">
-          <BaseButton 
-            variant="secondary" 
-            size="sm" 
-            @click="resetFilters"
-          >
-            Сбросить
-          </BaseButton>
-        </div>
-      </div>
-    </div>
 
     <!-- Bookings Table -->
     <div class="bookings-table-container">
@@ -280,7 +245,7 @@
               </td>
               <td class="amount">{{ booking.total_amount }} €</td>
               <td class="owner">
-                <div class="user-name">{{ booking.user.name }}</div>
+                <div class="user-name">{{ booking.user.first_name || booking.user.email.split('@')[0] }}</div>
                 <div class="user-email">{{ booking.user.email }}</div>
               </td>
               <td class="status">
@@ -340,6 +305,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
@@ -603,8 +569,8 @@ const sortBookings = () => {
         bValue = b.total_amount
         break
       case 'user_name':
-        aValue = a.user.name
-        bValue = b.user.name
+        aValue = a.user.first_name || a.user.email.split('@')[0]
+        bValue = b.user.first_name || b.user.email.split('@')[0]
         break
       case 'status':
         aValue = a.status
@@ -655,6 +621,15 @@ const getCountryFromCity = (city: string): string => {
 
 // Lifecycle
 onMounted(() => {
+  // Check if we have user filter from URL
+  const route = useRoute()
+  if (route.query.user_id || route.query.user_email) {
+    // Set user filter in search filters
+    if (route.query.user_email) {
+      searchFilters.value.user_name = route.query.user_email as string
+    }
+  }
+  
   loadBookings()
 })
 </script>
@@ -664,29 +639,6 @@ onMounted(() => {
   padding: var(--spacing-xl);
 }
 
-.filters-section {
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-}
-
-.filters-row {
-  display: flex;
-  gap: var(--spacing-lg);
-  align-items: end;
-}
-
-.filter-group {
-  flex: 1;
-  min-width: 200px;
-}
-
-.filter-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
 
 .bookings-table-container {
   background: white;
@@ -915,15 +867,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .admin-bookings {
     padding: var(--spacing-md);
-  }
-
-  .filters-row {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-
-  .filter-group {
-    min-width: auto;
   }
 
   .table {

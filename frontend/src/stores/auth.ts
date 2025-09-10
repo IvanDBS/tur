@@ -18,8 +18,20 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     error.value = null
 
+    // Сначала очищаем старые токены, если они есть
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    user.value = null
+
     try {
       const response = await AuthApi.login(credentials)
+      
+      // Проверяем, не заблокирован ли пользователь
+      if (response.user.banned) {
+        error.value = 'Ваш аккаунт заблокирован. Обратитесь в службу поддержки.'
+        throw new Error('Account is banned')
+      }
+      
       user.value = response.user
 
       // Сохраняем токен в localStorage
@@ -30,9 +42,20 @@ export const useAuthStore = defineStore('auth', () => {
 
       return response
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Ошибка входа в систему'
-      error.value = errorMessage
+      // Проверяем, является ли ошибка связанной с блокировкой
+      if (err instanceof Error) {
+        // Проверяем различные варианты ошибки блокировки
+        if (err.message.includes('403') || 
+            err.message.includes('Forbidden') || 
+            err.message.includes('suspended') ||
+            err.message.includes('blocked')) {
+          error.value = 'Ваш аккаунт заблокирован. Обратитесь в службу поддержки.'
+        } else {
+          error.value = err.message
+        }
+      } else {
+        error.value = 'Ошибка входа в систему'
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -74,6 +97,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
+      
+      // Очищаем кеш API
+      const { apiClient } = await import('../utils/api')
+      apiClient.clearCache()
     }
   }
 
@@ -83,10 +110,20 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await AuthApi.getCurrentUser()
+      
+      // Проверяем, не заблокирован ли пользователь
+      if (response.user.banned) {
+        // Если пользователь заблокирован, выходим из системы
+        console.log('User is banned, logging out...')
+        await logout()
+        return null
+      }
+      
       user.value = response.user
       return response.user
-    } catch {
-      // Если токен недействителен, очищаем состояние
+    } catch (err: unknown) {
+      // Если токен недействителен или пользователь заблокирован, очищаем состояние
+      console.log('getCurrentUser error:', err)
       user.value = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')

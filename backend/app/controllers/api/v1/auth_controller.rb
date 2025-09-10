@@ -41,6 +41,16 @@ module Api
       def sign_in
         @user = User.find_by(email: sign_in_params[:email])
 
+        # Проверяем, не заблокирован ли пользователь ДО проверки пароля
+        if @user&.banned?
+          Rails.logger.info "Blocked user #{@user.id} (#{@user.email}) attempted to sign in"
+          render json: {
+            success: false,
+            errors: ['Your account has been suspended. Please contact support.']
+          }, status: :forbidden
+          return
+        end
+
         if @user&.valid_password?(sign_in_params[:password])
           begin
             # Генерируем JWT токены
@@ -57,7 +67,9 @@ module Api
                 email: @user.email,
                 firstName: @user.first_name,
                 lastName: @user.last_name,
-                phone: @user.phone
+                phone: @user.phone,
+                admin: @user.admin,
+                banned: @user.banned
               },
               tokens: {
                 accessToken: access_token,
@@ -77,7 +89,9 @@ module Api
                 email: @user.email,
                 firstName: @user.first_name,
                 lastName: @user.last_name,
-                phone: @user.phone
+                phone: @user.phone,
+                admin: @user.admin,
+                banned: @user.banned
               }
             }
           end
@@ -109,6 +123,8 @@ module Api
             firstName: current_user.first_name,
             lastName: current_user.last_name,
             phone: current_user.phone,
+            admin: current_user.admin,
+            banned: current_user.banned,
             createdAt: current_user.created_at,
             updatedAt: current_user.updated_at
           }

@@ -33,6 +33,13 @@ module Api
           user_id = decoded_token[0]['user_id']
           @current_user = User.find(user_id)
           
+          # Проверяем, не заблокирован ли пользователь
+          if @current_user.banned?
+            Rails.logger.info "Blocked user #{@current_user.id} (#{@current_user.email}) attempted to access protected resource"
+            render_error('Your account has been suspended', :forbidden)
+            return
+          end
+          
         rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound => e
           Rails.logger.error "Authentication failed: #{e.message}"
           render_error('Invalid or expired token', :unauthorized)

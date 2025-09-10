@@ -4,6 +4,8 @@ export interface User {
   firstName?: string
   lastName?: string
   phone?: string
+  admin?: boolean
+  banned?: boolean
   createdAt: string
   updatedAt: string
 }

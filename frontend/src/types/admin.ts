@@ -3,8 +3,16 @@
 export interface AdminUser {
   id: number
   email: string
-  name: string
+  first_name?: string
+  last_name?: string
   phone?: string
+  admin: boolean
+  banned: boolean
+  created_at: string
+  last_sign_in_at?: string
+  sign_in_count?: number
+  bookings_count?: number
+  search_queries_count?: number
 }
 
 export interface AdminBooking {
@@ -84,4 +92,23 @@ export interface AdminStatsResponse {
   data: {
     stats: AdminStats
   }
+}
+
+export interface AdminUsersResponse {
+  success: boolean
+  message: string
+  data: {
+    users: AdminUser[]
+    pagination: {
+      current_page: number
+      total_pages: number
+      total_count: number
+      per_page: number
+    }
+  }
+}
+
+export interface AdminUserUpdateRequest {
+  admin?: boolean
+  banned?: boolean
 }

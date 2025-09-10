@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { apiClient } from '../utils/api'
 import { logger } from '../utils/logger'
-import type { AdminBookingsResponse, AdminStatsResponse } from '../types/admin'
+import type { AdminBookingsResponse, AdminStatsResponse, AdminUsersResponse, AdminUserUpdateRequest } from '../types/admin'
 
 export const useAdminApi = () => {
   const loading = ref(false)
@@ -115,6 +115,65 @@ export const useAdminApi = () => {
     }
   }
 
+  // Get all users with filters and pagination
+  const getUsers = async (params: {
+    page?: number
+    per_page?: number
+    role?: string
+    status?: string
+    search?: string
+    sort_field?: string
+    sort_direction?: 'asc' | 'desc'
+  } = {}) => {
+    try {
+      loading.value = true
+      clearError()
+
+      const queryParams = new URLSearchParams()
+      if (params.page) queryParams.append('page', params.page.toString())
+      if (params.per_page) queryParams.append('per_page', params.per_page.toString())
+      if (params.role) queryParams.append('role', params.role)
+      if (params.status) queryParams.append('status', params.status)
+      if (params.search) queryParams.append('search', params.search)
+      if (params.sort_field) queryParams.append('sort_field', params.sort_field)
+      if (params.sort_direction) queryParams.append('sort_direction', params.sort_direction)
+
+      const url = `/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+      
+      logger.apiCall('GET', url)
+      const response = await apiClient.get<AdminUsersResponse>(url)
+      
+      logger.info('Users loaded successfully:', response)
+      return response.data
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load users'
+      setError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Update user status (admin/banned)
+  const updateUserStatus = async (userId: number, updates: AdminUserUpdateRequest) => {
+    try {
+      loading.value = true
+      clearError()
+
+      logger.apiCall('PATCH', `/admin/users/${userId}`)
+      const response = await apiClient.patch(`/admin/users/${userId}`, updates)
+      
+      logger.info('User status updated successfully:', response)
+      return response.data.user
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update user status'
+      setError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -122,6 +181,8 @@ export const useAdminApi = () => {
     getBookings,
     getBookingDetails,
     updateBookingStatus,
-    getStats
+    getStats,
+    getUsers,
+    updateUserStatus
   }
 }

@@ -73,6 +73,9 @@
           <button @click="testLogin" class="btn btn--outline">
             Тест входа
           </button>
+          <button @click="testAdminLogin" class="btn btn--outline">
+            Тест входа (АДМИН)
+          </button>
           <button @click="testLogout" class="btn btn--outline">
             Тест выхода
           </button>
@@ -353,6 +356,18 @@
       alert('Вход успешен!')
     } catch (error) {
       alert(`Ошибка входа: ${error}`)
+    }
+  }
+
+  const testAdminLogin = async () => {
+    try {
+      await authStore.login({
+        email: 'admin@example.com',
+        password: 'password123',
+      })
+      alert('Вход админа успешен!')
+    } catch (error) {
+      alert(`Ошибка входа админа: ${error}`)
     }
   }
 

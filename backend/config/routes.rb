@@ -48,6 +48,11 @@ Rails.application.routes.draw do
       get 'admin/bookings', to: 'admin#bookings'
       get 'admin/bookings/:id', to: 'admin#booking_details'
       patch 'admin/bookings/:id/status', to: 'admin#update_booking_status'
+      
+      # Admin users routes
+      namespace :admin do
+        resources :users, only: [:index, :show, :update, :destroy]
+      end
     end
   end
   

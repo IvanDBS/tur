@@ -1,0 +1,15 @@
+/* ========================================
+   CONSOLIDATED CSS - Объединенные стили
+   ======================================== */
+
+/* 1. Design Tokens - переменные */
+@import './tokens.css';
+
+/* 2. Base Styles - базовые стили + layout + utilities */
+@import './base.css';
+
+/* 3. Components - все компоненты */
+@import './components.css';
+
+/* 4. Features - анимации, спиннеры, datepicker */
+@import './features.css';

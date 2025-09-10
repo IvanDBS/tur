@@ -2,10 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap');
 
 /* Design System - Консолидированные стили */
-@import '../styles/consolidated.css';
+@import '../styles/refactored/consolidated.css';
 
 /* Дополнительные стили */
-@import '../styles/components/hotel-cards.css';
 @import '@vuepic/vue-datepicker/dist/main.css';
 
 /* CSS Custom Properties - Business Minimalist Theme */

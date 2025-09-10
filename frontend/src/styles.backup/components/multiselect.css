@@ -1,0 +1,122 @@
+/* Консолидированные стили для Vue Multiselect */
+
+/* Высокоприоритетные стили для переопределения дефолтных стилей */
+
+/* Рамка при наведении */
+.multiselect:hover {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+/* Рамка при фокусе */
+.multiselect.is-active {
+  border-color: var(--color-secondary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Пункт при наведении */
+.multiselect .multiselect__option--highlight {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+/* Выбранный пункт в списке */
+.multiselect .multiselect__option--selected {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+/* Если выбранный ещё и в фокусе */
+.multiselect .multiselect__option--selected.multiselect__option--highlight {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+/* Vue Multiselect классы (альтернативные) */
+.multiselect .multiselect-option.is-pointed {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+.multiselect .multiselect-option.is-selected {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+.multiselect .multiselect-option.is-selected.is-pointed {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+/* Дополнительные селекторы для полного контроля */
+.multiselect:focus,
+.multiselect:focus-within {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+}
+
+/* Убираем все возможные зеленые цвета */
+.multiselect[style*='green'],
+.multiselect[style*='Green'],
+.multiselect[style*='#4CAF50'],
+.multiselect[style*='#4caf50'] {
+  border-color: var(--color-secondary) !important;
+}
+
+.multiselect-option[style*='green'],
+.multiselect-option[style*='Green'],
+.multiselect-option[style*='#4CAF50'],
+.multiselect-option[style*='#4caf50'] {
+  background: var(--color-secondary) !important;
+  color: #fff !important;
+}
+
+/* Настройка для селектора "Куда:" - показывать 7 элементов */
+:root {
+  --ms-max-height: 280px; /* 7 элементов по ~40px */
+}
+
+.multiselect__content-wrapper {
+  max-height: 280px !important; /* Примерно 7 элементов по 40px */
+}
+
+.multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Более специфичные селекторы для переопределения стилей библиотеки */
+.multiselect .multiselect__content-wrapper {
+  max-height: 280px !important;
+}
+
+.multiselect .multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Для всех multiselect в форме поиска */
+.search-form .multiselect__content-wrapper {
+  max-height: 280px !important;
+}
+
+.search-form .multiselect__content {
+  max-height: 280px !important;
+}
+
+/* Стили с максимальной специфичностью для Vue компонентов */
+:deep(.multiselect__content-wrapper) {
+  max-height: 280px !important;
+}
+
+:deep(.multiselect__content) {
+  max-height: 280px !important;
+}
+
+/* Специально для селектора "Куда:" */
+.field-group:has(.multiselect) :deep(.multiselect__content-wrapper) {
+  max-height: 280px !important;
+}
+
+.field-group:has(.multiselect) :deep(.multiselect__content) {
+  max-height: 280px !important;
+}

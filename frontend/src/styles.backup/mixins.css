@@ -1,0 +1,213 @@
+/* ========================================
+   CSS MIXINS - ТОЛЬКО МИКСИНЫ
+   Удалены дублирующиеся стили, оставлены только миксины
+   ======================================== */
+
+/* Миксин для disabled состояний полей */
+@mixin disabled-field {
+  opacity: 0.6;
+  background-color: var(--color-background-muted);
+  border-color: var(--color-border-muted);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Миксин для disabled состояний лейблов */
+@mixin disabled-label {
+  color: var(--color-text-muted) !important;
+}
+
+/* Миксин для базовых стилей полей формы */
+@mixin form-field-base {
+  min-height: var(--input-height);
+  height: var(--input-height);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  transition: var(--transition);
+}
+
+/* Миксин для hover состояний полей */
+@mixin form-field-hover {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px var(--color-secondary-muted);
+}
+
+/* Миксин для focus состояний полей */
+@mixin form-field-focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px var(--color-secondary-muted);
+  outline: none;
+}
+
+/* Миксин для стилей лейблов полей */
+@mixin field-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Миксин для стилей строк форм */
+@mixin form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  align-items: end;
+}
+
+/* Миксин для стилей групп полей */
+@mixin field-group {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+/* Миксин для стилей кнопок */
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: var(--button-height);
+  box-sizing: border-box;
+}
+
+/* Миксин для стилей кнопок вторичного типа */
+@mixin button-secondary {
+  @include button-base;
+  background: white;
+  border: 1px solid var(--color-dark-gray);
+  color: var(--color-dark-gray);
+  min-width: 180px;
+}
+
+/* Миксин для стилей кнопок первичного типа */
+@mixin button-primary {
+  @include button-base;
+  background: white;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+  min-width: 140px;
+}
+
+/* Миксин для hover состояний кнопок */
+@mixin button-hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Миксин для стилей чекбоксов */
+@mixin checkbox-base {
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+/* Миксин для стилей чекбоксов в списках */
+@mixin checkbox-list {
+  @include checkbox-base;
+  
+  &:hover {
+    background-color: var(--color-secondary-muted);
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Миксин для стилей контейнеров фильтров */
+@mixin filter-container {
+  display: flex;
+  flex-direction: column;
+  height: 210px;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+}
+
+/* Миксин для стилей заголовков фильтров */
+@mixin filter-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Миксин для стилей списков фильтров */
+@mixin filter-list {
+  flex: 1;
+  overflow-y: auto;
+  border: none;
+  border-radius: 0;
+}
+
+/* Миксин для стилей поиска в фильтрах */
+@mixin filter-search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-left: 10px;
+  
+  .search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 5px 0 0;
+    color: #888888;
+    width: 10%;
+    flex: 0 0 10%;
+    max-width: 25px;
+  }
+  
+  .search-input {
+    flex: 1 1 90%;
+    width: 90%;
+    padding: 6px 0 6px 0;
+    margin: 0;
+    border: none;
+    font-size: 14px;
+    font-family: 'Onest', var(--font-family);
+    background: transparent;
+    height: 32px;
+    outline: none;
+    text-align: left;
+    text-indent: 0;
+  }
+}
+
+/* Миксин для мобильной адаптивности */
+@mixin mobile-responsive {
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .field-group {
+      min-width: 80px;
+    }
+  }
+}

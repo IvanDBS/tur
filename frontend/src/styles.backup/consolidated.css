@@ -1,0 +1,113 @@
+/* ========================================
+   КОНСОЛИДИРОВАННЫЕ СТИЛИ
+   Главный файл, объединяющий все стили
+   ======================================== */
+
+/* Импортируем дизайн-токены */
+@import './design-tokens.css';
+
+/* Импортируем консолидированные компоненты */
+@import './components/forms-consolidated.css';
+@import './components/buttons-consolidated.css';
+
+/* Импортируем утилитарные стили */
+@import './utilities-consolidated.css';
+
+/* Импортируем специфичные стили компонентов */
+@import './components/multiselect.css';
+@import './datepicker.css';
+@import './spinner.css';
+@import './animations.css';
+
+/* Импортируем layout стили */
+@import './layout.css';
+
+/* ========================================
+   ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ СОВМЕСТИМОСТИ
+   ======================================== */
+
+/* Обеспечиваем совместимость со старыми классами */
+.form-field__select {
+  width: 100%;
+  min-height: var(--input-height);
+}
+
+.form-field__select--sm {
+  min-height: var(--input-height-sm);
+}
+
+.form-field__select--lg {
+  min-height: var(--input-height-lg);
+}
+
+.form-field__select--error :deep(.multiselect) {
+  border-color: var(--color-danger);
+}
+
+.form-field__select--error :deep(.multiselect:focus) {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+/* Стили для action buttons в поисковой форме */
+.search-form .action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.search-form .results-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-normal);
+  margin-right: auto;
+}
+
+/* Стили для секции результатов поиска */
+.search-form .search-results-section {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-md);
+  background: var(--color-background);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+/* ========================================
+   МОБИЛЬНАЯ АДАПТИВНОСТЬ
+   ======================================== */
+
+@media (max-width: 768px) {
+  .search-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form .field-group {
+    min-width: 80px;
+  }
+
+  .search-form .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-form .results-count {
+    text-align: center;
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .search-form .reset-btn,
+  .search-form .search-btn {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+}

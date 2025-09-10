@@ -1,0 +1,398 @@
+/* ========================================
+   КОНСОЛИДИРОВАННЫЕ СТИЛИ ФОРМ
+   Объединяет все стили форм в одном файле
+   ======================================== */
+
+/* ========================================
+   БАЗОВЫЕ КОМПОНЕНТЫ ФОРМ
+   ======================================== */
+
+/* Form Field - основной контейнер для полей */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-field__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.form-field__input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-text);
+  transition: var(--transition);
+  min-height: var(--input-height);
+  box-sizing: border-box;
+}
+
+.form-field__input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px var(--color-secondary-muted);
+}
+
+.form-field__input:hover:not(:focus) {
+  border-color: var(--color-secondary);
+}
+
+.form-field__input:disabled {
+  background: var(--color-background-muted);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-field__input--error {
+  border-color: var(--color-danger);
+}
+
+.form-field__input--error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+.form-field__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  font-weight: var(--font-weight-medium);
+  margin-top: var(--spacing-xs);
+}
+
+.form-field__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  margin-top: var(--spacing-xs);
+}
+
+.form-field--disabled .form-field__label {
+  color: var(--color-text-muted);
+}
+
+/* Form Group - альтернативный контейнер */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.form-group--half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Form Row - для горизонтального расположения */
+.form-row {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* ========================================
+   СТИЛИ ДЛЯ ПОИСКОВОЙ ФОРМЫ
+   ======================================== */
+
+/* Специфичные стили для поисковой формы */
+.search-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  align-items: end;
+}
+
+.search-form .field-group {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-form .field-group label,
+.search-form .field-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+/* Стили для number input в поисковой форме */
+.search-form .field-group input[type='number'] {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--border-radius) !important;
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
+  font-size: var(--font-size-sm) !important;
+  color: var(--color-text) !important;
+  background: var(--color-background) !important;
+  font-family: var(--font-family) !important;
+  min-height: var(--input-height) !important;
+  height: var(--input-height) !important;
+  box-sizing: border-box !important;
+}
+
+.search-form .field-group input[type='number']:hover,
+.search-form .field-group input[type='number']:focus {
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 2px var(--color-secondary-muted) !important;
+  outline: none !important;
+}
+
+/* Убираем стрелочки у number input */
+.search-form .field-group input[type='number']::-webkit-outer-spin-button,
+.search-form .field-group input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.search-form .field-group input[type='number'] {
+  appearance: textfield !important;
+  -moz-appearance: textfield !important;
+}
+
+/* ========================================
+   СТИЛИ ДЛЯ АВТОРИЗАЦИИ
+   ======================================== */
+
+/* Альтернативные стили для auth форм */
+.form-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-base);
+  transition: var(--transition);
+  box-sizing: border-box;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px var(--color-secondary-muted);
+}
+
+.form-input--error {
+  border-color: var(--color-danger);
+}
+
+.form-input--error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+.form-error {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  margin-top: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.form-error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ========================================
+   СТИЛИ ДЛЯ DISABLED СОСТОЯНИЙ
+   ======================================== */
+
+/* Общие disabled стили */
+.disabled-field .field-label,
+.disabled-field .form-field__label {
+  color: var(--color-text-muted) !important;
+}
+
+.disabled-field input,
+.disabled-field .multiselect,
+.disabled-field .dp__input {
+  background-color: var(--color-background-muted) !important;
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed !important;
+  border-color: var(--color-border-soft) !important;
+  opacity: 0.6;
+}
+
+/* Стили для отключенных VueDatePicker */
+.disabled-field :deep(.dp__input) {
+  background-color: var(--color-background-muted) !important;
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed !important;
+  border-color: var(--color-border-soft) !important;
+  opacity: 0.6;
+}
+
+.disabled-field :deep(.dp__input_wrap) {
+  opacity: 0.6;
+}
+
+/* Стили для отключенных фильтров */
+.disabled-field :deep(.filter-group) {
+  opacity: 0.6;
+}
+
+.disabled-field :deep(.filter-group label) {
+  color: var(--color-text-muted) !important;
+}
+
+.disabled-field :deep(.filter-group input),
+.disabled-field :deep(.filter-group select),
+.disabled-field :deep(.filter-group .multiselect) {
+  background-color: var(--color-background-muted) !important;
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed !important;
+  border-color: var(--color-border-soft) !important;
+  opacity: 0.6;
+}
+
+/* ========================================
+   СТИЛИ ДЛЯ КАЛЕНДАРЯ
+   ======================================== */
+
+.search-form :deep(.dp__active_date) {
+  background: transparent !important;
+  border: 2px solid var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+.search-form :deep(.dp__input) {
+  min-height: var(--input-height) !important;
+  height: var(--input-height) !important;
+  box-sizing: border-box !important;
+}
+
+/* ========================================
+   АНИМАЦИИ И ИНДИКАТОРЫ
+   ======================================== */
+
+/* Анимированная стрелка для селекторов */
+@keyframes downarrow {
+  0% { 
+    transform: translateY(0); 
+    opacity: 0.4; 
+  }
+  100% { 
+    transform: translateY(0.4em); 
+    opacity: 1; 
+  }
+}
+
+/* Стрелка рядом с названием поля */
+.search-form .field-arrow {
+  display: inline-block;
+  margin-right: var(--spacing-sm);
+  vertical-align: top;
+  margin-top: -0.4em;
+}
+
+.search-form .field-arrow::before {
+  content: '';
+  display: inline-block;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid var(--color-success);
+  animation: downarrow 0.8s infinite alternate ease-in-out;
+  margin-right: var(--spacing-xs);
+}
+
+/* ========================================
+   СТИЛИ ДЛЯ ДОПОЛНИТЕЛЬНЫХ ЭЛЕМЕНТОВ
+   ======================================== */
+
+/* Стили для селекторов возраста детей */
+.search-form .children-ages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+/* Стили для футера auth форм */
+.auth-form__footer {
+  text-align: center;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.auth-form__text {
+  color: var(--color-text-muted);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.auth-form__link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  text-decoration: none;
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: var(--font-weight-semibold);
+  padding: 0;
+  margin: 0;
+  transition: var(--transition);
+}
+
+.auth-form__link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ========================================
+   МОБИЛЬНАЯ АДАПТИВНОСТЬ
+   ======================================== */
+
+@media (max-width: 768px) {
+  .search-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form .field-group {
+    min-width: 80px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+}

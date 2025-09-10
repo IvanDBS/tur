@@ -29,8 +29,8 @@ const BaseSearchField = defineAsyncComponent(() => import('./BaseSearchField.vue
 
 // Props
 interface Props {
-  modelValue: any
-  options: Array<{ value: any; label: string }>
+  modelValue: string | number | null
+  options: Array<{ value: string | number; label: string }>
   activeSelector?: string | null
   disabled?: boolean
 }
@@ -42,6 +42,6 @@ withDefaults(defineProps<Props>(), {
 
 // Emits
 defineEmits<{
-  'update:modelValue': [value: any]
+  'update:modelValue': [value: string | number | null]
 }>()
 </script>

@@ -32,12 +32,12 @@ class Logger {
     return levels[level] >= levels[this.config.level]
   }
 
-  private formatMessage(level: LogLevel, message: string, ...args: any[]): string {
+  private formatMessage(level: LogLevel, message: string): string {
     const timestamp = new Date().toISOString()
     return `[${timestamp}] [${level.toUpperCase()}] ${message}`
   }
 
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (!this.shouldLog('debug')) return
     
     if (this.config.enableConsole) {
@@ -45,7 +45,7 @@ class Logger {
     }
   }
 
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (!this.shouldLog('info')) return
     
     if (this.config.enableConsole) {
@@ -53,7 +53,7 @@ class Logger {
     }
   }
 
-  warn(message: string, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (!this.shouldLog('warn')) return
     
     if (this.config.enableConsole) {
@@ -61,7 +61,7 @@ class Logger {
     }
   }
 
-  error(message: string, ...args: any[]): void {
+  error(message: string, ...args: unknown[]): void {
     if (!this.shouldLog('error')) return
     
     if (this.config.enableConsole) {
@@ -70,12 +70,12 @@ class Logger {
   }
 
   // Метод для логирования API вызовов
-  apiCall(method: string, url: string, params?: any): void {
+  apiCall(method: string, url: string, params?: unknown): void {
     this.debug(`API ${method.toUpperCase()} ${url}`, params)
   }
 
   // Метод для логирования ошибок API
-  apiError(method: string, url: string, error: any): void {
+  apiError(method: string, url: string, error: unknown): void {
     this.error(`API ${method.toUpperCase()} ${url} failed:`, error)
   }
 }

@@ -16,10 +16,10 @@ export interface SearchFormFieldsProps {
   selectedFilters: SelectedFilters
   activeSelector: string | null
   isLoading: boolean
-  searchData: any // TODO: типизировать searchData
+  searchData: Record<string, unknown> // TODO: типизировать searchData
   filteredNights2Options: Array<{ value: number; label: string }>
   dynamicNightsOptions: Array<{ value: number; label: string }>
-  calendarHints: any // TODO: типизировать calendarHints
+  calendarHints: Record<string, unknown> // TODO: типизировать calendarHints
 }
 
 // События для компонентов
@@ -36,8 +36,8 @@ export interface SearchFormFieldsEmits {
 
 // Типы для отдельных полей формы
 export interface SearchFormFieldProps {
-  modelValue: any
-  options: Array<{ value: any; label: string }>
+  modelValue: string | number | null
+  options: Array<{ value: string | number; label: string }>
   activeSelector?: string | null
   disabled?: boolean
   placeholder?: string
@@ -46,7 +46,7 @@ export interface SearchFormFieldProps {
 }
 
 export interface SearchFormFieldEmits {
-  'update:modelValue': [value: any]
+  'update:modelValue': [value: string | number | null]
 }
 
 // Типы для строк формы
@@ -54,7 +54,7 @@ export interface SearchFormRowProps {
   searchForm: SearchForm
   activeSelector: string | null
   isLoading: boolean
-  searchData: any
+  searchData: Record<string, unknown>
   filteredNights2Options: Array<{ value: number; label: string }>
 }
 

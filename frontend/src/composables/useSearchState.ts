@@ -23,15 +23,15 @@ export const useSearchState = () => {
   })
 
   const isLoading = ref(false)
-  const searchResults = ref<Record<string, any> | null>(null)
+  const searchResults = ref<Record<string, unknown> | null>(null)
   const totalResults = ref(0)
 
   // Сохранение состояния поиска
   const saveSearchState = (state: {
     searchForm: SearchForm
     selectedFilters: SelectedFilters
-    searchResults: Record<string, any> | null
-    allLoadedResults: Record<string, any> | null
+    searchResults: Record<string, unknown> | null
+    allLoadedResults: Record<string, unknown> | null
     totalResults: number
     currentPage: number
     lastSearchParams: Record<string, unknown> | null

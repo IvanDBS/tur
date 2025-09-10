@@ -135,7 +135,7 @@
       // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       bookings.value = mockBookings
-    } catch (error) {
+    } catch {
       // Error handling - bookings will remain empty
       bookings.value = []
     } finally {
@@ -153,18 +153,18 @@
   }
 
   // TODO: Implement booking confirmation
-  const confirmBooking = async (_bookingId: number) => {
-    // TODO: API call to confirm booking
-  }
+  // const confirmBooking = async (_bookingId: number) => {
+  //   // TODO: API call to confirm booking
+  // }
 
   // TODO: Implement booking cancellation
-  const cancelBooking = async (_bookingId: number) => {
-    // TODO: API call to cancel booking
-  }
+  // const cancelBooking = async (_bookingId: number) => {
+  //   // TODO: API call to cancel booking
+  // }
 
-  const viewDetails = (bookingId: number) => {
-    // TODO: Navigate to booking details page
-  }
+  // const viewDetails = (bookingId: number) => {
+  //   // TODO: Navigate to booking details page
+  // }
 
   // Lifecycle
   onMounted(() => {

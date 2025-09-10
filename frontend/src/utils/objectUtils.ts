@@ -13,7 +13,7 @@ export function arraysEqual<T>(a: T[], b: T[]): boolean {
 /**
  * Сравнивает два объекта на равенство (поверхностное сравнение)
  */
-export function objectsEqual<T extends Record<string, any>>(a: T, b: T): boolean {
+export function objectsEqual<T extends Record<string, unknown>>(a: T, b: T): boolean {
   const keysA = Object.keys(a)
   const keysB = Object.keys(b)
   
@@ -38,7 +38,7 @@ export function shallowCopy<T>(obj: T): T {
 /**
  * Проверяет, является ли значение пустым (null, undefined, пустой массив)
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true
   if (Array.isArray(value)) return value.length === 0
   if (typeof value === 'object') return Object.keys(value).length === 0

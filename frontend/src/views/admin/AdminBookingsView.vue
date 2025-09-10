@@ -310,7 +310,7 @@ import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
 import BookingDetailsModal from './components/admin/BookingDetailsModal.vue'
-import { formatDate, formatDateTime } from '../../utils/dateUtils'
+import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
 import { useAdminApi } from '../../composables/useAdminApi'
 import type { AdminBooking } from '../../types/admin'
@@ -352,13 +352,13 @@ const sortField = ref<string>('')
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
 // Options
-const statusOptions = [
-  { value: '', label: 'Все статусы' },
-  { value: 'pending', label: 'В ожидании' },
-  { value: 'confirmed', label: 'Подтверждено' },
-  { value: 'cancelled', label: 'Отменено' },
-  { value: 'failed', label: 'Ошибка' }
-]
+// const statusOptions = [
+//   { value: '', label: 'Все статусы' },
+//   { value: 'pending', label: 'В ожидании' },
+//   { value: 'confirmed', label: 'Подтверждено' },
+//   { value: 'cancelled', label: 'Отменено' },
+//   { value: 'failed', label: 'Ошибка' }
+// ]
 
 const statusFilterOptions = [
   { value: '', label: 'Все' },
@@ -434,11 +434,11 @@ const loadBookings = async () => {
   }
 }
 
-const resetFilters = () => {
-  filters.value = { status: '', search: '' }
-  currentPage.value = 1
-  loadBookings()
-}
+// const resetFilters = () => {
+//   filters.value = { status: '', search: '' }
+//   currentPage.value = 1
+//   loadBookings()
+// }
 
 const clearAllFilters = () => {
   // Clear main filters
@@ -520,8 +520,8 @@ const sortBookings = () => {
   if (!sortField.value) return
   
   bookings.value.sort((a, b) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
     
     switch (sortField.value) {
       case 'id':

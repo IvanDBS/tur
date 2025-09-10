@@ -105,20 +105,7 @@ export const useSearchData = () => {
     { id: 3, name: 'BODRUM' },
   ])
 
-  // Добавляем fallback для аэропортов
-  const fallbackAirports = ref([
-    { id: 50004, name: 'ANTALYA' },
-    { id: 50005, name: 'ISTANBUL' },
-    { id: 50006, name: 'BODRUM' },
-  ])
-
   const fallbackRegions = ref<Region[]>([])
-
-  const fallbackCategories = ref<Category[]>([])
-
-  const fallbackHotels = ref<Hotel[]>([])
-
-  const fallbackMeals = ref<Meal[]>([])
 
   const options = ref([
     { id: 1, name: 'Выбрать все' },
@@ -196,7 +183,7 @@ export const useSearchData = () => {
       const loadedCategories = await obsApi.fetchHotelCategories(packageTemplateId)
       // Синхронизируем данные между obsApi и searchData
       categories.value = loadedCategories || []
-    } catch (err) {
+    } catch {
       logger.warn('Using fallback hotel categories data')
     }
   }
@@ -262,7 +249,7 @@ export const useSearchData = () => {
       const loadedMeals = await obsApi.fetchMeals(packageTemplateId)
       // Синхронизируем данные между obsApi и searchData
       meals.value = loadedMeals || []
-    } catch (err) {
+    } catch {
       logger.warn('Using fallback meals data')
     }
   }
@@ -276,8 +263,8 @@ export const useSearchData = () => {
   }) => {
     try {
       await obsApi.fetchCalendarHints(params)
-    } catch (err) {
-      logger.warn('Failed to load calendar hints:', err)
+    } catch {
+      logger.warn('Failed to load calendar hints')
     }
   }
 
@@ -399,9 +386,9 @@ export const useSearchData = () => {
   })
 
   // Опции для Multiselect
-  const departureCitiesOptions = ref<Array<{ value: any, label: string }>>([])
-  const countriesOptions = ref<Array<{ value: any, label: string }>>([])
-  const packagesOptions = ref<Array<{ value: any, label: string }>>([])
+  const departureCitiesOptions = ref<Array<{ value: number, label: string }>>([])
+  const countriesOptions = ref<Array<{ value: number, label: string }>>([])
+  const packagesOptions = ref<Array<{ value: number, label: string }>>([])
 
   // Обновляем options при изменении данных
   const updateDepartureCitiesOptions = () => {

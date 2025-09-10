@@ -18,13 +18,13 @@ import { computed } from 'vue'
 
 // Props
 interface Props {
-  modelValue: any
+  modelValue: string | number | null
   fieldKey: string
   label: string
   activeSelector?: string | null
   disabled?: boolean
   placeholder?: string
-  options?: Array<{ value: any; label: string }>
+  options?: Array<{ value: string | number; label: string }>
   searchable?: boolean
   canClear?: boolean
   canDeselect?: boolean
@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  'update:modelValue': [value: any]
+  'update:modelValue': [value: string | number | null]
 }>()
 
 // Computed
@@ -62,7 +62,7 @@ const fieldProps = computed(() => ({
 }))
 
 // Methods
-const updateValue = (value: any) => {
+const updateValue = (value: string | number | null) => {
   emit('update:modelValue', value)
 }
 </script>

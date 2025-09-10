@@ -162,16 +162,16 @@ export interface SearchResult {
   hotel_results_counter: number
   package_template: number
   operator: number
-  additional_services: any[]
+  additional_services: unknown[]
   dates: SearchResultDates
   nights: SearchResultNights
   accommodation: SearchResultAccommodation
   tickets: SearchResultTickets
   price: SearchResultPrice
   transfers: SearchResultTransfers
-  never_land_entrance: any[]
-  gala_dinner: any[]
-  aquapark_services: any[]
+  never_land_entrance: unknown[]
+  gala_dinner: unknown[]
+  aquapark_services: unknown[]
   tourists: SearchResultTourists
 }
 
@@ -292,9 +292,9 @@ export interface GroupedSearchResult {
   dates: SearchResultDates
   nights: SearchResultNights
   transfers: SearchResultTransfers
-  never_land_entrance: any[]
-  gala_dinner: any[]
-  aquapark_services: any[]
+  never_land_entrance: unknown[]
+  gala_dinner: unknown[]
+  aquapark_services: unknown[]
   tourists: SearchResultTourists
   // Массив вариантов комнат для этого отеля
   roomOptions: RoomOption[]

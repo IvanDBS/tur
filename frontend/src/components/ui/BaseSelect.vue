@@ -36,7 +36,10 @@ import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import type { BaseSelectProps, BaseFieldEmits } from '@/types/ui'
 
-interface Props extends BaseSelectProps {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface Props extends BaseSelectProps {
+  // Props are inherited from BaseSelectProps
+}
 
 const props = withDefaults(defineProps<Props>(), {
   disabled: false,

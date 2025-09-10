@@ -257,13 +257,13 @@ import { debounce } from '../../utils/debounce'
 import { useAdminApi } from '../../composables/useAdminApi'
 import type { AdminUser } from '../../types/admin'
 import { BaseInput, BaseButton, BaseSelect } from '../../components/ui'
-// @ts-ignore
+// @ts-expect-error - Pagination component needs proper typing
 import Pagination from '../../components/Pagination.vue'
-// @ts-ignore
+// @ts-expect-error - UserDetailsModal component needs proper typing
 import UserDetailsModal from './components/admin/UserDetailsModal.vue'
 
 // Admin API
-const { loading, getUsers, updateUserStatus } = useAdminApi()
+const { loading, getUsers } = useAdminApi()
 
 // State
 const users = ref<AdminUser[]>([])
@@ -295,17 +295,17 @@ const sortField = ref<string>('')
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
 // Options
-const roleOptions = [
-  { value: '', label: 'Все роли' },
-  { value: 'admin', label: 'Администраторы' },
-  { value: 'user', label: 'Пользователи' }
-]
+// const roleOptions = [
+//   { value: '', label: 'Все роли' },
+//   { value: 'admin', label: 'Администраторы' },
+//   { value: 'user', label: 'Пользователи' }
+// ]
 
-const statusOptions = [
-  { value: '', label: 'Все статусы' },
-  { value: 'active', label: 'Активные' },
-  { value: 'banned', label: 'Заблокированные' }
-]
+// const statusOptions = [
+//   { value: '', label: 'Все статусы' },
+//   { value: 'active', label: 'Активные' },
+//   { value: 'banned', label: 'Заблокированные' }
+// ]
 
 const roleFilterOptions = [
   { value: '', label: 'Все' },
@@ -371,15 +371,15 @@ const sortBy = (field: string) => {
   loadUsers()
 }
 
-const resetFilters = () => {
-  filters.value = {
-    role: '',
-    status: '',
-    search: ''
-  }
-  currentPage.value = 1
-  loadUsers()
-}
+// const resetFilters = () => {
+//   filters.value = {
+//     role: '',
+//     status: '',
+//     search: ''
+//   }
+//   currentPage.value = 1
+//   loadUsers()
+// }
 
 const clearAllFilters = () => {
   // Clear main filters

@@ -5,7 +5,7 @@ export interface ValidationRule {
   minLength?: number
   maxLength?: number
   pattern?: RegExp
-  custom?: (value: any) => string | null
+  custom?: (value: unknown) => string | null
   message?: string
 }
 
@@ -17,14 +17,14 @@ export interface FormErrors {
   [key: string]: string
 }
 
-export function useFormValidation<T extends Record<string, any>>(
+export function useFormValidation<T extends Record<string, unknown>>(
   formData: T,
   schema: ValidationSchema
 ) {
   const errors = reactive<FormErrors>({})
 
   // Валидация отдельного поля
-  const validateField = (fieldName: keyof T, value: any): string => {
+  const validateField = (fieldName: keyof T, value: unknown): string => {
     const rule = schema[fieldName as string]
     if (!rule) return ''
 

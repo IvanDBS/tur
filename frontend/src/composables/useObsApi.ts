@@ -378,7 +378,7 @@ export const useObsApi = () => {
       queryParams.append('city_from', params.city_from.toString())
       queryParams.append('city_to', params.city_to)
       
-      const response = await apiClient.get<ApiResponse<{ calendar_hints: Record<string, any[]> }>>(`/search/calendar_hints?${queryParams.toString()}`)
+      const response = await apiClient.get<ApiResponse<{ calendar_hints: Record<string, unknown[]> }>>(`/search/calendar_hints?${queryParams.toString()}`)
       
       logger.info('Calendar hints API response:', response)
       
@@ -474,7 +474,7 @@ export const useObsApi = () => {
         logger.debug(`performSearch API call: ${url}`)
         logger.apiCall('POST', url)
         
-        const response = await apiClient.post<ApiResponse<Record<string, any>>>(url, requestBody)
+        const response = await apiClient.post<ApiResponse<Record<string, unknown>>>(url, requestBody)
       
       if (response.success) {
         return response.data

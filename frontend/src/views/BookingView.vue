@@ -138,9 +138,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, defineAsyncComponent } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+// import { useRoute, useRouter } from 'vue-router' // TODO: implement route usage
 import { useBooking } from '../composables/useBooking'
-import { useSearchData } from '../composables/useSearchData'
+// import { useSearchData } from '../composables/useSearchData' // TODO: implement search functionality
 // Import components dynamically to avoid TypeScript issues
 const HotelInfoBlock = defineAsyncComponent(() => import('../components/booking/HotelInfoBlock.vue'))
 const RoomSelectionBlock = defineAsyncComponent(() => import('../components/booking/RoomSelectionBlock.vue'))
@@ -157,8 +157,8 @@ interface Props {
 const props = defineProps<Props>()
 
 // Composables
-const route = useRoute()
-const router = useRouter()
+// const route = useRoute() // TODO: implement route usage
+// const router = useRouter() // TODO: implement router usage
 
 // Wrapper for updateTourist to match TouristDataBlock emit signature
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
@@ -179,13 +179,13 @@ const {
   resetSelectedFlight,
   updateTourist: updateTouristOriginal,
   updateAdditionalServices,
-  calculateBooking,
+  // calculateBooking, // TODO: implement calculation functionality
   createBooking,
   goBackToSearch,
   clearError
 } = useBooking()
 
-const { performSearch } = useSearchData()
+// const { performSearch } = useSearchData() // TODO: implement search functionality
 
 // State
 const touristErrors = ref<Record<string, Record<string, string>>>({})
@@ -218,7 +218,7 @@ const loadSearchResult = async () => {
         
         initializeBooking(searchResult)
         return
-      } catch (parseError) {
+      } catch {
         // Failed to parse stored search result
         sessionStorage.removeItem('bookingSearchResult')
       }
@@ -260,13 +260,13 @@ const retryLoad = () => {
   loadSearchResult()
 }
 
-const handleCalculate = async () => {
-  const result = await calculateBooking()
-  if (result) {
-    // Booking calculated
-    // TODO: Show calculation results to user
-  }
-}
+// const handleCalculate = async () => {
+//   const result = await calculateBooking()
+//   if (result) {
+//     // Booking calculated
+//     // TODO: Show calculation results to user
+//   }
+// }
 
 const handleBook = async () => {
   const result = await createBooking()
@@ -419,7 +419,7 @@ watch(() => bookingData.value.tourists, () => {
 onMounted(async () => {
   try {
     await loadSearchResult()
-  } catch (error) {
+  } catch {
     // Error in BookingView onMounted
   }
 })

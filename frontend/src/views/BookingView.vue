@@ -23,10 +23,10 @@
       <!-- Error State -->
       <div v-else-if="error" class="error-state">
         <div class="error-icon">⚠️</div>
-        <h3>Ошибка загрузки</h3>
+        <h3>{{ $t('bookingSummary.errorLoading') }}</h3>
         <p>{{ error }}</p>
         <button class="retry-button" @click="retryLoad">
-          Попробовать снова
+          {{ $t('bookingSummary.tryAgain') }}
         </button>
       </div>
 
@@ -76,13 +76,13 @@
           <div class="summary-content">
             <div class="price-breakdown">
               <div class="price-item">
-                <div class="price-name">Базовая стоимость</div>
+                <div class="price-name">{{ $t('bookingSummary.baseCost') }}</div>
                 <div class="price-description">{{ getBasePriceDescription() }}</div>
                 <div class="price-value">{{ basePrice }} €</div>
               </div>
               
               <div class="price-item">
-                <div class="price-name">Страховка</div>
+                <div class="price-name">{{ $t('bookingSummary.insurance') }}</div>
                 <div class="price-description">{{ getInsuranceName() }} - {{ getInsuranceDescription() }}</div>
                 <div class="price-value">
                   {{ bookingData.additionalServices.insurance.included ? '0' : '+' + bookingData.additionalServices.insurance.price }}
@@ -90,7 +90,7 @@
               </div>
               
               <div class="price-item">
-                <div class="price-name">Трансфер</div>
+                <div class="price-name">{{ $t('bookingSummary.transfer') }}</div>
                 <div class="price-description">{{ getTransferName() }} - {{ getTransferDescription() }}</div>
                 <div class="price-value">
                   {{ bookingData.additionalServices.transfer.included ? '0' : '+' + bookingData.additionalServices.transfer.price + ' €' }}
@@ -98,8 +98,8 @@
               </div>
               
               <div v-if="bookingData.additionalServices.covidInsurance.type === 'COVID_19'" class="price-item">
-                <div class="price-name">COVID-19 страховка</div>
-                <div class="price-description">Дополнительная страховка COVID-19</div>
+                <div class="price-name">{{ $t('bookingSummary.covidInsurance') }}</div>
+                <div class="price-description">{{ $t('additionalServices.additionalCovid') }}</div>
                 <div class="price-value">+ {{ bookingData.additionalServices.covidInsurance.price }} €</div>
               </div>
               
@@ -126,10 +126,10 @@
       <!-- No Search Result -->
       <div v-else class="no-result-state">
         <div class="no-result-icon">🔍</div>
-        <h3>Результат поиска не найден</h3>
-        <p>Не удалось найти данные для бронирования. Вернитесь к поиску и попробуйте снова.</p>
+        <h3>{{ $t('bookingSummary.searchResultNotFound') }}</h3>
+        <p>{{ $t('bookingSummary.searchResultNotFoundDesc') }}</p>
         <button class="back-to-search-button" @click="goBackToSearch">
-          Вернуться к поиску
+          {{ $t('bookingSummary.backToSearch') }}
         </button>
       </div>
     </div>
@@ -293,7 +293,7 @@ const getInsuranceName = () => {
     case 'STANDARD_PLUS':
       return 'STANDARD PLUS TR 30 000 €'
     case 'NONE':
-      return 'Без страховки'
+      return $t('additionalServices.noInsurance')
     default:
       return insurance.type
   }
@@ -303,11 +303,11 @@ const getInsuranceDescription = () => {
   const insurance = bookingData.value.additionalServices.insurance
   switch (insurance.type) {
     case 'STANDARD':
-      return 'Стандартная страховка'
+      return $t('additionalServices.standardInsurance')
     case 'STANDARD_PLUS':
-      return 'Расширенная страховка'
+      return $t('additionalServices.extendedInsurance')
     case 'NONE':
-      return 'Отказ от страховки'
+      return $t('additionalServices.insuranceDecline')
     default:
       return insurance.coverage || ''
   }
@@ -331,11 +331,11 @@ const getTransferDescription = () => {
   const transfer = bookingData.value.additionalServices.transfer
   switch (transfer.type) {
     case 'GROUP':
-      return 'Групповой трансфер на автобусе'
+      return $t('additionalServices.groupBus')
     case 'INDIVIDUAL':
-      return 'Индивидуальный трансфер'
+      return $t('additionalServices.individualTransfer')
     case 'VIP':
-      return 'VIP индивидуальный трансфер'
+      return $t('additionalServices.vipTransfer')
     default:
       return ''
   }
@@ -349,11 +349,11 @@ const getBasePriceDescription = () => {
   
   // Проверяем, есть ли перелет (для GroupedSearchResult)
   if ('flightOptions' in result && Array.isArray(result.flightOptions) && result.flightOptions.length > 0) {
-    parts.push('Перелет')
+    parts.push($t('bookingSummary.flight'))
   }
   
   // Добавляем проживание
-  parts.push('проживание')
+  parts.push($t('bookingSummary.accommodation'))
   
   // Добавляем питание из выбранной комнаты
   let mealName = 'питание'
@@ -368,7 +368,7 @@ const getBasePriceDescription = () => {
   }
   
   // Форматируем питание: "питание по системе {НАЗВАНИЕ}"
-  const mealDescription = `питание по системе ${mealName.toUpperCase()}`
+  const mealDescription = `${$t('bookingSummary.mealBySystem')} ${mealName.toUpperCase()}`
   parts.push(mealDescription)
   
   return parts.join(' + ')
@@ -382,27 +382,27 @@ const validateTouristData = () => {
     const touristErrors: Record<string, string> = {}
     
     if (!tourist.firstName.trim()) {
-      touristErrors.firstName = 'Имя обязательно для заполнения'
+      touristErrors.firstName = $t('bookingSummary.nameRequired')
     }
     
     if (!tourist.lastName.trim()) {
-      touristErrors.lastName = 'Фамилия обязательна для заполнения'
+      touristErrors.lastName = $t('bookingSummary.lastNameRequired')
     }
     
     if (!tourist.birthDate) {
-      touristErrors.birthDate = 'Дата рождения обязательна для заполнения'
+      touristErrors.birthDate = $t('bookingSummary.birthDateRequired')
     }
     
     if (!tourist.passportNumber.trim()) {
-      touristErrors.passportNumber = 'Номер паспорта обязателен для заполнения'
+      touristErrors.passportNumber = $t('bookingSummary.passportNumberRequired')
     }
     
     if (!tourist.passportExpiry) {
-      touristErrors.passportExpiry = 'Срок действия паспорта обязателен для заполнения'
+      touristErrors.passportExpiry = $t('bookingSummary.passportExpiryRequired')
     }
     
     if (!tourist.nationality) {
-      touristErrors.nationality = 'Гражданство обязательно для заполнения'
+      touristErrors.nationality = $t('bookingSummary.nationalityRequired')
     }
     
     if (Object.keys(touristErrors).length > 0) {

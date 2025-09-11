@@ -1,13 +1,13 @@
 <template>
   <div class="additional-services-block">
     <div class="block-header">
-      <h2 class="block-title">Дополнительные услуги</h2>
+      <h2 class="block-title">{{ $t('searchResults.additionalServices') }}</h2>
     </div>
 
     <div class="services-content">
       <!-- Insurance -->
       <div class="service-section">
-        <h3 class="service-title">Страховка</h3>
+        <h3 class="service-title">{{ $t('searchResults.insurance') }}</h3>
         <div class="service-options">
           <div 
             v-for="option in insuranceOptions" 
@@ -24,7 +24,7 @@
             <div class="option-name">{{ option.name }}</div>
             <div class="option-description">{{ option.coverage }}</div>
             <div class="option-price">
-              <span v-if="option.included" class="included">включен</span>
+              <span v-if="option.included" class="included">{{ $t('searchResults.included') }}</span>
               <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
@@ -33,7 +33,7 @@
 
       <!-- COVID-19 Insurance -->
       <div class="service-section">
-        <h3 class="service-title">Страховка COVID-19</h3>
+        <h3 class='service-title'>{{ $t('additionalServices.covidInsurance') }}</h3>
         <div class="service-options">
           <div 
             v-for="option in covidInsuranceOptions" 
@@ -50,8 +50,8 @@
             <div class="option-name">{{ option.name }}</div>
             <div class="option-description">{{ option.description }}</div>
             <div class="option-price">
-              <span v-if="option.type === 'INCLUDED'" class="included">включен</span>
-              <span v-else-if="option.type === 'OPT_OUT'" class="opt-out">Отказываюсь</span>
+              <span v-if="option.type === 'INCLUDED'" class="included">{{ $t('searchResults.included') }}</span>
+              <span v-else-if="option.type === 'OPT_OUT'" class="opt-out">{{ $t('additionalServices.decline') }}</span>
               <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
@@ -60,7 +60,7 @@
 
       <!-- Transfer -->
       <div class="service-section">
-        <h3 class="service-title">Трансфер</h3>
+        <h3 class='service-title'>{{ $t('additionalServices.transfer') }}</h3>
         <div class="service-options">
           <div 
             v-for="option in transferOptions" 
@@ -77,7 +77,7 @@
             <div class="option-name">{{ option.name }}</div>
             <div class="option-description">{{ option.description }}</div>
             <div class="option-price">
-              <span v-if="option.included" class="included">включен</span>
+              <span v-if="option.included" class="included">{{ $t('searchResults.included') }}</span>
               <span v-else class="price">+ {{ option.price }} €</span>
             </div>
           </div>
@@ -86,7 +86,7 @@
 
       <!-- Booking Notes -->
       <div class="service-section">
-        <h3 class="service-title">Примечания к бронированию</h3>
+        <h3 class='service-title'>{{ $t('additionalServices.bookingNotes') }}</h3>
         <div class="notes-grid">
           <label 
             v-for="note in bookingNotes" 
@@ -95,11 +95,11 @@
           >
             <input 
               type="checkbox" 
-              :checked="notes[note.key]"
-              @change="updateNote(note.key, $event.target.checked)"
+              :checked="getNoteValue(note.key)"
+              @change="handleCheckboxChange(note.key, $event)"
               class="note-checkbox"
             />
-            <div class="radio-button" :class="{ selected: notes[note.key] }">
+            <div class="radio-button" :class="{ selected: getNoteValue(note.key) }">
               <div class="radio-dot"></div>
             </div>
             <span class="note-label">{{ note.label }}</span>
@@ -107,11 +107,11 @@
         </div>
         
         <div class="comment-section">
-          <label class="comment-label">Комментарий</label>
+          <label class="comment-label">{{ $t('additionalServices.comment') }}</label>
           <textarea
-            :value="notes.comment"
-            @input="updateNote('comment', $event.target.value)"
-            placeholder="Введите комментарий"
+            :value="props.notes.comment"
+            @input="handleTextareaChange($event)"
+            :placeholder="$t('additionalServices.enterComment')"
             class="comment-textarea"
             rows="3"
           ></textarea>
@@ -123,89 +123,108 @@
 
 <script setup lang="ts">
 import type { AdditionalServices, BookingNotes } from '../../types/booking'
+import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 
 interface Props {
   services: AdditionalServices
   notes: BookingNotes
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:services': [services: Partial<AdditionalServices>]
   'update:notes': [notes: Partial<BookingNotes>]
 }>()
 
+const { t: $t } = useI18n()
+
+// Helper functions for type safety
+const getNoteValue = (key: string): boolean => {
+  return !!(props.notes as Record<string, unknown>)[key]
+}
+
+const handleCheckboxChange = (key: string, event: Event) => {
+  const target = event.target as HTMLInputElement
+  updateNote(key, target?.checked || false)
+}
+
+const handleTextareaChange = (event: Event) => {
+  const target = event.target as HTMLTextAreaElement
+  updateNote('comment', target?.value || '')
+}
+
 // Insurance options
-const insuranceOptions = [
+const insuranceOptions = computed(() => [
   {
     type: 'STANDARD' as const,
     name: 'STANDARD 10000 EUR',
-    coverage: 'Стандартная страховка',
+    coverage: $t('additionalServices.standardInsurance'),
     price: 0,
     included: true
   },
   {
     type: 'STANDARD_PLUS' as const,
     name: 'STANDARD PLUS TR 30 000 EUR',
-    coverage: 'Расширенная страховка',
+    coverage: $t('additionalServices.extendedInsurance'),
     price: 25,
     included: false
   },
   {
     type: 'NONE' as const,
-    name: 'Без страховки',
-    coverage: 'Отказ от страховки',
+    name: $t('additionalServices.noInsurance'),
+    coverage: $t('additionalServices.insuranceDecline'),
     price: 0,
     included: false
   }
-]
+])
 
 // COVID-19 Insurance options
-const covidInsuranceOptions = [
+const covidInsuranceOptions = computed(() => [
   {
     type: 'INCLUDED' as const,
-    name: 'COVID-19 включен',
-    description: 'Страховка COVID-19 включена в базовую страховку',
+    name: $t('additionalServices.covidIncluded'),
+    description: $t('additionalServices.covidInsuranceIncluded'),
     price: 0
   },
   {
     type: 'OPT_OUT' as const,
-    name: 'Отказываюсь от страховки COVID-19',
-    description: 'Отказ от страховки COVID-19',
+    name: $t('additionalServices.declineCovid'),
+    description: $t('additionalServices.covidInsuranceDecline'),
     price: 0
   },
   {
     type: 'COVID_19' as const,
     name: 'COVID-19',
-    description: 'Дополнительная страховка COVID-19',
+    description: $t('additionalServices.additionalCovid'),
     price: 15
   }
-]
+])
 
 // Transfer options
-const transferOptions = [
+const transferOptions = computed(() => [
   {
     type: 'GROUP' as const,
     name: 'GROUP (BUS)',
-    description: 'Групповой трансфер на автобусе',
+    description: $t('additionalServices.groupBus'),
     price: 0,
     included: true
   },
   {
     type: 'INDIVIDUAL' as const,
     name: 'INDIVIDUAL TRANSFER',
-    description: 'Индивидуальный трансфер',
+    description: $t('additionalServices.individualTransfer'),
     price: 95,
     included: false
   },
   {
     type: 'VIP' as const,
     name: 'VIP IND TRANSFER',
-    description: 'VIP индивидуальный трансфер',
+    description: $t('additionalServices.vipTransfer'),
     price: 150,
     included: false
   }
-]
+])
 
 // Booking notes
 const bookingNotes = [
@@ -220,7 +239,7 @@ const bookingNotes = [
 ]
 
 // Methods
-const selectInsurance = (option: typeof insuranceOptions[0]) => {
+const selectInsurance = (option: { type: 'STANDARD' | 'STANDARD_PLUS' | 'NONE'; coverage: string; price: number; included: boolean }) => {
   emit('update:services', {
     insurance: {
       type: option.type,
@@ -231,7 +250,7 @@ const selectInsurance = (option: typeof insuranceOptions[0]) => {
   })
 }
 
-const selectCovidInsurance = (option: typeof covidInsuranceOptions[0]) => {
+const selectCovidInsurance = (option: { type: 'INCLUDED' | 'OPT_OUT' | 'COVID_19'; price: number }) => {
   emit('update:services', {
     covidInsurance: {
       type: option.type,
@@ -240,7 +259,7 @@ const selectCovidInsurance = (option: typeof covidInsuranceOptions[0]) => {
   })
 }
 
-const selectTransfer = (option: typeof transferOptions[0]) => {
+const selectTransfer = (option: { type: 'GROUP' | 'INDIVIDUAL' | 'VIP'; price: number; included: boolean }) => {
   emit('update:services', {
     transfer: {
       type: option.type,

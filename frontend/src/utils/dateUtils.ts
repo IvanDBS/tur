@@ -95,6 +95,37 @@ export const formatDateWithDay = (dateString: string): string => {
 }
 
 /**
+ * Форматирует дату с днем недели в формате DD.MM.YYYY (День) с локализацией
+ * @param dateString - строка даты
+ * @param t - функция перевода
+ * @returns отформатированная дата с днем недели
+ */
+export const formatDateWithDayLocalized = (dateString: string, t: (key: string) => string): string => {
+  if (!dateString) return ''
+  try {
+    const date = new Date(dateString)
+    const dayNames = [
+      t('daysOfWeek.sun'),
+      t('daysOfWeek.mon'),
+      t('daysOfWeek.tue'),
+      t('daysOfWeek.wed'),
+      t('daysOfWeek.thu'),
+      t('daysOfWeek.fri'),
+      t('daysOfWeek.sat')
+    ]
+    const dayName = dayNames[date.getDay()]
+    const formattedDate = date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    return `${formattedDate} (${dayName})`
+  } catch {
+    return dateString
+  }
+}
+
+/**
  * Форматирует дату в короткий формат DD.MM
  * @param dateString - строка даты
  * @returns отформатированная дата
@@ -160,6 +191,43 @@ export const calculateDuration = (
       return `${diffHours}ч ${diffMinutes}м`
     } else {
       return `${diffMinutes}м`
+    }
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Рассчитывает длительность между временем отправления и прибытия с локализацией
+ * @param departure - объект с временем отправления
+ * @param arrival - объект с временем прибытия
+ * @param t - функция перевода
+ * @returns строка с длительностью в локализованном формате
+ */
+export const calculateDurationLocalized = (
+  departure: { time: string }, 
+  arrival: { time: string },
+  t: (key: string) => string
+): string => {
+  if (!departure?.time || !arrival?.time) return ''
+  
+  try {
+    const depTime = new Date(`2000-01-01T${departure.time}`)
+    const arrTime = new Date(`2000-01-01T${arrival.time}`)
+    
+    // Если время прибытия меньше времени отправления, значит это следующий день
+    if (arrTime < depTime) {
+      arrTime.setDate(arrTime.getDate() + 1)
+    }
+    
+    const diffMs = arrTime.getTime() - depTime.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    
+    if (diffHours > 0) {
+      return `${diffHours}${t('timeUnits.hours')} ${diffMinutes}${t('timeUnits.minutes')}`
+    } else {
+      return `${diffMinutes}${t('timeUnits.minutes')}`
     }
   } catch {
     return ''

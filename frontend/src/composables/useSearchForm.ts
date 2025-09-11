@@ -1,4 +1,4 @@
-import { computed, watch, nextTick } from 'vue'
+import { computed, watch, nextTick, ref } from 'vue'
 import { useSearchData } from './useSearchData'
 import { useCalendarHints } from './useCalendarHints'
 import { useNotifications } from './useNotifications'
@@ -8,6 +8,7 @@ import { useSearchFilters } from './useSearchFilters'
 import { useSearchState } from './useSearchState'
 import { logger } from '../utils/logger'
 import { getAirportIdByPackageName } from '../constants/airports'
+import { debounce } from '../utils/debounce'
 import type { GroupedSearchResult } from '../types/search'
 
 // Интерфейс для результатов поиска от OBS API
@@ -185,6 +186,10 @@ export const useSearchForm = () => {
     clearSearchState,
     resetSearchForm
   } = useSearchState()
+
+  // Состояние для debounce
+  const isSearchPending = ref(false)
+  const searchRequestId = ref(0)
 
   // Определяем активный селектор для показа стрелки
   const activeSelector = computed((): string | null => {
@@ -425,8 +430,10 @@ export const useSearchForm = () => {
 
 
 
-  // Methods
-  const handleSearch = () => {
+  // Внутренняя функция поиска (без debounce)
+  const performSearchInternal = () => {
+    const currentRequestId = ++searchRequestId.value
+    
     logger.info('🔍 Starting search with form data:', {
       departureCity: searchForm.value.departureCity?.id,
       destination: searchForm.value.destination?.id,
@@ -517,6 +524,7 @@ export const useSearchForm = () => {
     })
 
     isLoading.value = true
+    isSearchPending.value = false // Сбрасываем флаг ожидания
     
     // Сбрасываем предыдущие результаты и пагинацию
     searchResults.value = null
@@ -543,6 +551,12 @@ export const useSearchForm = () => {
     // Вызываем API поиска
     searchData.performSearch(searchParamsWithPagination)
       .then((result) => {
+        // Проверяем, что это актуальный запрос
+        if (currentRequestId !== searchRequestId.value) {
+          logger.info('🚫 Search request outdated, ignoring result')
+          return
+        }
+        
         // Используем nextTick для безопасного обновления реактивности
         nextTick(() => {
           isLoading.value = false
@@ -563,8 +577,8 @@ export const useSearchForm = () => {
           
           if (result.results && typeof result.results === 'object') {
             // Стандартная структура: { results: {...}, total_results: N }
-            resultsData = result.results
-            totalCount = result.total_results || 0
+            resultsData = result.results as Record<string, ObsSearchResult>
+            totalCount = (result.total_results as number) || 0
             logger.debug('Using standard structure: result.results')
           } else if (typeof result === 'object' && !result.results) {
             // Прямая структура: результаты в корне объекта
@@ -573,10 +587,10 @@ export const useSearchForm = () => {
             const resultKeys = Object.keys(result).filter(key => !excludeKeys.includes(key))
             
             if (resultKeys.length > 0) {
-              resultsData = {}
+              resultsData = {} as Record<string, ObsSearchResult>
               resultKeys.forEach(key => {
-                if (resultsData) {
-                  resultsData[key] = result[key]
+                if (resultsData && result[key]) {
+                  resultsData[key] = result[key] as ObsSearchResult
                 }
               })
               totalCount = resultKeys.length
@@ -617,6 +631,12 @@ export const useSearchForm = () => {
         }
       })
       .catch((error) => {
+        // Проверяем, что это актуальный запрос
+        if (currentRequestId !== searchRequestId.value) {
+          logger.info('🚫 Search request outdated, ignoring error')
+          return
+        }
+        
         logger.error('Search failed:', error)
         nextTick(() => {
           isLoading.value = false
@@ -635,6 +655,18 @@ export const useSearchForm = () => {
         
         showError('Ошибка поиска', errorMessage)
       })
+  }
+
+  // Создаем debounced версию поиска
+  const debouncedSearch = debounce(performSearchInternal, 800)
+
+  // Основная функция поиска с debounce
+  const handleSearch = () => {
+    // Показываем индикатор ожидания
+    isSearchPending.value = true
+    
+    // Вызываем debounced поиск
+    debouncedSearch()
   }
 
   const handleReset = async () => {
@@ -732,6 +764,7 @@ export const useSearchForm = () => {
     searchForm,
     selectedFilters,
     isLoading,
+    isSearchPending,
     searchResults,
     totalResults,
     currentPage,

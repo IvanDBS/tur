@@ -15,7 +15,7 @@
 
         <!-- Search Form -->
         <div class="search-wrapper animate-fade-in-up">
-          <SearchForm @search="handleSearch" />
+          <SearchForm />
         </div>
       </div>
     </section>

@@ -38,8 +38,10 @@ Rails.application.routes.draw do
       # Booking routes
       resources :bookings, only: [:index, :show, :create, :update, :destroy] do
         member do
-          post :calculate
           post :confirm
+        end
+        collection do
+          post :calculate
         end
       end
       

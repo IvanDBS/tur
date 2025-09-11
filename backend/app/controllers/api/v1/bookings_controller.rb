@@ -3,7 +3,7 @@ module Api
   module V1
     class BookingsController < Api::V1::BaseController
       before_action :authenticate_user!
-      before_action :set_booking, only: %i[show update destroy calculate confirm]
+      before_action :set_booking, only: %i[show update destroy confirm]
 
       # GET /api/v1/bookings
       def index
@@ -57,69 +57,50 @@ module Api
           return render_error('Search not found', :not_found) if search_query.nil?
         end
 
-        # Get booking details from OBS API
-        booking_hash = booking_params[:booking_hash]
-        return render_error('Booking hash is required', :bad_request) if booking_hash.blank?
+        # For debugging: create booking locally without OBS API call
+        # Generate a local booking hash for testing
+        booking_hash = booking_params[:booking_hash] || "LOCAL-#{Time.current.to_i}-#{current_user.id}"
 
-        begin
-          # Get booking details from OBS
-          adapter = ObsAdapter.new(user_id: current_user.id)
-          obs_booking = adapter.booking_status(booking_hash)
+        # Create booking record with local data
+        booking = current_user.bookings.build(
+          search_query: search_query,
+          obs_booking_hash: booking_hash,
+          total_amount: booking_params[:total_amount] || 0,
+          tour_details: booking_params[:tour_details] || {},
+          customer_data: booking_params[:customer_data] || {},
+          status: 'pending'
+        )
 
-          # Create booking record
-          booking = current_user.bookings.build(
-            search_query: search_query,
-            obs_booking_hash: booking_hash,
-            total_amount: obs_booking['total_sum'] || 0,
-            tour_details: obs_booking['hotel'] || {},
-            customer_data: booking_params[:customer_data] || {},
-            status: 'pending'
-          )
-
-          if booking.save
-            render_success({
-                             booking: {
-                               id: booking.id,
-                               obs_booking_hash: booking.obs_booking_hash,
-                               status: booking.status,
-                               total_amount: booking.total_amount,
-                               tour_details: booking.tour_details_hash
-                             }
-                           }, :created)
-          else
-            render_error("Failed to create booking: #{booking.errors.full_messages.join(', ')}", :unprocessable_entity)
-          end
-        rescue ObsAdapter::Error => e
-          render_error("Failed to get booking details: #{e.message}", :bad_gateway)
+        if booking.save
+          render_success({
+                           booking: {
+                             id: booking.id,
+                             obs_booking_hash: booking.obs_booking_hash,
+                             status: booking.status,
+                             total_amount: booking.total_amount,
+                             tour_details: booking.tour_details_hash
+                           }
+                         }, :created)
+        else
+          render_error("Failed to create booking: #{booking.errors.full_messages.join(', ')}", :unprocessable_entity)
         end
       end
 
-      # POST /api/v1/bookings/:id/calculate
+      # POST /api/v1/bookings/calculate
       def calculate
         customer_data = params[:customer_data] || {}
 
-        begin
-          # Calculate booking with OBS API
-          obs_response = ObsApiService.new.calculate_booking(@booking.obs_booking_hash, customer_data)
-
-          # Update booking with calculated data
-          @booking.update!(
-            customer_data: customer_data,
-            total_amount: obs_response['total_amount'] || @booking.total_amount
-          )
-
-          render_success({
-                           booking: {
-                             id: @booking.id,
-                             obs_booking_hash: @booking.obs_booking_hash,
-                             total_amount: @booking.total_amount,
-                             customer_data: @booking.customer_data_hash,
-                             calculation_details: obs_response
-                           }
-                         })
-        rescue ObsApiService::Error => e
-          render_error("Failed to calculate booking: #{e.message}", :bad_gateway)
-        end
+        # For debugging: calculate booking locally without OBS API call
+        # This endpoint doesn't require a specific booking ID for debugging
+        calculated_amount = customer_data.dig('additional_services', 'total_price') || 0
+        
+        render_success({
+                         calculation_details: {
+                           total_amount: calculated_amount,
+                           note: "Local calculation for debugging",
+                           customer_data: customer_data
+                         }
+                       })
       end
 
       # POST /api/v1/bookings/:id/confirm
@@ -129,34 +110,27 @@ module Api
                               :unprocessable_entity)
         end
 
-        begin
-          # Confirm booking with OBS API
-          adapter = ObsAdapter.new(user_id: current_user.id)
-          obs_response = adapter.book(
-            @booking.obs_booking_hash,
-            @booking.customer_data_hash
-          )
+        # For debugging: confirm booking locally without OBS API call
+        # Generate a local order ID for testing
+        local_order_id = "LOCAL-ORDER-#{@booking.id}-#{Time.current.to_i}"
 
-          # Update booking status
-          @booking.update!(
-            obs_order_id: obs_response['order_number'],
-            status: 'confirmed',
-            confirmed_at: Time.current
-          )
+        # Update booking status
+        @booking.update!(
+          obs_order_id: local_order_id,
+          status: 'confirmed',
+          confirmed_at: Time.current
+        )
 
-          render_success({
-                           booking: {
-                             id: @booking.id,
-                             obs_booking_hash: @booking.obs_booking_hash,
-                             obs_order_id: @booking.obs_order_id,
-                             status: @booking.status,
-                             total_amount: @booking.total_amount,
-                             confirmed_at: @booking.confirmed_at
-                           }
-                         })
-        rescue ObsAdapter::Error => e
-          render_error("Failed to confirm booking: #{e.message}", :bad_gateway)
-        end
+        render_success({
+                         booking: {
+                           id: @booking.id,
+                           obs_booking_hash: @booking.obs_booking_hash,
+                           obs_order_id: @booking.obs_order_id,
+                           status: @booking.status,
+                           total_amount: @booking.total_amount,
+                           confirmed_at: @booking.confirmed_at
+                         }
+                       })
       end
 
       # PATCH /api/v1/bookings/:id
@@ -184,20 +158,13 @@ module Api
           return render_error('Cannot cancel confirmed booking after 24 hours', :unprocessable_entity)
         end
 
-        begin
-          # Cancel booking in OBS API
-          adapter = ObsAdapter.new(user_id: current_user.id)
-          adapter.cancel_booking(@booking.obs_booking_hash)
+        # For debugging: cancel booking locally without OBS API call
+        @booking.update!(
+          status: 'cancelled',
+          cancelled_at: Time.current
+        )
 
-          @booking.update!(
-            status: 'cancelled',
-            cancelled_at: Time.current
-          )
-
-          render_success({ message: 'Booking cancelled successfully' })
-        rescue ObsAdapter::Error => e
-          render_error("Failed to cancel booking: #{e.message}", :bad_gateway)
-        end
+        render_success({ message: 'Booking cancelled successfully' })
       end
 
       private

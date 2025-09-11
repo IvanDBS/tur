@@ -24,7 +24,9 @@ export const useSearchValidation = () => {
       showError('Ошибка поиска', 'Выберите пакет тура')
       return false
     }
-    if (!searchForm.arrivalCity?.id) {
+    // Проверяем город прилета только для пакетов с перелетом
+    const isPackageWithoutFlight = !searchForm.package?.airports || searchForm.package.airports.length === 0
+    if (!isPackageWithoutFlight && !searchForm.arrivalCity?.id) {
       showError('Ошибка поиска', 'Выберите город прилета')
       return false
     }

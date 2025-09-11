@@ -5,8 +5,8 @@
       <div class="modal-header">
         <div class="booking-header">
           <div class="booking-title">
-            <h2>Детали пакета</h2>
-            <div class="booking-ref">{{ booking.obs_order_id || `#${booking.id}` }}</div>
+            <h2>Детали бронирования</h2>
+            <div class="booking-ref">{{ booking.obs_booking_hash || `#${booking.id}` }}</div>
             <div class="booking-date">от {{ formatDate(booking.created_at) }} {{ formatTime(booking.created_at) }}</div>
             <div class="booking-id">ID: {{ booking.id }}</div>
           </div>
@@ -17,25 +17,10 @@
           </button>
         </div>
         
-        <!-- Admin info -->
-        <div class="admin-info">
-          <div class="info-row">
-            <div class="info-item">
-              <label>Владелец</label>
-              <span>{{ booking.user.first_name || booking.user.email.split('@')[0] }}</span>
-            </div>
-            <div class="info-item">
-              <label>Email</label>
-              <span>{{ booking.user.email }}</span>
-            </div>
-            <div class="info-item">
-              <label>Телефон</label>
-              <span>{{ booking.user.phone || '-' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Статус</label>
-              <StatusBadge :status="booking.status" />
-            </div>
+        <!-- Status info -->
+        <div class="status-info">
+          <div class="status-badge" :class="`status-${booking.status}`">
+            {{ getStatusLabel(booking.status) }}
           </div>
         </div>
       </div>
@@ -98,7 +83,7 @@
                 </div>
                 <div class="detail-item">
                   <label>ГРАЖДАНСТВО</label>
-                  <span>MOLDOVA</span>
+                  <span>{{ tourist.nationality || 'MOLDOVA' }}</span>
                 </div>
               </div>
             </div>
@@ -106,7 +91,7 @@
         </div>
 
         <!-- Flight Information -->
-        <div class="section" v-if="getFlightInfo()">
+        <div class="section" v-if="getSelectedFlight()">
           <div class="section-header">
             <div class="section-icon">✈️</div>
             <h3 class="section-title">Перелет</h3>
@@ -169,77 +154,45 @@
             </div>
           </div>
         </div>
-
-        <!-- Booking Timeline -->
-        <div class="section">
-          <div class="section-header">
-            <div class="section-icon">📋</div>
-            <h3 class="section-title">История бронирования</h3>
-          </div>
-          <div class="timeline">
-            <div class="timeline-item">
-              <div class="timeline-date">{{ formatDateTime(booking.created_at) }}</div>
-              <div class="timeline-content">Бронирование создано</div>
-            </div>
-            <div v-if="booking.confirmed_at" class="timeline-item">
-              <div class="timeline-date">{{ formatDateTime(booking.confirmed_at) }}</div>
-              <div class="timeline-content">Бронирование подтверждено</div>
-            </div>
-            <div v-if="booking.cancelled_at" class="timeline-item">
-              <div class="timeline-date">{{ formatDateTime(booking.cancelled_at) }}</div>
-              <div class="timeline-content">Бронирование отменено</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Footer with actions -->
       <div class="modal-footer">
         <div class="footer-actions">
-          <div class="status-actions" v-if="booking.status === 'pending'">
-            <BaseButton 
-              variant="primary" 
-              @click="confirmBooking"
-              :loading="actionLoading"
-            >
-              Подтвердить
-            </BaseButton>
-            <BaseButton 
-              variant="danger" 
-              @click="rejectBooking"
-              :loading="actionLoading"
-            >
-              Отклонить
-            </BaseButton>
-          </div>
           <div class="print-actions">
-            <BaseButton variant="secondary" size="sm">
+            <button class="btn-secondary">
               📄 Распечатать
-            </BaseButton>
-            <BaseButton variant="secondary" size="sm">
+            </button>
+            <button class="btn-secondary">
               📧 Отправить
-            </BaseButton>
+            </button>
           </div>
         </div>
-        <BaseButton variant="ghost" @click="closeModal">
+        <button class="btn-ghost" @click="closeModal">
           Закрыть
-        </BaseButton>
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { BaseButton } from '../../../../components/ui'
-import StatusBadge from './StatusBadge.vue'
-import { formatDate, formatDateTime } from '../../../../utils/dateUtils'
-import { BOOKING_DEFAULTS, extractDataByPriority } from '../../../../constants/bookingDefaults'
-import type { AdminBooking } from '../../../../types/admin'
+import { formatDate, formatDateTime } from '../../utils/dateUtils'
+import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaults'
 
 // Props
 interface Props {
-  booking: AdminBooking
+  booking: {
+    id: number
+    obs_booking_hash: string
+    status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
+    total_amount: string | number
+    tour_details: Record<string, unknown>
+    customer_data?: Record<string, unknown>
+    created_at: string
+    confirmed_at?: string | null
+    can_be_cancelled: boolean
+  }
 }
 
 const props = defineProps<Props>()
@@ -247,39 +200,11 @@ const props = defineProps<Props>()
 // Emits
 const emit = defineEmits<{
   close: []
-  statusChanged: []
 }>()
-
-// State
-const actionLoading = ref(false)
 
 // Methods
 const closeModal = () => {
   emit('close')
-}
-
-const confirmBooking = async () => {
-  actionLoading.value = true
-  try {
-    // Emit event to parent component to handle status change
-    emit('statusChanged')
-  } catch (error) {
-    console.error('Failed to confirm booking:', error)
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const rejectBooking = async () => {
-  actionLoading.value = true
-  try {
-    // Emit event to parent component to handle status change
-    emit('statusChanged')
-  } catch (error) {
-    console.error('Failed to reject booking:', error)
-  } finally {
-    actionLoading.value = false
-  }
 }
 
 const formatTime = (dateString: string) => {
@@ -308,6 +233,15 @@ const formatBirthday = (birthday: string) => {
   }
 }
 
+const getStatusLabel = (status: string) => {
+  const statusMap: Record<string, string> = {
+    pending: 'В ожидании',
+    confirmed: 'Подтверждено',
+    cancelled: 'Отменено',
+    failed: 'Ошибка',
+  }
+  return statusMap[status] || status
+}
 
 const getPaymentStatus = () => {
   switch (props.booking.status) {
@@ -322,42 +256,6 @@ const getPaymentStatus = () => {
     default:
       return 'Неизвестно'
   }
-}
-
-
-const getTourists = () => {
-  const tourists = props.booking.tour_details?.tourists
-  if (Array.isArray(tourists)) {
-    return tourists
-  }
-  // Try to get tourists from customer_data
-  const customerData = props.booking.customer_data
-  if (customerData && Array.isArray(customerData.tourists)) {
-    return customerData.tourists
-  }
-  return []
-}
-
-const getFlightInfo = () => {
-  const flightInfo = props.booking.tour_details?.flight_info
-  if (flightInfo && typeof flightInfo === 'object') {
-    return flightInfo
-  }
-  return null
-}
-
-
-const generateFlightNumber = () => {
-  const airlines = ['5F', '4M', 'W6', 'FR']
-  const numbers = ['1015', '1016', '184', '185', '186']
-  const airline = airlines[Math.floor(Math.random() * airlines.length)]
-  const number = numbers[Math.floor(Math.random() * numbers.length)]
-  return `${airline} ${number}`
-}
-
-const generateAirline = () => {
-  const airlines = ['FLY ONE', 'MGA AIRLINES', 'WIZZ AIR', 'RYANAIR']
-  return airlines[Math.floor(Math.random() * airlines.length)]
 }
 
 // Helper functions to extract data from booking structure
@@ -386,69 +284,77 @@ const getHotelCity = () => {
 }
 
 const getRoomType = () => {
-  const data = {
-    tour_details: props.booking.tour_details,
-    customer_data: props.booking.customer_data
-  }
-  return extractDataByPriority(
-    data, 
-    BOOKING_DEFAULTS.EXTRACTION_PRIORITY.ROOM_TYPE, 
-    BOOKING_DEFAULTS.DEFAULTS.ROOM_TYPE
-  )
+  const tourDetails = props.booking.tour_details as any
+  const roomType = tourDetails?.room_type || 
+                   tourDetails?.accommodation?.room?.name ||
+                   tourDetails?.selected_room?.room?.name ||
+                   tourDetails?.selected_room?.name
+  return getDefaultValue(roomType, BOOKING_DEFAULTS.DEFAULTS.ROOM_TYPE)
 }
 
 const getMealPlan = () => {
-  const data = {
-    tour_details: props.booking.tour_details,
-    customer_data: props.booking.customer_data
-  }
-  return extractDataByPriority(
-    data, 
-    BOOKING_DEFAULTS.EXTRACTION_PRIORITY.MEAL_PLAN, 
-    BOOKING_DEFAULTS.DEFAULTS.MEAL_PLAN
-  )
+  const tourDetails = props.booking.tour_details as any
+  const mealPlan = tourDetails?.meal_plan || 
+                   tourDetails?.accommodation?.meal?.name ||
+                   tourDetails?.selected_room?.meal?.name ||
+                   tourDetails?.selected_room?.meal_plan
+  return getDefaultValue(mealPlan, BOOKING_DEFAULTS.DEFAULTS.MEAL_PLAN)
 }
 
 const getCheckInDate = () => {
-  const data = {
-    tour_details: props.booking.tour_details,
-    customer_data: props.booking.customer_data
-  }
-  const checkIn = extractDataByPriority(
-    data, 
-    BOOKING_DEFAULTS.EXTRACTION_PRIORITY.CHECK_IN, 
-    BOOKING_DEFAULTS.DEFAULTS.CHECK_IN
-  )
-  
-  if (checkIn !== BOOKING_DEFAULTS.DEFAULTS.CHECK_IN) {
+  const tourDetails = props.booking.tour_details as any
+  const checkIn = tourDetails?.check_in || 
+                  tourDetails?.accommodation?.check_in ||
+                  tourDetails?.selected_room?.check_in ||
+                  tourDetails?.search_result?.check_in
+  if (checkIn && checkIn !== 'N/A') {
     try {
       return formatDate(checkIn)
     } catch {
-      return BOOKING_DEFAULTS.DEFAULTS.CHECK_IN
+      return 'N/A'
     }
   }
-  return BOOKING_DEFAULTS.DEFAULTS.CHECK_IN
+  // Try to get from customer_data
+  const customerData = props.booking.customer_data as any
+  const customerCheckIn = customerData?.selected_room?.check_in ||
+                         customerData?.search_result?.check_in ||
+                         customerData?.searchResult?.check_in
+  if (customerCheckIn && customerCheckIn !== 'N/A') {
+    try {
+      return formatDate(customerCheckIn)
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
 }
 
 const getCheckOutDate = () => {
-  const data = {
-    tour_details: props.booking.tour_details,
-    customer_data: props.booking.customer_data
-  }
-  const checkOut = extractDataByPriority(
-    data, 
-    BOOKING_DEFAULTS.EXTRACTION_PRIORITY.CHECK_OUT, 
-    BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT
-  )
-  
-  if (checkOut !== BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT) {
+  const tourDetails = props.booking.tour_details as any
+  const checkOut = tourDetails?.check_out || 
+                   tourDetails?.accommodation?.check_out ||
+                   tourDetails?.selected_room?.check_out ||
+                   tourDetails?.search_result?.check_out
+  if (checkOut && checkOut !== 'N/A') {
     try {
       return formatDate(checkOut)
     } catch {
-      return BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT
+      return 'N/A'
     }
   }
-  return BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT
+  // Try to get from customer_data
+  const customerData = props.booking.customer_data as any
+  const customerCheckOut = customerData?.selected_room?.check_out ||
+                          customerData?.search_result?.check_out ||
+                          customerData?.searchResult?.check_out
+  if (customerCheckOut && customerCheckOut !== 'N/A') {
+    try {
+      return formatDate(customerCheckOut)
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
 }
 
 const getNights = () => {
@@ -460,6 +366,19 @@ const getNights = () => {
     return tourDetails.nights
   }
   return tourDetails?.nights || 0
+}
+
+const getTourists = () => {
+  const tourists = props.booking.tour_details?.tourists
+  if (Array.isArray(tourists)) {
+    return tourists
+  }
+  // Try to get tourists from customer_data
+  const customerData = props.booking.customer_data
+  if (customerData && Array.isArray(customerData.tourists)) {
+    return customerData.tourists
+  }
+  return []
 }
 
 const getTouristName = (tourist: any) => {
@@ -577,6 +496,19 @@ const getSelectedFlight = () => {
   const customerData = props.booking.customer_data as any
   return customerData?.selected_flight
 }
+
+const generateFlightNumber = () => {
+  const airlines = ['5F', '4M', 'W6', 'FR']
+  const numbers = ['1015', '1016', '184', '185', '186']
+  const airline = airlines[Math.floor(Math.random() * airlines.length)]
+  const number = numbers[Math.floor(Math.random() * numbers.length)]
+  return `${airline} ${number}`
+}
+
+const generateAirline = () => {
+  const airlines = ['FLY ONE', 'MGA AIRLINES', 'WIZZ AIR', 'RYANAIR']
+  return airlines[Math.floor(Math.random() * airlines.length)]
+}
 </script>
 
 <script lang="ts">
@@ -665,36 +597,40 @@ export default {
   color: var(--color-text);
 }
 
-.admin-info {
+.status-info {
   background: white;
   border-radius: var(--border-radius);
   padding: var(--spacing-lg);
 }
 
-.info-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.info-item label {
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-soft);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.info-item span {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-confirmed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-failed {
+  background: #fecaca;
+  color: #7f1d1d;
 }
 
 .modal-body {
@@ -951,32 +887,6 @@ export default {
   color: var(--color-primary);
 }
 
-.timeline {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.timeline-item {
-  display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--color-background-soft);
-  border-radius: var(--border-radius);
-}
-
-.timeline-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-  min-width: 120px;
-}
-
-.timeline-content {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
-}
-
 .modal-footer {
   padding: var(--spacing-xl);
   border-top: 1px solid var(--color-border);
@@ -992,14 +902,40 @@ export default {
   align-items: center;
 }
 
-.status-actions {
+.print-actions {
   display: flex;
   gap: var(--spacing-sm);
 }
 
-.print-actions {
-  display: flex;
-  gap: var(--spacing-sm);
+.btn-secondary {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-secondary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary-hover);
+}
+
+.btn-ghost {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  color: var(--color-text-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--color-background-soft);
+  color: var(--color-text);
 }
 
 /* Mobile responsive */
@@ -1016,10 +952,6 @@ export default {
   .modal-body,
   .modal-footer {
     padding: var(--spacing-lg);
-  }
-  
-  .info-row {
-    grid-template-columns: 1fr;
   }
   
   .hotel-details,
@@ -1044,7 +976,6 @@ export default {
     align-items: stretch;
   }
   
-  .status-actions,
   .print-actions {
     justify-content: center;
   }

@@ -5,6 +5,7 @@ export interface SearchFormActionsProps {
   hasResults: boolean
   totalResults: number
   isLoading?: boolean
+  isSearchPending?: boolean
 }
 
 export interface SearchFormLoadingProps {
@@ -36,7 +37,7 @@ export interface SearchFormFieldsEmits {
 
 // Типы для отдельных полей формы
 export interface SearchFormFieldProps {
-  modelValue: string | number | null
+  modelValue: string | number | null | Record<string, unknown>
   options: Array<{ value: string | number; label: string }>
   activeSelector?: string | null
   disabled?: boolean
@@ -46,7 +47,7 @@ export interface SearchFormFieldProps {
 }
 
 export interface SearchFormFieldEmits {
-  'update:modelValue': [value: string | number | null]
+  'update:modelValue': [value: string | number | null | Record<string, unknown>]
 }
 
 // Типы для строк формы

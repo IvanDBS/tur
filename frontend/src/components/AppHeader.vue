@@ -212,6 +212,8 @@
     await authStore.logout()
     isUserMenuOpen.value = false
     closeMobileMenu()
+    // Redirect to home page after logout
+    window.location.href = '/'
   }
 
   // Close user menu when clicking outside

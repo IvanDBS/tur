@@ -33,14 +33,14 @@
       <SearchFieldArrival
         :model-value="searchForm.arrivalCity"
         :active-selector="activeSelector"
-        :disabled="!searchForm.package"
+        :disabled="!searchForm.package || isPackageWithoutFlight"
       />
     </div>
 
     <!-- Row 2 - Даты и ночи -->
     <div class="form-row">
       <!-- Период заезда от -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.arrivalCity }">
+      <div class="field-group" :class="{ 'disabled-field': !searchForm.package || (!isPackageWithoutFlight && !searchForm.arrivalCity) }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkInDate'" class="field-arrow"></span>
           Период заезда от:
@@ -62,7 +62,7 @@
           locale="ru"
           :title-format="{ month: 'long', year: 'numeric' }"
           month-name-format="long"
-          :disabled="!searchForm.arrivalCity"
+          :disabled="!searchForm.package || (!isPackageWithoutFlight && !searchForm.arrivalCity)"
         />
       </div>
 
@@ -184,13 +184,24 @@ const props = defineProps<SearchFormFieldsProps>()
 const emit = defineEmits<SearchFormFieldsEmits>()
 
 // Computed
+// Функция для определения пакетов без перелета
+const isPackageWithoutFlight = computed((): boolean => {
+  const pkg = props.searchForm.package
+  if (!pkg) return false
+  return !pkg.airports || pkg.airports.length === 0
+})
 const getDisabledDates = computed(() => {
-  // Если нет calendar hints, не блокируем даты
-  if (!props.calendarHints || !props.calendarHints.calendarHints.value) {
+  // Для пакетов без перелета не блокируем даты на основе calendar hints
+  if (isPackageWithoutFlight.value) {
     return []
   }
   
-  const availableDates = Object.keys(props.calendarHints.calendarHints.value)
+  // Если нет calendar hints, не блокируем даты
+  if (!props.calendarHints || !(props.calendarHints as any).calendarHints?.value) {
+    return []
+  }
+  
+  const availableDates = Object.keys((props.calendarHints as any).calendarHints.value)
   const disabledDates = []
   
   // Блокируем все даты, кроме доступных
@@ -209,8 +220,13 @@ const getDisabledDates = computed(() => {
 
 // Фильтруем ночи по выбранной дате
 const filteredNightsOptions = computed(() => {
+  // Для пакетов без перелета показываем все варианты ночей
+  if (isPackageWithoutFlight.value) {
+    return props.dynamicNightsOptions
+  }
+  
   // Если нет выбранной даты или calendar hints, показываем все варианты
-  if (!props.searchForm.checkInDate || !props.calendarHints || !props.calendarHints.calendarHints.value) {
+  if (!props.searchForm.checkInDate || !props.calendarHints || !(props.calendarHints as any).calendarHints?.value) {
     return props.dynamicNightsOptions
   }
   
@@ -220,7 +236,7 @@ const filteredNightsOptions = computed(() => {
   }
   
   const dateString = checkInDate.toISOString().split('T')[0]
-  const dateHints = props.calendarHints.calendarHints.value[dateString]
+  const dateHints = (props.calendarHints as any).calendarHints.value[dateString]
   
   if (!dateHints || !Array.isArray(dateHints)) {
     return props.dynamicNightsOptions

@@ -18,7 +18,7 @@ import { computed } from 'vue'
 
 // Props
 interface Props {
-  modelValue: string | number | null
+  modelValue: string | number | null | Record<string, unknown>
   fieldKey: string
   label: string
   activeSelector?: string | null
@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  'update:modelValue': [value: string | number | null]
+  'update:modelValue': [value: string | number | null | Record<string, unknown>]
 }>()
 
 // Computed
@@ -62,7 +62,7 @@ const fieldProps = computed(() => ({
 }))
 
 // Methods
-const updateValue = (value: string | number | null) => {
+const updateValue = (value: string | number | null | Record<string, unknown>) => {
   emit('update:modelValue', value)
 }
 </script>

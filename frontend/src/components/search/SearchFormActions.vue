@@ -17,10 +17,10 @@
       type="button" 
       @click="$emit('search')" 
       class="search-btn"
-      :disabled="isLoading"
+      :disabled="isLoading || isSearchPending"
     >
       <svg
-        v-if="!isLoading"
+        v-if="!isLoading && !isSearchPending"
         width="18"
         height="18"
         viewBox="0 0 24 24"
@@ -31,8 +31,9 @@
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.35-4.35" />
       </svg>
-      <div v-else class="blue-spinner spinner-small"></div>
-      {{ isLoading ? 'Поиск...' : 'Поиск тура' }}
+      <div v-else-if="isLoading" class="blue-spinner spinner-small"></div>
+      <div v-else-if="isSearchPending" class="pending-indicator"></div>
+      {{ getButtonText() }}
     </button>
   </div>
 </template>
@@ -42,14 +43,22 @@ import type { SearchFormActionsProps, SearchFormActionsEmits } from '../../types
 import '../../styles/spinners.css'
 
 // Props
-withDefaults(defineProps<SearchFormActionsProps>(), {
+const props = withDefaults(defineProps<SearchFormActionsProps>(), {
   hasResults: false,
   totalResults: 0,
-  isLoading: false
+  isLoading: false,
+  isSearchPending: false
 })
 
 // Emits
 defineEmits<SearchFormActionsEmits>()
+
+// Methods
+const getButtonText = () => {
+  if (props.isLoading) return 'Поиск...'
+  if (props.isSearchPending) return 'Ожидание...'
+  return 'Поиск тура'
+}
 </script>
 
 <style scoped>
@@ -142,6 +151,27 @@ defineEmits<SearchFormActionsEmits>()
   background-size: 12px;
   top: -8px;
   left: 8px;
+}
+
+/* Индикатор ожидания debounce */
+.pending-indicator {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: pending-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pending-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 /* Mobile Responsive */

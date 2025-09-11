@@ -8,45 +8,56 @@
         <p class="loading-text">Загрузка бронирований...</p>
       </div>
 
+      <div v-else-if="error" class="error-state">
+        <p>Ошибка загрузки бронирований: {{ error }}</p>
+        <button @click="loadBookings" class="retry-btn">Попробовать снова</button>
+      </div>
+
       <div v-else-if="bookings.length === 0" class="empty-state">
         <p>У вас пока нет бронирований</p>
         <router-link to="/" class="cta-link"> Найти туры </router-link>
       </div>
 
-      <div v-else class="bookings-grid">
+      <div v-else>
+        <div class="refresh-section">
+          <button @click="loadBookings" class="refresh-btn">Обновить</button>
+        </div>
+
+        <div class="bookings-grid">
         <div v-for="booking in bookings" :key="booking.id" class="booking-card">
           <!-- Hotel Info -->
           <div class="hotel-info">
-            <h3 class="hotel-name">{{ booking.tour_details.hotel }}</h3>
+            <h3 class="hotel-name">{{ getHotelName(booking) }}</h3>
             <div class="hotel-details">
-              <span class="stars">{{
-                booking.tour_details.hotel_category
-              }}</span>
-              <span class="location">{{ booking.tour_details.city }}</span>
+              <span class="stars">{{ getHotelCategory(booking) }}</span>
+              <span class="location">{{ getHotelCity(booking) }}</span>
             </div>
           </div>
 
           <!-- Dates & Duration -->
           <div class="trip-info">
             <div class="dates">
-              <span class="date">{{
-                formatDate(booking.tour_details.check_in)
-              }}</span>
-              <span class="separator">—</span>
-              <span class="date">{{
-                formatDate(booking.tour_details.check_out)
-              }}</span>
+              <span class="date">{{ formatDate(booking.created_at) }}</span>
             </div>
             <div class="duration">
-              {{ booking.tour_details.nights }}
-              {{ getNightWord(booking.tour_details.nights) }}
+              {{ getNights(booking) }}
+              {{ getNightWord(getNights(booking)) }}
+            </div>
+            <div class="guests">
+              {{ getAdults(booking) }} взрослых
+              <span v-if="getChildren(booking) > 0">
+                , {{ getChildren(booking) }} детей
+              </span>
             </div>
           </div>
 
-          <!-- Room & Meal -->
+          <!-- Booking Info -->
           <div class="accommodation-info">
-            <div class="room">{{ booking.tour_details.room }}</div>
-            <div class="meal">{{ booking.tour_details.meal }}</div>
+            <div class="booking-id">ID: {{ booking.obs_booking_hash }}</div>
+            <div class="booking-date">Создано: {{ formatDate(booking.created_at) }}</div>
+            <div v-if="booking.confirmed_at" class="confirmed-date">
+              Подтверждено: {{ formatDate(booking.confirmed_at) }}
+            </div>
           </div>
 
           <!-- Price -->
@@ -60,83 +71,68 @@
             Подробнее
           </button>
         </div>
+        </div>
       </div>
     </div>
+
+    <!-- Booking Details Modal -->
+    <BookingDetailsModal 
+      v-if="selectedBooking" 
+      :booking="selectedBooking" 
+      @close="closeModal" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
   import { formatDate, getNightWord } from '../utils/dateUtils'
+  import { apiClient } from '../utils/api'
+  import { logger } from '../utils/logger'
+  import BookingDetailsModal from '../components/booking/BookingDetailsModal.vue'
 
   interface Booking {
     id: number
-    status: 'pending' | 'confirmed' | 'cancelled'
-    total_amount: number
-    tour_details: {
-      hotel: string
-      hotel_category: string
-      city: string
-      check_in: string
-      check_out: string
-      nights: number
-      room: string
-      meal: string
-    }
+    obs_booking_hash: string
+    status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
+    total_amount: string | number
+    tour_details: Record<string, unknown>
     created_at: string
+    confirmed_at?: string | null
     can_be_cancelled: boolean
   }
 
   // State
   const bookings = ref<Booking[]>([])
   const isLoading = ref(true)
-
-  // Mock data for demonstration
-  const mockBookings: Booking[] = [
-    {
-      id: 1,
-      status: 'confirmed',
-      total_amount: 1712,
-      tour_details: {
-        hotel: 'ADALYA ARTSIDE HOTEL',
-        hotel_category: '5* / HV1',
-        city: 'SIDE',
-        check_in: '2024-07-21',
-        check_out: '2024-07-28',
-        nights: 7,
-        room: 'STANDARD ROOM LAND VIEW',
-        meal: 'ULTRA ALL INCLUSIVE',
-      },
-      created_at: '2024-01-15T10:30:00Z',
-      can_be_cancelled: true,
-    },
-    {
-      id: 2,
-      status: 'pending',
-      total_amount: 1959,
-      tour_details: {
-        hotel: 'ADALYA OCEAN DELUXE',
-        hotel_category: '5* / HV1',
-        city: 'SIDE',
-        check_in: '2024-08-15',
-        check_out: '2024-08-22',
-        nights: 7,
-        room: 'STANDARD ROOM LAND VIEW',
-        meal: 'ULTRA ALL INCLUSIVE',
-      },
-      created_at: '2024-01-20T15:45:00Z',
-      can_be_cancelled: false,
-    },
-  ]
+  const error = ref<string | null>(null)
+  const selectedBooking = ref<Booking | null>(null)
+  const router = useRouter()
 
   // Methods
   const loadBookings = async () => {
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      bookings.value = mockBookings
-    } catch {
-      // Error handling - bookings will remain empty
+      isLoading.value = true
+      error.value = null
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('accessToken')
+      console.log('Auth token:', token ? 'Present' : 'Missing')
+      
+      logger.apiCall('GET', '/bookings')
+      const response = await apiClient.get<{ success: boolean; data: { bookings: Booking[] } }>('/bookings')
+      
+      console.log('Bookings API response:', response)
+      logger.info('Bookings loaded:', response.data?.bookings)
+      bookings.value = response.data?.bookings || []
+      console.log('Bookings value after assignment:', bookings.value)
+      console.log('Bookings length:', bookings.value.length)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load bookings'
+      error.value = message
+      console.error('Failed to load bookings:', err)
+      logger.error('Failed to load bookings:', err)
       bookings.value = []
     } finally {
       isLoading.value = false
@@ -148,26 +144,131 @@
       pending: 'В ожидании',
       confirmed: 'Подтверждено',
       cancelled: 'Отменено',
+      failed: 'Ошибка',
     }
     return statusMap[status] || status
   }
 
-  // TODO: Implement booking confirmation
-  // const confirmBooking = async (_bookingId: number) => {
-  //   // TODO: API call to confirm booking
-  // }
+  const viewDetails = (bookingId: number) => {
+    const booking = bookings.value.find(b => b.id === bookingId)
+    if (booking) {
+      selectedBooking.value = booking
+    }
+  }
 
-  // TODO: Implement booking cancellation
-  // const cancelBooking = async (_bookingId: number) => {
-  //   // TODO: API call to cancel booking
-  // }
+  const closeModal = () => {
+    selectedBooking.value = null
+  }
 
-  // const viewDetails = (bookingId: number) => {
-  //   // TODO: Navigate to booking details page
-  // }
+  // Helper functions to extract data from booking
+  const getHotelName = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getHotelName - tourDetails:', tourDetails)
+    
+    // Try different possible structures
+    return tourDetails?.hotel?.name || 
+           tourDetails?.hotel_name || 
+           tourDetails?.accommodation?.hotel?.name ||
+           tourDetails?.hotel?.hotel_name ||
+           'Отель не указан'
+  }
+
+  const getHotelCategory = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getHotelCategory - tourDetails:', tourDetails)
+    
+    return tourDetails?.hotel?.category || 
+           tourDetails?.hotel_category || 
+           tourDetails?.accommodation?.hotel?.category ||
+           tourDetails?.hotel?.hotel_category ||
+           'Категория не указана'
+  }
+
+  const getHotelCity = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getHotelCity - tourDetails:', tourDetails)
+    
+    return tourDetails?.hotel?.city || 
+           tourDetails?.city || 
+           tourDetails?.accommodation?.hotel?.city ||
+           tourDetails?.hotel?.hotel_city ||
+           'Город не указан'
+  }
+
+  const getNights = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getNights - tourDetails:', tourDetails)
+    
+    return tourDetails?.nights?.total || 
+           tourDetails?.nights || 
+           tourDetails?.duration ||
+           tourDetails?.hotel?.nights ||
+           tourDetails?.accommodation?.nights ||
+           0
+  }
+
+  const getAdults = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getAdults - tourDetails:', tourDetails)
+    
+    return tourDetails?.adults || 
+           tourDetails?.tourists?.adults ||
+           tourDetails?.hotel?.adults ||
+           tourDetails?.accommodation?.adults ||
+           0
+  }
+
+  const getChildren = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getChildren - tourDetails:', tourDetails)
+    
+    return tourDetails?.children || 
+           tourDetails?.tourists?.children ||
+           tourDetails?.hotel?.children ||
+           tourDetails?.accommodation?.children ||
+           0
+  }
+
+  const getCheckIn = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getCheckIn - tourDetails:', tourDetails)
+    
+    return tourDetails?.check_in || 
+           tourDetails?.hotel?.check_in ||
+           tourDetails?.dates?.check_in ||
+           tourDetails?.accommodation?.check_in ||
+           tourDetails?.selected_room?.check_in ||
+           'N/A'
+  }
+
+  const getCheckOut = (booking: Booking) => {
+    const tourDetails = booking.tour_details as any
+    console.log('getCheckOut - tourDetails:', tourDetails)
+    
+    return tourDetails?.check_out || 
+           tourDetails?.hotel?.check_out ||
+           tourDetails?.dates?.check_out ||
+           tourDetails?.accommodation?.check_out ||
+           tourDetails?.selected_room?.check_out ||
+           'N/A'
+  }
+
+  const getStatusText = (status: string) => {
+    return getStatusLabel(status)
+  }
 
   // Lifecycle
   onMounted(() => {
+    // Check authentication status
+    const token = localStorage.getItem('accessToken')
+    console.log('Page mounted - Auth token:', token ? 'Present' : 'Missing')
+    
+    if (!token) {
+      console.warn('No auth token found, redirecting to login')
+      router.push({ name: 'home' })
+      return
+    }
+    
     loadBookings()
   })
 </script>
@@ -186,6 +287,50 @@
 
   .cta-link:hover {
     background: var(--color-primary-hover);
+  }
+
+  .error-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-soft);
+  }
+
+  .retry-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 1rem;
+  }
+
+  .retry-btn:hover {
+    background: var(--color-primary-hover);
+  }
+
+  .refresh-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .refresh-btn {
+    padding: 0.5rem 1rem;
+    background: var(--color-secondary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .refresh-btn:hover {
+    background: var(--color-secondary-hover);
   }
 
   .bookings-grid {
@@ -262,6 +407,12 @@
     white-space: nowrap;
   }
 
+  .guests {
+    color: var(--color-text-soft);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
   .accommodation-info {
     grid-column: 3;
     margin-top: 0;
@@ -278,6 +429,23 @@
   .meal {
     font-size: 0.8rem;
     line-height: 1.3;
+  }
+
+  .booking-id {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+
+  .booking-date {
+    font-size: 0.75rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .confirmed-date {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    font-weight: 500;
   }
 
   .price-info {

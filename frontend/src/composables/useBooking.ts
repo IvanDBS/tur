@@ -12,6 +12,7 @@ import type {
   BookingCalculationResponse
 } from '../types/booking'
 import type { SearchResult, GroupedSearchResult } from '../types/search'
+import { BOOKING_DEFAULTS } from '../constants/bookingDefaults'
 
 export const useBooking = () => {
   const router = useRouter()
@@ -257,12 +258,15 @@ export const useBooking = () => {
       loading.value = true
       clearError()
 
-      const requestData: BookingCreateRequest = {
-        search_result_id: searchResult.value.unique_key,
-        selected_flight: bookingData.selectedFlight,
-        tourists: bookingData.tourists,
-        additional_services: bookingData.additionalServices,
-        notes: bookingData.notes
+      // For debugging: send data in the format expected by the local booking controller
+      const requestData = {
+        customer_data: {
+          tourists: bookingData.tourists,
+          selected_flight: bookingData.selectedFlight,
+          selected_room: bookingData.selectedRoom,
+          additional_services: bookingData.additionalServices,
+          notes: bookingData.notes
+        }
       }
 
       logger.apiCall('POST', '/bookings/calculate')
@@ -287,12 +291,47 @@ export const useBooking = () => {
       loading.value = true
       clearError()
 
-      const requestData: BookingCreateRequest = {
-        search_result_id: searchResult.value.unique_key,
-        selected_flight: bookingData.selectedFlight,
-        tourists: bookingData.tourists,
-        additional_services: bookingData.additionalServices,
-        notes: bookingData.notes
+      // For debugging: send data in the format expected by the local booking controller
+      // Use the same structure as seeds for consistency
+      const requestData = {
+        booking: {
+          search_id: searchResult.value.unique_key,
+          booking_hash: `LOCAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          total_amount: totalPrice.value,
+          tour_details: {
+            hotel_name: searchResult.value.hotel?.name || BOOKING_DEFAULTS.DEFAULTS.HOTEL_NAME,
+            hotel_category: searchResult.value.hotel?.category || BOOKING_DEFAULTS.DEFAULTS.HOTEL_CATEGORY,
+            city: searchResult.value.hotel?.city || searchResult.value.destination?.name || BOOKING_DEFAULTS.DEFAULTS.CITY,
+            room_type: bookingData.selectedRoom?.room?.name || null,
+            meal_plan: bookingData.selectedRoom?.meal?.name || null,
+            check_in: searchResult.value.check_in || null,
+            check_out: searchResult.value.check_out || null,
+            nights: searchResult.value.nights || 0,
+            currency: BOOKING_DEFAULTS.DEFAULTS.CURRENCY,
+            tourists: bookingData.tourists || [],
+            flight_info: {
+              departure: {
+                date: bookingData.selectedFlight?.outbound?.departure?.date || 'N/A',
+                time: bookingData.selectedFlight?.outbound?.departure?.time || 'N/A',
+                airport: bookingData.selectedFlight?.outbound?.airports?.from?.name || 'N/A',
+                city: bookingData.selectedFlight?.outbound?.airports?.from?.name || 'N/A'
+              },
+              arrival: {
+                date: bookingData.selectedFlight?.inbound?.departure?.date || 'N/A',
+                time: bookingData.selectedFlight?.inbound?.departure?.time || 'N/A',
+                airport: bookingData.selectedFlight?.inbound?.airports?.from?.name || 'N/A',
+                city: bookingData.selectedFlight?.inbound?.airports?.from?.name || 'N/A'
+              }
+            }
+          },
+          customer_data: {
+            tourists: bookingData.tourists,
+            selected_flight: bookingData.selectedFlight,
+            selected_room: bookingData.selectedRoom,
+            additional_services: bookingData.additionalServices,
+            notes: bookingData.notes
+          }
+        }
       }
 
       logger.apiCall('POST', '/bookings')

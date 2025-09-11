@@ -191,12 +191,28 @@ export const useSearchForm = () => {
   const isSearchPending = ref(false)
   const searchRequestId = ref(0)
 
+  // Функция для определения пакетов без перелета
+  const isPackageWithoutFlight = (pkg: Package | null): boolean => {
+    if (!pkg) return false
+    return !pkg.airports || pkg.airports.length === 0
+  }
+
   // Определяем активный селектор для показа стрелки
   const activeSelector = computed((): string | null => {
     if (!searchForm.value.departureCity) return 'departureCity'
     if (!searchForm.value.destination) return 'destination'
     if (!searchForm.value.package) return 'package'
-    if (!searchForm.value.arrivalCity) return 'arrivalCity'
+    
+    // Если пакет без перелета, пропускаем поле города прилета
+    if (!isPackageWithoutFlight(searchForm.value.package) && !searchForm.value.arrivalCity) {
+      return 'arrivalCity'
+    }
+    
+    // Для пакетов без перелета сразу переходим к дате заезда
+    if (isPackageWithoutFlight(searchForm.value.package) && !searchForm.value.checkInDate) {
+      return 'checkInDate'
+    }
+    
     if (!searchForm.value.checkInDate) return 'checkInDate'
     if (!searchForm.value.checkOutDate) return 'checkOutDate'
     // После выбора даты заезда активируется поле "ночей от"
@@ -244,6 +260,11 @@ export const useSearchForm = () => {
   
   // Динамические опции ночей на основе calendar hints
   const dynamicNightsOptions = computed(() => {
+    // Для пакетов без перелета используем стандартные опции
+    if (isPackageWithoutFlight(searchForm.value.package)) {
+      return searchData.nightsOptions.value
+    }
+    
     // Если есть доступные ночи из calendar hints, используем их
     if (calendarHints.availableNights.value.length > 0) {
       return calendarHints.availableNightsOptions.value
@@ -365,17 +386,19 @@ export const useSearchForm = () => {
           searchData.loadMeals(newPackage.id)
         ])
         
-        // Загружаем calendar hints для доступных дат и ночей
-        if (searchForm.value.departureCity?.id && searchForm.value.arrivalCity?.id) {
+        // Загружаем calendar hints только для пакетов с перелетом
+        if (!isPackageWithoutFlight(newPackage) && searchForm.value.departureCity?.id && searchForm.value.arrivalCity?.id) {
           try {
             await calendarHints.loadCalendarHints({
               city_from: searchForm.value.departureCity.id,
               city_to: searchForm.value.arrivalCity.id.toString()
             })
-            logger.info('Calendar hints loaded successfully')
+            logger.info('Calendar hints loaded successfully for flight package')
           } catch (err) {
             logger.warn('Failed to load calendar hints:', err)
           }
+        } else if (isPackageWithoutFlight(newPackage)) {
+          logger.info('Skipping calendar hints for no-flight package')
         }
         
         // Автоматически выбираем все регионы, категории и отели

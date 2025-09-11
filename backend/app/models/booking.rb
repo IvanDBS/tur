@@ -20,7 +20,13 @@ class Booking < ApplicationRecord
   # Instance methods
   def tour_details_hash
     @tour_details_hash ||= begin
-      JSON.parse(tour_details)
+      if tour_details.is_a?(String)
+        JSON.parse(tour_details)
+      elsif tour_details.is_a?(Hash)
+        tour_details
+      else
+        {}
+      end
     rescue StandardError
       {}
     end
@@ -33,7 +39,13 @@ class Booking < ApplicationRecord
 
   def customer_data_hash
     @customer_data_hash ||= begin
-      JSON.parse(customer_data)
+      if customer_data.is_a?(String)
+        JSON.parse(customer_data)
+      elsif customer_data.is_a?(Hash)
+        customer_data
+      else
+        {}
+      end
     rescue StandardError
       {}
     end

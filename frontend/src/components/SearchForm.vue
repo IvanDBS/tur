@@ -69,6 +69,7 @@
             :has-results="!!(searchResults && Object.keys(searchResults).length > 0)"
             :total-results="totalResults"
             :is-loading="isLoading"
+            :is-search-pending="isSearchPending"
             @search="handleSearchWithEmit"
             @reset="handleReset"
           />
@@ -121,6 +122,7 @@
     searchForm,
     selectedFilters,
     isLoading,
+    isSearchPending,
     searchResults,
     totalResults,
     currentPage,

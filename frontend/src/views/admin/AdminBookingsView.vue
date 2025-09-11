@@ -219,14 +219,14 @@
               <td class="booking-id">#{{ booking.id }}</td>
               <td class="booking-number">{{ booking.obs_order_id || 'N/A' }}</td>
               <td class="booking-date">{{ formatDate(booking.created_at) }}</td>
-              <td class="country">{{ getCountryFromCity(booking.tour_details.city) }}</td>
+              <td class="country">{{ getCountryFromCity(getHotelCity(booking)) }}</td>
               <td class="hotel-info">
-                <div class="hotel-name">{{ booking.tour_details.hotel_name }}</div>
-                <div class="hotel-location">{{ booking.tour_details.city }}</div>
+                <div class="hotel-name">{{ getHotelName(booking) }}</div>
+                <div class="hotel-location">{{ getHotelCity(booking) }}</div>
               </td>
-              <td class="check-in">{{ formatDate(booking.tour_details.check_in) }}</td>
-              <td class="check-out">{{ formatDate(booking.tour_details.check_out) }}</td>
-              <td class="tourists-count">{{ booking.tour_details.tourists.length }}</td>
+              <td class="check-in">{{ getCheckInDate(booking) }}</td>
+              <td class="check-out">{{ getCheckOutDate(booking) }}</td>
+              <td class="tourists-count">{{ getTouristsCount(booking) }}</td>
               <td class="departure-flight">
                 <div v-if="booking.tour_details.flight_info?.departure">
                   <div class="flight-date">{{ formatDate(booking.tour_details.flight_info.departure.date) }}</div>
@@ -313,6 +313,7 @@ import BookingDetailsModal from './components/admin/BookingDetailsModal.vue'
 import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
 import { useAdminApi } from '../../composables/useAdminApi'
+import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaults'
 import type { AdminBooking } from '../../types/admin'
 
 // Admin API
@@ -414,13 +415,77 @@ const loadBookings = async () => {
     
     // API returns data in response.data structure
     const data = (response.data || response) as {
-      bookings?: AdminBooking[]
+      bookings?: unknown[]
       pagination?: {
         total_pages: number
         total_count: number
       }
     }
-    bookings.value = data.bookings || []
+    
+    // Transform API data to match AdminBooking interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    bookings.value = (data.bookings || []).map((booking: any) => {
+      // Parse tour_details if it's a string
+      let tourDetails = booking.tour_details
+      if (typeof tourDetails === 'string') {
+        try {
+          tourDetails = JSON.parse(tourDetails)
+        } catch {
+          tourDetails = {}
+        }
+      }
+      
+      // Parse customer_data if it's a string
+      let customerData = booking.customer_data
+      if (typeof customerData === 'string') {
+        try {
+          customerData = JSON.parse(customerData)
+        } catch {
+          customerData = {}
+        }
+      }
+      
+      return {
+        id: booking.id,
+        user: booking.user,
+        status: booking.status,
+        total_amount: booking.total_amount,
+        tour_details: {
+          hotel_name: tourDetails?.hotel_name || tourDetails?.hotel?.name || 'N/A',
+          hotel_category: tourDetails?.hotel_category || tourDetails?.hotel?.category || 'N/A',
+          city: tourDetails?.city || tourDetails?.hotel?.city || 'N/A',
+          room_type: tourDetails?.room_type || tourDetails?.accommodation?.room?.name || 'N/A',
+          meal_plan: tourDetails?.meal_plan || tourDetails?.accommodation?.meal?.full_name || 'N/A',
+          check_in: tourDetails?.check_in || tourDetails?.dates?.check_in || 'N/A',
+          check_out: tourDetails?.check_out || tourDetails?.dates?.check_out || 'N/A',
+          nights: tourDetails?.nights || tourDetails?.nights?.total || 0,
+          currency: tourDetails?.currency || 'EUR',
+          tourists: tourDetails?.tourists || customerData?.tourists || [],
+          flight_info: tourDetails?.flight_info || {
+            departure: {
+              date: 'N/A',
+              time: 'N/A',
+              airport: 'N/A',
+              city: 'N/A'
+            },
+            arrival: {
+              date: 'N/A',
+              time: 'N/A',
+              airport: 'N/A',
+              city: 'N/A'
+            }
+          }
+        },
+        customer_data: customerData,
+        created_at: booking.created_at,
+        confirmed_at: booking.confirmed_at,
+        cancelled_at: booking.cancelled_at,
+        obs_booking_hash: booking.obs_booking_hash,
+        obs_order_id: booking.obs_order_id,
+        search_query: booking.search_query
+      }
+    })
+    
     totalPages.value = data.pagination?.total_pages || 1
     totalCount.value = data.pagination?.total_count || 0
     
@@ -541,20 +606,20 @@ const sortBookings = () => {
         bValue = getCountryFromCity(b.tour_details.city)
         break
       case 'hotel_name':
-        aValue = a.tour_details.hotel_name
-        bValue = b.tour_details.hotel_name
+        aValue = getHotelName(a)
+        bValue = getHotelName(b)
         break
       case 'check_in':
-        aValue = new Date(a.tour_details.check_in)
-        bValue = new Date(b.tour_details.check_in)
+        aValue = getCheckInDate(a)
+        bValue = getCheckInDate(b)
         break
       case 'check_out':
-        aValue = new Date(a.tour_details.check_out)
-        bValue = new Date(b.tour_details.check_out)
+        aValue = getCheckOutDate(a)
+        bValue = getCheckOutDate(b)
         break
       case 'tourists_count':
-        aValue = a.tour_details.tourists.length
-        bValue = b.tour_details.tourists.length
+        aValue = getTouristsCount(a)
+        bValue = getTouristsCount(b)
         break
       case 'departure_flight':
         aValue = a.tour_details.flight_info?.departure?.date || ''
@@ -580,10 +645,10 @@ const sortBookings = () => {
         return 0
     }
     
-    if (aValue < bValue) {
+    if (String(aValue) < String(bValue)) {
       return sortDirection.value === 'asc' ? -1 : 1
     }
-    if (aValue > bValue) {
+    if (String(aValue) > String(bValue)) {
       return sortDirection.value === 'asc' ? 1 : -1
     }
     return 0
@@ -617,6 +682,93 @@ const getCountryFromCity = (city: string): string => {
   }
   
   return cityToCountry[city] || 'Турция' // Default to Turkey if city not found
+}
+
+// Helper functions for booking data extraction
+const getHotelName = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  if (tourDetails?.hotel?.name) {
+    return tourDetails.hotel.name
+  }
+  return tourDetails?.hotel_name || 'N/A'
+}
+
+const getHotelCity = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  if (tourDetails?.hotel?.city) {
+    return tourDetails.hotel.city
+  }
+  return tourDetails?.city || 'N/A'
+}
+
+const getCheckInDate = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  const checkIn = tourDetails?.check_in || 
+                  tourDetails?.accommodation?.check_in ||
+                  tourDetails?.selected_room?.check_in ||
+                  tourDetails?.search_result?.check_in
+  if (checkIn && checkIn !== 'N/A') {
+    try {
+      return formatDate(checkIn)
+    } catch {
+      return 'N/A'
+    }
+  }
+  // Try to get from customer_data
+  const customerData = booking.customer_data as any
+  const customerCheckIn = customerData?.selected_room?.check_in ||
+                         customerData?.search_result?.check_in ||
+                         customerData?.searchResult?.check_in
+  if (customerCheckIn && customerCheckIn !== 'N/A') {
+    try {
+      return formatDate(customerCheckIn)
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
+}
+
+const getCheckOutDate = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  const checkOut = tourDetails?.check_out || 
+                   tourDetails?.accommodation?.check_out ||
+                   tourDetails?.selected_room?.check_out ||
+                   tourDetails?.search_result?.check_out
+  if (checkOut && checkOut !== 'N/A') {
+    try {
+      return formatDate(checkOut)
+    } catch {
+      return 'N/A'
+    }
+  }
+  // Try to get from customer_data
+  const customerData = booking.customer_data as any
+  const customerCheckOut = customerData?.selected_room?.check_out ||
+                          customerData?.search_result?.check_out ||
+                          customerData?.searchResult?.check_out
+  if (customerCheckOut && customerCheckOut !== 'N/A') {
+    try {
+      return formatDate(customerCheckOut)
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
+}
+
+const getTouristsCount = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  const tourists = tourDetails?.tourists
+  if (Array.isArray(tourists)) {
+    return tourists.length
+  }
+  // Try to get tourists from customer_data
+  const customerData = booking.customer_data as any
+  if (customerData && Array.isArray(customerData.tourists)) {
+    return customerData.tourists.length
+  }
+  return 0
 }
 
 // Lifecycle
@@ -864,22 +1016,116 @@ onMounted(() => {
 }
 
 /* Mobile responsive */
+@media (max-width: 1200px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .table {
+    min-width: 1000px;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-bookings {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .search-filters {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .filter-group {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .filter-group label {
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    min-width: 800px;
   }
 
   .table th,
   .table td {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    white-space: nowrap;
+  }
+
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
   }
 
   .action-buttons {
     flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .action-buttons .btn {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-bookings {
+    padding: var(--spacing-xs);
+  }
+
+  .table {
+    min-width: 600px;
+    font-size: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 4px;
+  }
+
+  .btn {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .page-title {
+    font-size: var(--font-size-md);
   }
 }
 </style>

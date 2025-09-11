@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { apiClient } from '@/utils/api'
 import { logger } from '@/utils/logger'
+import { useCountryLocalization } from './useCountryLocalization'
 import type { 
   DepartureCity, 
   Country, 
@@ -67,6 +68,9 @@ export const useObsApi = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   
+  // Localization
+  const { translateCountries, translateDepartureCities } = useCountryLocalization()
+  
   // Data
   const departureCities = ref<DepartureCity[]>([])
   const countries = ref<Country[]>([])
@@ -108,14 +112,19 @@ export const useObsApi = () => {
       logger.debug('Departure cities response received', response)
       
       if (response.success) {
-        departureCities.value = response.data.departure_cities.map(city => {
+        const mappedCities = response.data.departure_cities.map(city => {
           logger.debug('Processing city:', city)
           return {
             id: city.id,
             name: city.label,
+            label: city.label,
             code: city.label
           }
         })
+        
+        // Переводим названия городов отправления на русский язык
+        const translatedCities = translateDepartureCities(mappedCities)
+        departureCities.value = translatedCities
         logger.info(`Processed ${departureCities.value.length} departure cities`)
         return departureCities.value
       } else {
@@ -150,10 +159,13 @@ export const useObsApi = () => {
         const mappedCountries = response.data.countries.map(country => ({
           id: country.id,
           name: country.label,
+          label: country.label,
           code: country.label
         }))
         
-        countries.value = mappedCountries
+        // Переводим названия стран на русский язык
+        const translatedCountries = translateCountries(mappedCountries)
+        countries.value = translatedCountries
         logger.info(`Successfully loaded ${countries.value.length} countries for city ${departureCityId}`)
         return countries.value
       } else {
@@ -283,11 +295,11 @@ export const useObsApi = () => {
     categories?: number[]
     is_exclusive?: boolean
   }) => {
+    let url = `/search/package_templates/${packageTemplateId}/hotels`
+    
     try {
       loading.value = true
       clearError()
-      
-      let url = `/search/package_templates/${packageTemplateId}/hotels`
       const params = new URLSearchParams()
       
       if (filters?.cities?.length) {

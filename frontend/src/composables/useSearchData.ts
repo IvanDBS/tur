@@ -86,11 +86,14 @@ export const useSearchData = () => {
 
   // Fallback данные (если API недоступен) - только для тестирования
   const fallbackCountries = ref([
-    { id: 1, name: 'TÜRKIYE' },
-    { id: 2, name: 'EGYPT' },
-    { id: 3, name: 'GREECE' },
-    { id: 4, name: 'BULGARIA' },
-    { id: 5, name: 'SPAIN' },
+    { id: 1, name: 'Турция', label: 'Турция' },
+    { id: 2, name: 'Египет', label: 'Египет' },
+    { id: 3, name: 'Греция', label: 'Греция' },
+    { id: 4, name: 'Болгария', label: 'Болгария' },
+    { id: 5, name: 'Испания', label: 'Испания' },
+    { id: 6, name: 'Кипр', label: 'Кипр' },
+    { id: 7, name: 'Черногория', label: 'Черногория' },
+    { id: 8, name: 'ОАЭ', label: 'ОАЭ' },
   ])
 
   const fallbackPackages = ref([

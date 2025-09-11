@@ -97,15 +97,15 @@ export const useSearchData = () => {
   ])
 
   const fallbackPackages = ref([
-    { id: 1, name: 'ANTALYA FULL' },
-    { id: 2, name: 'ANTALYA HOTEL ONLY' },
-    { id: 3, name: 'KEMER FULL' },
+    { id: 1, name: 'Анталья (✈️ Перелет + 🏨 Отель)', label: 'Анталья (✈️ Перелет + 🏨 Отель)' },
+    { id: 2, name: 'Анталья (🏨 Только отель)', label: 'Анталья (🏨 Только отель)' },
+    { id: 3, name: 'Бодрум (✈️ Перелет + 🏨 Отель)', label: 'Бодрум (✈️ Перелет + 🏨 Отель)' },
   ])
 
   const fallbackArrivalCities = ref([
-    { id: 1, name: 'ANTALYA' },
-    { id: 2, name: 'ISTANBUL' },
-    { id: 3, name: 'BODRUM' },
+    { id: 1, name: 'Анталья', label: 'Анталья' },
+    { id: 2, name: 'Стамбул', label: 'Стамбул' },
+    { id: 3, name: 'Бодрум', label: 'Бодрум' },
   ])
 
   const fallbackRegions = ref<Region[]>([])
@@ -233,14 +233,15 @@ export const useSearchData = () => {
     is_exclusive?: boolean
   }) => {
     try {
-      logger.debug(`Loading hotels for package ${packageTemplateId} with filters:`, filters)
+      logger.info(`🏨 Loading hotels for package ${packageTemplateId} with filters:`, filters)
       const loadedHotels = await obsApi.fetchHotels(packageTemplateId, filters)
-      logger.debug(`🏨 Received ${(loadedHotels || []).length} hotels from obsApi.fetchHotels`)
+      logger.info(`🏨 Received ${(loadedHotels || []).length} hotels from obsApi.fetchHotels`)
+      logger.info(`🏨 Loaded hotels data:`, loadedHotels)
       // Синхронизируем данные между obsApi и searchData
       hotels.value = loadedHotels || []
       await nextTick() // Ждем обновления реактивности
       logger.info(`🏨 Hotels synced to searchData. Total hotels: ${hotels.value.length}`)
-      logger.debug(`🏨 First 3 hotels:`, hotels.value.slice(0, 3))
+      logger.info(`🏨 First 3 hotels in searchData:`, hotels.value.slice(0, 3))
     } catch (err) {
       logger.warn('Using fallback hotels data')
       logger.error('Error loading hotels:', err)

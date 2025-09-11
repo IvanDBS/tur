@@ -8,7 +8,6 @@
       :active-selector="activeSelector"
       :disabled="disabled || (activeSelector !== 'adults' && adults === null)"
       :options="adultsOptions"
-      placeholder="2"
       :searchable="false"
       :can-clear="false"
       :can-deselect="false"

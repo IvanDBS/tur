@@ -134,3 +134,20 @@
 .field-group:has(.multiselect) :deep(.multiselect__content) {
   max-height: 280px !important;
 }
+
+/* Поддержка переносов строк в опциях */
+.multiselect__option,
+.multiselect-option {
+  white-space: pre-line !important;
+  line-height: 1.3 !important;
+  padding: 8px 12px !important;
+  font-weight: 500 !important; /* Чуть жирнее для лучшей читаемости */
+}
+
+/* Поддержка переносов строк в выбранном значении */
+.multiselect__single,
+.multiselect__placeholder {
+  white-space: pre-line !important;
+  line-height: 1.3 !important;
+  font-weight: 500 !important; /* Чуть жирнее для выбранного значения */
+}

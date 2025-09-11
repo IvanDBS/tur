@@ -68,8 +68,8 @@ export const useObsApi = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   
-  // Localization
-  const { translateCountries, translateDepartureCities } = useCountryLocalization()
+  // Localization - тестируем по одному
+  const { translateCountries, translateDepartureCities, translateArrivalCities, translatePackages } = useCountryLocalization()
   
   // Data
   const departureCities = ref<DepartureCity[]>([])
@@ -197,6 +197,7 @@ export const useObsApi = () => {
         const mappedPackages = response.data.package_templates.map(pkg => ({
           id: pkg.id,
           name: pkg.label,
+          label: pkg.label,
           code: pkg.label,
           airports: pkg.airports?.map(airport => ({
             id: airport.id,
@@ -204,7 +205,10 @@ export const useObsApi = () => {
           })) || []
         }))
         
-        packages.value = mappedPackages
+        // Переводим названия пакетов на русский язык
+        const translatedPackages = translatePackages(mappedPackages)
+        packages.value = translatedPackages
+        logger.info(`🏨 Packages loaded, first package airports:`, mappedPackages[0]?.airports)
         logger.info(`Successfully loaded ${packages.value.length} package templates for country ${countryId}`)
         
         // Обновляем arrival cities из airports package templates
@@ -214,11 +218,15 @@ export const useObsApi = () => {
             self.findIndex(a => a.id === airport.id) === index
           )
         
-        arrivalCities.value = allAirports.map(airport => ({
+        const mappedArrivalCities = allAirports.map(airport => ({
           id: airport.id,
           name: airport.label,
+          label: airport.label,
           code: airport.label
         }))
+        
+        // Переводим названия городов прилета на русский язык
+        arrivalCities.value = translateArrivalCities(mappedArrivalCities)
         
         return packages.value
       } else {
@@ -324,6 +332,7 @@ export const useObsApi = () => {
       
       if (response.success) {
         logger.debug('Hotels API response received', response.data)
+        logger.info(`🏨 Raw hotels data:`, response.data.hotels)
         hotels.value = response.data.hotels.map(hotel => ({
           id: hotel.id,
           name: hotel.label,
@@ -331,7 +340,8 @@ export const useObsApi = () => {
           category_id: hotel.category_id,
           city_id: hotel.city_id
         }))
-        logger.info(`Mapped ${hotels.value.length} hotels for package ${packageTemplateId}`)
+        logger.info(`🏨 Mapped ${hotels.value.length} hotels for package ${packageTemplateId}`)
+        logger.info(`🏨 First 3 mapped hotels:`, hotels.value.slice(0, 3))
         return hotels.value
       } else {
         throw new Error(response.message)

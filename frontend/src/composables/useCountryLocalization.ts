@@ -1,9 +1,9 @@
-import { translateCountry, translateDepartureCity } from '../utils/countryTranslations'
-import type { Country, DepartureCity } from '../types/search'
+import { translateCountry, translateDepartureCity, translateArrivalCity, translatePackage, sortCountriesByPopularity } from '../utils/countryTranslations'
+import type { Country, DepartureCity, ArrivalCity, Package } from '../types/search'
 
 /**
- * Composable для локализации стран и городов
- * Переводит названия стран и городов отправления с английского на русский язык
+ * Composable для локализации стран, городов и пакетов
+ * Переводит названия стран, городов отправления, городов прилета и пакетов с английского на русский язык
  */
 export const useCountryLocalization = () => {
   /**
@@ -25,16 +25,39 @@ export const useCountryLocalization = () => {
   }
 
   /**
-   * Переводит массив стран на русский язык
+   * Переводит название города прилета на русский язык
+   * @param englishName - название города на английском
+   * @returns название города на русском или оригинальное название, если перевод не найден
+   */
+  const translateArrivalCityName = (englishName: string): string => {
+    return translateArrivalCity(englishName)
+  }
+
+  /**
+   * Переводит название пакета на русский язык
+   * @param englishName - название пакета на английском
+   * @returns название пакета на русском или оригинальное название, если перевод не найден
+   */
+  const translatePackageName = (englishName: string): string => {
+    return translatePackage(englishName)
+  }
+
+  /**
+   * Переводит массив стран на русский язык и сортирует по популярности
    * @param countries - массив стран с английскими названиями
-   * @returns массив стран с русскими названиями
+   * @returns массив стран с русскими названиями, отсортированный по популярности
    */
   const translateCountries = (countries: Country[]): Country[] => {
-    return countries.map(country => ({
+    const translated = countries.map(country => ({
       ...country,
+      originalName: country.name, // Сохраняем оригинальное название
+      originalLabel: country.label, // Сохраняем оригинальное название
       name: country.name ? translateCountryName(country.name) : country.name,
       label: country.label ? translateCountryName(country.label) : country.label
     }))
+    
+    // Сортируем по популярности
+    return sortCountriesByPopularity(translated)
   }
 
   /**
@@ -63,6 +86,39 @@ export const useCountryLocalization = () => {
   }
 
   /**
+   * Переводит массив городов прилета на русский язык
+   * @param cities - массив городов с английскими названиями
+   * @returns массив городов с русскими названиями
+   */
+  const translateArrivalCities = (cities: ArrivalCity[]): ArrivalCity[] => {
+    return cities.map(city => ({
+      ...city,
+      name: city.name ? translateArrivalCityName(city.name) : city.name,
+      label: city.label ? translateArrivalCityName(city.label) : city.label
+    }))
+  }
+
+  /**
+   * Переводит массив пакетов на русский язык и сортирует по алфавиту
+   * @param packages - массив пакетов с английскими названиями
+   * @returns массив пакетов с русскими названиями, отсортированный по алфавиту
+   */
+  const translatePackages = (packages: Package[]): Package[] => {
+    const translated = packages.map(pkg => ({
+      ...pkg,
+      name: pkg.name ? translatePackageName(pkg.name) : pkg.name,
+      label: pkg.label ? translatePackageName(pkg.label) : pkg.label
+    }))
+    
+    // Сортируем по алфавиту по русскому названию
+    return translated.sort((a, b) => {
+      const aName = a.label || a.name || ''
+      const bName = b.label || b.name || ''
+      return aName.localeCompare(bName, 'ru')
+    })
+  }
+
+  /**
    * Переводит опции городов отправления для селекторов
    * @param cities - массив городов
    * @returns массив опций с переведенными названиями
@@ -74,12 +130,42 @@ export const useCountryLocalization = () => {
     }))
   }
 
+  /**
+   * Переводит опции городов прилета для селекторов
+   * @param cities - массив городов
+   * @returns массив опций с переведенными названиями
+   */
+  const translateArrivalCityOptions = (cities: ArrivalCity[]) => {
+    return cities.map(city => ({
+      value: city,
+      label: translateArrivalCityName(city.label || city.name || `City ${city.id}`)
+    }))
+  }
+
+  /**
+   * Переводит опции пакетов для селекторов
+   * @param packages - массив пакетов
+   * @returns массив опций с переведенными названиями
+   */
+  const translatePackageOptions = (packages: Package[]) => {
+    return packages.map(pkg => ({
+      value: pkg,
+      label: translatePackageName(pkg.label || pkg.name || `Package ${pkg.id}`)
+    }))
+  }
+
   return {
     translateCountryName,
     translateCountries,
     translateCountryOptions,
     translateDepartureCityName,
     translateDepartureCities,
-    translateDepartureCityOptions
+    translateDepartureCityOptions,
+    translateArrivalCityName,
+    translateArrivalCities,
+    translateArrivalCityOptions,
+    translatePackageName,
+    translatePackages,
+    translatePackageOptions
   }
 }

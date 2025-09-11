@@ -44,7 +44,7 @@
         <VueDatePicker
           :model-value="modelValue"
           @update:model-value="$emit('update:checkOutDate', $event)"
-          :min-date="checkInDate || new Date()"
+          :min-date="new Date()"
           :disabled-dates="isDateDisabled"
           format="dd.MM.yyyy"
           placeholder="Выберите дату"

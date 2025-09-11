@@ -1,15 +1,10 @@
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { logger } from '../utils/logger'
 import type { SelectedFilters } from '../types/search'
+import { useGlobalFilters } from './useGlobalFilters'
 
 export const useSearchFilters = () => {
-  const selectedFilters = ref<SelectedFilters>({
-    regions: [],
-    categories: [],
-    hotels: [],
-    meals: [],
-    options: [],
-  })
+  const { selectedFilters, resetFilters: globalResetFilters } = useGlobalFilters()
 
   // Helper function to get hotels for search
   const getSelectedHotelsForSearch = (searchData: { hotels: { value: Array<{ id: number }> } }) => {
@@ -36,13 +31,7 @@ export const useSearchFilters = () => {
 
   // Сброс фильтров
   const resetFilters = () => {
-    selectedFilters.value = {
-      regions: [],
-      categories: [],
-      hotels: [],
-      meals: [],
-      options: [],
-    }
+    globalResetFilters()
   }
 
   // Функции для переключения "Любой" (ID=1)

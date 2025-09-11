@@ -309,9 +309,12 @@ const getFlightOptionsCount = () => {
     
     groupedResult.roomOptions.forEach(roomOption => {
       roomOption.flightOptions.forEach(flightOption => {
-        // Создаем уникальный ключ для комбинации перелет туда + обратно
-        const flightKey = `${flightOption.from.id}_${flightOption.to.id}`
-        uniqueFlights.add(flightKey)
+        // Проверяем, что flightOption.from и flightOption.to существуют
+        if (flightOption.from && flightOption.to && flightOption.from.id && flightOption.to.id) {
+          // Создаем уникальный ключ для комбинации перелет туда + обратно
+          const flightKey = `${flightOption.from.id}_${flightOption.to.id}`
+          uniqueFlights.add(flightKey)
+        }
       })
     })
     

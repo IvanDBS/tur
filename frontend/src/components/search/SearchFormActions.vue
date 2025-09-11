@@ -20,7 +20,6 @@
       :disabled="isLoading || isSearchPending"
     >
       <svg
-        v-if="!isLoading && !isSearchPending"
         width="18"
         height="18"
         viewBox="0 0 24 24"
@@ -31,8 +30,6 @@
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.35-4.35" />
       </svg>
-      <div v-else-if="isLoading" class="blue-spinner spinner-small"></div>
-      <div v-else-if="isSearchPending" class="pending-indicator"></div>
       {{ getButtonText() }}
     </button>
   </div>
@@ -40,7 +37,6 @@
 
 <script setup lang="ts">
 import type { SearchFormActionsProps, SearchFormActionsEmits } from '../../types/searchForm'
-import '../../styles/spinners.css'
 
 // Props
 const props = withDefaults(defineProps<SearchFormActionsProps>(), {
@@ -55,8 +51,6 @@ defineEmits<SearchFormActionsEmits>()
 
 // Methods
 const getButtonText = () => {
-  if (props.isLoading) return 'Поиск...'
-  if (props.isSearchPending) return 'Ожидание...'
   return 'Поиск тура'
 }
 </script>
@@ -136,43 +130,6 @@ const getButtonText = () => {
   transform: scale(1.1);
 }
 
-/* Стили для спиннера в кнопке */
-.blue-spinner.spinner-small {
-  width: 18px;
-  height: 18px;
-  border-top: 2px solid currentColor;
-  border-bottom: 0;
-  border-left: 2px solid currentColor;
-  border-right: 2px solid transparent;
-  margin: 0;
-}
-
-.blue-spinner.spinner-small::before {
-  background-size: 12px;
-  top: -8px;
-  left: 8px;
-}
-
-/* Индикатор ожидания debounce */
-.pending-indicator {
-  width: 18px;
-  height: 18px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  border-top-color: transparent;
-  animation: pending-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pending-pulse {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

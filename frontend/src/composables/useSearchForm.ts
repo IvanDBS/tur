@@ -341,11 +341,17 @@ export const useSearchForm = () => {
 
   // Следим за изменениями пакета и загружаем связанные данные
   watch(() => searchForm.value.package, async (newPackage) => {
+    logger.info('📦 Package watcher triggered:', {
+      hasPackage: !!newPackage,
+      packageId: newPackage?.id,
+      packageName: newPackage?.name || newPackage?.label
+    })
     try {
       if (newPackage && newPackage.id) {
         // Если у пакета есть аэропорты, устанавливаем город прилета
         if (newPackage.airports && newPackage.airports.length > 0) {
           const airport = newPackage.airports[0]
+          logger.info('🛫 Setting arrival city from package airports:', airport)
           
           // Создаем объект города прилета
           const arrivalCity = {
@@ -355,6 +361,7 @@ export const useSearchForm = () => {
           
           // Принудительно обновляем реактивность
           searchForm.value.arrivalCity = { ...arrivalCity }
+          logger.info('🛫 Arrival city set:', searchForm.value.arrivalCity)
           
           // Ждем обновления DOM и принудительно обновляем Multiselect
           await nextTick()
@@ -379,12 +386,14 @@ export const useSearchForm = () => {
         }
         
         // Загружаем связанные данные для поиска отелей
+        logger.info('🔄 Starting to load search data for package:', newPackage.id)
         await Promise.all([
           searchData.loadHotelCategories(newPackage.id),
           searchData.loadLocations(newPackage.id),
           searchData.loadHotels(newPackage.id),
           searchData.loadMeals(newPackage.id)
         ])
+        logger.info('✅ All search data loaded for package:', newPackage.id)
         
         // Загружаем calendar hints только для пакетов с перелетом
         if (!isPackageWithoutFlight(newPackage) && searchForm.value.departureCity?.id && searchForm.value.arrivalCity?.id) {
@@ -402,20 +411,34 @@ export const useSearchForm = () => {
         }
         
         // Автоматически выбираем все регионы, категории и отели
+        logger.info('🏨 Auto-selecting filters for package:', {
+          regionsCount: searchData.regions.value.length,
+          categoriesCount: searchData.categories.value.length,
+          hotelsCount: searchData.hotels.value.length,
+          mealsCount: searchData.meals.value.length
+        })
+        
         if (searchData.regions.value.length > 0) {
           selectedFilters.value.regions = [1, ...searchData.regions.value.map(r => r.id)]
+          logger.info('✅ Selected regions:', selectedFilters.value.regions.length)
         }
         
         if (searchData.categories.value.length > 0) {
           selectedFilters.value.categories = [1, ...searchData.categories.value.map(c => c.id)]
+          logger.info('✅ Selected categories:', selectedFilters.value.categories.length)
         }
         
         if (searchData.hotels.value.length > 0) {
           selectedFilters.value.hotels = [1, ...searchData.hotels.value.map(h => h.id)]
+          logger.info('✅ Selected hotels:', selectedFilters.value.hotels.length)
+          logger.info('✅ Selected hotels IDs:', selectedFilters.value.hotels)
+        } else {
+          logger.warn('⚠️ No hotels available for auto-selection')
         }
         
         if (searchData.meals.value.length > 0) {
           selectedFilters.value.meals = [1, ...searchData.meals.value.map(m => m.id)]
+          logger.info('✅ Selected meals:', selectedFilters.value.meals.length)
         }
       } else {
         // Очищаем город прилета при сбросе пакета
@@ -455,7 +478,16 @@ export const useSearchForm = () => {
 
   // Внутренняя функция поиска (без debounce)
   const performSearchInternal = () => {
+    logger.info('🔍 performSearchInternal called')
     const currentRequestId = ++searchRequestId.value
+    
+    logger.info('🔍 Current selectedFilters before validation:', {
+      regions: selectedFilters.value.regions.length,
+      categories: selectedFilters.value.categories.length,
+      hotels: selectedFilters.value.hotels.length,
+      meals: selectedFilters.value.meals.length,
+      hotelsContent: selectedFilters.value.hotels
+    })
     
     logger.info('🔍 Starting search with form data:', {
       departureCity: searchForm.value.departureCity?.id,
@@ -469,17 +501,25 @@ export const useSearchForm = () => {
     })
     
     // Добавляем выбранные отели в форму поиска (используем правильную логику)
-    searchForm.value.selectedHotels = getSelectedHotelsForSearch(searchData)
+    const selectedHotels = getSelectedHotelsForSearch(searchData)
+    logger.info('🏨 getSelectedHotelsForSearch result:', selectedHotels.length, 'hotels')
+    searchForm.value.selectedHotels = selectedHotels
 
     // Проверяем обязательные поля
+    logger.info('🔍 Validating search form...')
     if (!validateSearchForm(searchForm.value, selectedFilters.value)) {
+      logger.warn('❌ Search form validation failed')
       return
     }
+    logger.info('✅ Search form validation passed')
 
     // Проверяем доступность выбранных дат
+    logger.info('🔍 Validating dates...')
     if (!validateDates(searchForm.value)) {
+      logger.warn('❌ Dates validation failed')
       return
     }
+    logger.info('✅ Dates validation passed')
     
     logger.info('✅ Validation passed, proceeding with search...')
 
@@ -685,6 +725,7 @@ export const useSearchForm = () => {
 
   // Основная функция поиска с debounce
   const handleSearch = () => {
+    logger.info('🔍 handleSearch called')
     // Показываем индикатор ожидания
     isSearchPending.value = true
     

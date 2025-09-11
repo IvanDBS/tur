@@ -4,7 +4,7 @@
     <BaseSearchField
       :model-value="priceFrom"
       field-key="priceFrom"
-      label="Цена € от"
+      :label="$t('search.priceFrom')"
       :active-selector="activeSelector"
       :disabled="disabled"
       @update:model-value="$emit('update:priceFrom', $event)"
@@ -14,7 +14,7 @@
           type="number"
           :value="modelValue"
           @input="handlePriceFromInput"
-          placeholder="От"
+          :placeholder="$t('search.from')"
           :disabled="disabled"
           class="price-input"
         />
@@ -25,7 +25,7 @@
     <BaseSearchField
       :model-value="priceTo"
       field-key="priceTo"
-      label="Цена € до"
+      :label="$t('search.priceTo')"
       :active-selector="activeSelector"
       :disabled="disabled"
       @update:model-value="$emit('update:priceTo', $event)"
@@ -35,7 +35,7 @@
           type="number"
           :value="modelValue"
           @input="handlePriceToInput"
-          placeholder="До"
+          :placeholder="$t('search.to')"
           :disabled="disabled"
           class="price-input"
         />

@@ -43,7 +43,7 @@
       <div class="field-group" :class="{ 'disabled-field': !searchForm.package || (!isPackageWithoutFlight && !searchForm.arrivalCity) }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkInDate'" class="field-arrow"></span>
-          Период заезда от:
+          {{ $t('search.checkInFrom') }}:
         </label>
         <VueDatePicker
           :model-value="searchForm.checkInDate"
@@ -52,7 +52,7 @@
           :max-date="new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)"
           :disabled-dates="getDisabledDates"
           format="dd.MM.yyyy"
-          placeholder="Выберите дату"
+          :placeholder="$t('search.selectDate')"
           :month-change-on-scroll="false"
           :auto-apply="true"
           :enable-time-picker="false"
@@ -70,7 +70,7 @@
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkOutDate'" class="field-arrow"></span>
-          Период заезда до:
+          {{ $t('search.checkInTo') }}:
         </label>
         <VueDatePicker
           :model-value="searchForm.checkOutDate"
@@ -79,7 +79,7 @@
           :max-date="new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)"
           :disabled-dates="getDisabledDates"
           format="dd.MM.yyyy"
-          placeholder="Выберите дату"
+          :placeholder="$t('search.selectDate')"
           :month-change-on-scroll="false"
           :auto-apply="true"
           :enable-time-picker="false"
@@ -97,7 +97,7 @@
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'nights'" class="field-arrow"></span>
-          Ночей в отеле от:
+          {{ $t('search.nightsFrom') }}:
         </label>
         <Multiselect
           :model-value="searchForm.nights"
@@ -106,7 +106,7 @@
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="Выберите количество ночей"
+          :placeholder="$t('search.selectNights')"
           label="label"
           valueProp="value"
           :disabled="!searchForm.checkInDate"
@@ -118,7 +118,7 @@
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'nights2'" class="field-arrow"></span>
-          Ночей в отеле до:
+          {{ $t('search.nightsTo') }}:
         </label>
         <Multiselect
           :model-value="searchForm.nights2"
@@ -127,7 +127,7 @@
           :searchable="false"
           :canClear="false"
           :canDeselect="false"
-          placeholder="Выберите количество ночей"
+          :placeholder="$t('search.selectNights')"
           label="label"
           valueProp="value"
           :disabled="!searchForm.checkInDate"

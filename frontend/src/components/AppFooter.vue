@@ -9,31 +9,30 @@
             <span class="logo-text">migo.md</span>
           </div>
           <p class="footer-description">
-            Ваш надежный спутник в мире путешествий. Находим лучшие туры для
-            незабываемого отдыха.
+            {{ $t('footer.description') }}
           </p>
         </div>
 
         <!-- Quick Links -->
         <div class="footer-section">
-          <h3 class="footer-title">Навигация</h3>
+          <h3 class="footer-title">{{ $t('footer.navigation') }}</h3>
           <ul class="footer-links">
             <li>
-              <router-link to="/" class="footer-link">Поиск туров</router-link>
+              <router-link to="/" class="footer-link">{{ $t('footer.searchTours') }}</router-link>
             </li>
             <li>
               <router-link to="/bookings" class="footer-link"
-                >Мои бронирования</router-link
+                >{{ $t('footer.myBookings') }}</router-link
               >
             </li>
             <li>
               <router-link to="/about" class="footer-link"
-                >О компании</router-link
+                >{{ $t('footer.aboutCompany') }}</router-link
               >
             </li>
             <li>
               <router-link to="/contact" class="footer-link"
-                >Контакты</router-link
+                >{{ $t('footer.contacts') }}</router-link
               >
             </li>
           </ul>
@@ -41,18 +40,18 @@
 
         <!-- Support -->
         <div class="footer-section">
-          <h3 class="footer-title">Поддержка</h3>
+          <h3 class="footer-title">{{ $t('footer.support') }}</h3>
           <ul class="footer-links">
-            <li><a href="#" class="footer-link">Помощь</a></li>
-            <li><a href="#" class="footer-link">Условия</a></li>
-            <li><a href="#" class="footer-link">Конфиденциальность</a></li>
-            <li><a href="#" class="footer-link">FAQ</a></li>
+            <li><a href="#" class="footer-link">{{ $t('footer.help') }}</a></li>
+            <li><a href="#" class="footer-link">{{ $t('footer.terms') }}</a></li>
+            <li><a href="#" class="footer-link">{{ $t('footer.privacy') }}</a></li>
+            <li><a href="#" class="footer-link">{{ $t('footer.faq') }}</a></li>
           </ul>
         </div>
 
         <!-- Contact Info -->
         <div class="footer-section">
-          <h3 class="footer-title">Связаться с нами</h3>
+          <h3 class="footer-title">{{ $t('footer.contactUs') }}</h3>
           <div class="contact-info">
             <div class="contact-item">
               <svg
@@ -92,7 +91,7 @@
       <!-- Bottom Bar -->
       <div class="footer-bottom">
         <div class="footer-copyright">
-          <p>&copy; {{ currentYear }} migo.md. Все права защищены.</p>
+          <p>&copy; {{ currentYear }} migo.md. {{ $t('footer.allRightsReserved') }}</p>
         </div>
         <div class="footer-social">
           <a href="#" class="social-link" aria-label="Facebook">

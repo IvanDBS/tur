@@ -11,7 +11,7 @@
       class="reset-btn"
       :disabled="isLoading"
     >
-      Сбросить параметры
+      {{ $t('search.resetParams') }}
     </button>
     <button 
       type="button" 
@@ -36,7 +36,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../../composables/useI18n'
 import type { SearchFormActionsProps, SearchFormActionsEmits } from '../../types/searchForm'
+
+const { t: $t } = useI18n()
 
 // Props
 const props = withDefaults(defineProps<SearchFormActionsProps>(), {
@@ -51,7 +54,7 @@ defineEmits<SearchFormActionsEmits>()
 
 // Methods
 const getButtonText = () => {
-  return 'Поиск тура'
+  return $t('search.searchButton')
 }
 </script>
 

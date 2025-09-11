@@ -9,18 +9,21 @@
 
         <!-- Navigation Links -->
         <div class="nav-links">
-          <router-link to="/" class="nav-link">Поиск</router-link>
+          <router-link to="/" class="nav-link">{{ $t('navigation.search') }}</router-link>
           <router-link
             v-if="authStore.isAuthenticated"
             to="/bookings"
             class="nav-link"
-            >Мои туры</router-link
+            >{{ $t('navigation.bookings') }}</router-link
           >
           <router-link to="/auth-test" class="nav-link"
             >Тест авторизации</router-link
           >
           <router-link to="/obs-test" class="nav-link"
             >Тест OBS API</router-link
+          >
+          <router-link to="/i18n-test" class="nav-link"
+            >Тест переводов</router-link
           >
           <router-link 
             v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
@@ -29,8 +32,13 @@
           >
             Админ-панель
           </router-link>
-          <router-link to="/about" class="nav-link">О нас</router-link>
-          <router-link to="/contact" class="nav-link">Контакты</router-link>
+          <router-link to="/about" class="nav-link">{{ $t('navigation.about') }}</router-link>
+          <router-link to="/contact" class="nav-link">{{ $t('navigation.contact') }}</router-link>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="nav-language">
+          <LanguageSwitcher />
         </div>
 
         <!-- Auth Section -->
@@ -70,7 +78,7 @@
                   <polyline points="16,17 21,12 16,7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                Выйти
+                {{ $t('navigation.logout') }}
               </button>
             </div>
           </div>
@@ -88,7 +96,7 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            Войти
+            {{ $t('navigation.login') }}
           </button>
         </div>
 
@@ -106,16 +114,22 @@
         :class="{ 'mobile-menu-open': isMobileMenuOpen }"
       >
         <router-link to="/" class="mobile-link" @click="closeMobileMenu"
-          >Поиск</router-link
+          >{{ $t('navigation.search') }}</router-link
         >
         <router-link to="/bookings" class="mobile-link" @click="closeMobileMenu"
-          >Мои туры</router-link
+          >{{ $t('navigation.bookings') }}</router-link
         >
         <router-link
           to="/auth-test"
           class="mobile-link"
           @click="closeMobileMenu"
           >Тест авторизации</router-link
+        >
+        <router-link
+          to="/i18n-test"
+          class="mobile-link"
+          @click="closeMobileMenu"
+          >Тест переводов</router-link
         >
         <router-link 
           v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
@@ -126,11 +140,16 @@
           Админ-панель
         </router-link>
         <router-link to="/about" class="mobile-link" @click="closeMobileMenu"
-          >О нас</router-link
+          >{{ $t('navigation.about') }}</router-link
         >
         <router-link to="/contact" class="mobile-link" @click="closeMobileMenu"
-          >Контакты</router-link
+          >{{ $t('navigation.contact') }}</router-link
         >
+
+        <!-- Mobile Language Switcher -->
+        <div class="mobile-language">
+          <LanguageSwitcher />
+        </div>
 
         <!-- Mobile Auth -->
         <div v-if="authStore.isAuthenticated" class="mobile-user">
@@ -140,10 +159,10 @@
               {{ authStore.currentUser?.email }}
             </div>
           </div>
-          <button @click="handleLogout" class="mobile-logout-btn">Выйти</button>
+          <button @click="handleLogout" class="mobile-logout-btn">{{ $t('navigation.logout') }}</button>
         </div>
         <button v-else @click="handleOpenAuthModal" class="mobile-auth-btn">
-          Войти
+          {{ $t('navigation.login') }}
         </button>
       </div>
     </nav>
@@ -155,6 +174,7 @@
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { useAuthStore } from '../stores/auth'
   import { useAuthModal } from '../composables/useAuthModal'
+  import LanguageSwitcher from './ui/LanguageSwitcher.vue'
 
   // Header component for the application
 
@@ -318,6 +338,11 @@
     height: 2px;
     background: var(--color-secondary);
     border-radius: 1px;
+  }
+
+  .nav-language {
+    display: flex;
+    align-items: center;
   }
 
   .nav-auth {
@@ -531,6 +556,12 @@
 
   .mobile-auth-btn:hover {
     background: var(--color-secondary-hover);
+  }
+
+  .mobile-language {
+    padding: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
   }
 
   /* Mobile Responsive */

@@ -2,11 +2,11 @@
   <BaseSearchField
     :model-value="modelValue"
     field-key="destination"
-    label="Куда"
+    :label="$t('search.to')"
     :active-selector="activeSelector"
     :disabled="disabled"
     :options="options"
-    placeholder="Выберите страну"
+    :placeholder="$t('search.selectCountry')"
     :searchable="true"
     :can-clear="false"
     :can-deselect="false"

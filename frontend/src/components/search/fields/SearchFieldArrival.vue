@@ -2,7 +2,7 @@
   <BaseSearchField
     :model-value="modelValue"
     field-key="arrivalCity"
-    label="Город прилета"
+    :label="$t('search.arrival')"
     :active-selector="activeSelector"
     :disabled="disabled"
     @update:model-value="$emit('update:modelValue', $event)"
@@ -10,7 +10,7 @@
     <template #default="{ modelValue }">
       <input 
         type="text" 
-        :value="modelValue ? modelValue.name : 'Город будет выбран автоматически'"
+        :value="modelValue ? modelValue.name : $t('search.arrivalCityAuto')"
         :disabled="true"
         class="arrival-input"
         title="Автоматически устанавливается на основе выбранного пакета"

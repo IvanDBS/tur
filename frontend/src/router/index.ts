@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,6 +36,11 @@ const router = createRouter({
       component: () => import('../views/FormFieldTest.vue'),
     },
     {
+      path: '/i18n-test',
+      name: 'i18n-test',
+      component: () => import('../components/I18nTest.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
@@ -53,6 +59,7 @@ const router = createRouter({
     {
       path: '/admin',
       component: () => import('../views/admin/AdminDashboard.vue'),
+      meta: { requiresAdmin: true },
       children: [
         {
           path: '',
@@ -63,15 +70,42 @@ const router = createRouter({
           path: 'bookings',
           name: 'admin-bookings',
           component: () => import('../views/admin/AdminBookingsView.vue'),
+          meta: { requiresAdmin: true },
         },
         {
           path: 'users',
           name: 'admin-users',
           component: () => import('../views/admin/AdminUsersView.vue'),
+          meta: { requiresAdmin: true },
         },
       ]
     },
   ],
+})
+
+// Route guard для проверки админских прав
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // Проверяем, требует ли маршрут админских прав
+  if (to.meta.requiresAdmin) {
+    // Проверяем, авторизован ли пользователь
+    if (!authStore.isAuthenticated) {
+      next('/auth-test') // Перенаправляем на страницу входа
+      return
+    }
+    
+    // Получаем актуальные данные пользователя
+    await authStore.getCurrentUser()
+    
+    // Проверяем, является ли пользователь админом
+    if (!authStore.currentUser?.admin) {
+      next('/') // Перенаправляем на главную страницу
+      return
+    }
+  }
+  
+  next()
 })
 
 export default router

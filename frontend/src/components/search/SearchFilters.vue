@@ -5,7 +5,7 @@
       <div class="filters-column extra-small">
         <!-- Region -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
-          <label>Регион:</label>
+          <label>{{ $t('search.region') }}:</label>
           <div class="filter-options vertical">
             <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
               <input 
@@ -15,7 +15,7 @@
                 @change="handleToggleAllRegions"
               />
               <span class="checkmark"></span>
-              <span class="label-text">Любой</span>
+              <span class="label-text">{{ $t('search.any') }}</span>
             </label>
             <label 
               class="checkbox-v9"
@@ -40,7 +40,7 @@
       <div class="filters-column extra-small">
         <!-- Category -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
-          <label>Категория:</label>
+          <label>{{ $t('search.category') }}:</label>
           <div class="filter-options vertical">
             <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
               <input 
@@ -50,7 +50,7 @@
                 @change="handleToggleAllCategories"
               />
               <span class="checkmark"></span>
-              <span class="label-text">Любой</span>
+              <span class="label-text">{{ $t('search.any') }}</span>
             </label>
             <label 
               class="checkbox-v9"
@@ -75,7 +75,7 @@
       <div class="filters-column medium">
         <!-- Hotels -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
-          <label>Отели:</label>
+          <label>{{ $t('search.hotels') }}:</label>
           <div class="hotel-container">
             <!-- Закрепленная верхняя часть -->
             <div class="hotel-header">
@@ -87,7 +87,7 @@
                   @change="handleToggleAllHotels"
                 />
                 <span class="checkmark"></span>
-                <span class="label-text">Любой</span>
+                <span class="label-text">{{ $t('search.any') }}</span>
               </label>
               <div class="hotel-item hotel-search-item">
                 <div class="search-input-container">
@@ -107,7 +107,7 @@
                   </div>
                   <input
                     type="text"
-                    placeholder="Поиск отеля"
+                    :placeholder="$t('search.searchHotel')"
                     class="hotel-search-input"
                     v-model="hotelSearchQuery"
                     :disabled="props.disabled"
@@ -142,7 +142,7 @@
       <div class="filters-column meals">
         <!-- Meals -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
-          <label>Питание:</label>
+          <label>{{ $t('search.meals') }}:</label>
           <div class="filter-options vertical">
             <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
               <input 
@@ -152,7 +152,7 @@
                 @change="handleToggleAllMeals"
               />
               <span class="checkmark"></span>
-              <span class="label-text">Любой</span>
+              <span class="label-text">{{ $t('search.any') }}</span>
             </label>
             <label 
               class="checkbox-v9"
@@ -187,7 +187,7 @@
                 @change="handleToggleAllOptions"
               />
               <span class="checkmark"></span>
-              <span class="label-text">Любой</span>
+              <span class="label-text">{{ $t('search.any') }}</span>
             </label>
             <label 
               class="checkbox-v9"

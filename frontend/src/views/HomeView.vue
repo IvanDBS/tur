@@ -5,11 +5,10 @@
       <div class="hero-content">
         <div class="hero-text">
           <h1 class="hero-title animate-fade-in-up">
-            Бесплатный сервис бронирования туров.
+            {{ $t('home.heroTitle') }}
           </h1>
           <p class="hero-subtitle animate-fade-in-up-delay">
-            <span class="brand-bold">migo.md</span> - путешествуй легко и
-            бронируй онлайн!
+            <span class="brand-bold">migo.md</span> - {{ $t('home.heroSubtitle').split(' - ')[1] }}
           </p>
         </div>
 
@@ -25,22 +24,23 @@
     <div v-if="loading" class="loading-overlay">
       <div class="spinner-container">
         <div class="blue-spinner spinner-medium"></div>
-        <p class="spinner-text">Загружаем данные для поиска...</p>
+        <p class="spinner-text">{{ $t('home.loadingData') }}</p>
       </div>
     </div>
 
     <!-- Error Display -->
     <div v-if="error" class="error-banner">
       <p>⚠️ {{ error }}</p>
-      <button @click="retryLoad" class="retry-btn">Повторить</button>
+      <button @click="retryLoad" class="retry-btn">{{ $t('home.retry') }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { onMounted } from 'vue'
-  import SearchForm from '../components/SearchForm.vue'
+  import { onMounted, defineAsyncComponent } from 'vue'
   import { useSearchData } from '../composables/useSearchData'
+  
+  const SearchForm = defineAsyncComponent(() => import('../components/SearchForm.vue'))
 
   const { loading, error, initializeData, clearError } = useSearchData()
 
@@ -146,7 +146,7 @@
     padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 1000000;
     max-width: 300px;
   }
 

@@ -14,12 +14,19 @@
 </template>
 
 <script setup lang="ts">
+  import { onMounted } from 'vue'
   import AppHeader from '@/components/AppHeader.vue'
   import AppFooter from '@/components/AppFooter.vue'
   import AuthModal from '@/components/auth/AuthModal.vue'
   import { useAuthModal } from '@/composables/useAuthModal'
+  import { useI18n } from '@/composables/useI18n'
 
   const { isAuthModalOpen, closeAuthModal } = useAuthModal()
+  const { initializeLocale } = useI18n()
+
+  onMounted(() => {
+    initializeLocale()
+  })
 </script>
 
 <style scoped>

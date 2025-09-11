@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
 import { apiClient } from '@/utils/api'
 import { logger } from '@/utils/logger'
-import { useCountryLocalization } from './useCountryLocalization'
+import { translateCountries, translateDepartureCities, translateArrivalCities, translatePackages, sortCountriesByPopularity } from '@/utils/translations'
+import { useI18n } from './useI18n'
 import type { 
   DepartureCity, 
   Country, 
@@ -68,8 +69,8 @@ export const useObsApi = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   
-  // Localization - тестируем по одному
-  const { translateCountries, translateDepartureCities, translateArrivalCities, translatePackages } = useCountryLocalization()
+  // Localization - используем новую систему i18n
+  const { translateCountry, translateDepartureCity, translateArrivalCity, translatePackage } = useI18n()
   
   // Data
   const departureCities = ref<DepartureCity[]>([])
@@ -122,9 +123,8 @@ export const useObsApi = () => {
           }
         })
         
-        // Переводим названия городов отправления на русский язык
-        const translatedCities = translateDepartureCities(mappedCities)
-        departureCities.value = translatedCities
+        // Переводим названия городов отправления
+        departureCities.value = translateDepartureCities(mappedCities, translateDepartureCity) as DepartureCity[]
         logger.info(`Processed ${departureCities.value.length} departure cities`)
         return departureCities.value
       } else {
@@ -163,9 +163,9 @@ export const useObsApi = () => {
           code: country.label
         }))
         
-        // Переводим названия стран на русский язык
-        const translatedCountries = translateCountries(mappedCountries)
-        countries.value = translatedCountries
+        // Переводим названия стран и сортируем по популярности
+        const translatedCountries = translateCountries(mappedCountries, translateCountry) as Country[]
+        countries.value = sortCountriesByPopularity(translatedCountries) as Country[]
         logger.info(`Successfully loaded ${countries.value.length} countries for city ${departureCityId}`)
         return countries.value
       } else {
@@ -205,9 +205,8 @@ export const useObsApi = () => {
           })) || []
         }))
         
-        // Переводим названия пакетов на русский язык
-        const translatedPackages = translatePackages(mappedPackages)
-        packages.value = translatedPackages
+        // Переводим названия пакетов
+        packages.value = translatePackages(mappedPackages, translatePackage) as Package[]
         logger.info(`🏨 Packages loaded, first package airports:`, mappedPackages[0]?.airports)
         logger.info(`Successfully loaded ${packages.value.length} package templates for country ${countryId}`)
         
@@ -225,8 +224,8 @@ export const useObsApi = () => {
           code: airport.label
         }))
         
-        // Переводим названия городов прилета на русский язык
-        arrivalCities.value = translateArrivalCities(mappedArrivalCities)
+        // Переводим названия городов прилета
+        arrivalCities.value = translateArrivalCities(mappedArrivalCities, translateArrivalCity) as ArrivalCity[]
         
         return packages.value
       } else {

@@ -4,7 +4,7 @@
     <BaseSearchField
       :model-value="adults"
       field-key="adults"
-      label="Взрослых"
+      :label="$t('search.adults')"
       :active-selector="activeSelector"
       :disabled="disabled || (activeSelector !== 'adults' && adults === null)"
       :options="adultsOptions"
@@ -25,7 +25,7 @@
     <BaseSearchField
       :model-value="children"
       field-key="children"
-      label="Детей"
+      :label="$t('search.children')"
       :active-selector="activeSelector"
       :disabled="disabled || (activeSelector !== 'children' && children === null)"
       :options="childrenOptions"

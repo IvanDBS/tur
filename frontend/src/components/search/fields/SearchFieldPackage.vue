@@ -2,11 +2,11 @@
   <BaseSearchField
     :model-value="modelValue"
     field-key="package"
-    label="Пакет"
+    :label="$t('search.selectPackage')"
     :active-selector="activeSelector"
     :disabled="disabled"
     :options="options"
-    placeholder="Выберите пакет"
+    :placeholder="$t('search.selectPackage')"
     :searchable="true"
     :can-clear="false"
     :can-deselect="false"

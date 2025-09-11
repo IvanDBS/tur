@@ -22,9 +22,6 @@
           <router-link to="/obs-test" class="nav-link"
             >Тест OBS API</router-link
           >
-          <router-link to="/i18n-test" class="nav-link"
-            >Тест переводов</router-link
-          >
           <router-link 
             v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
             to="/admin" 

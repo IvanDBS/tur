@@ -163,9 +163,13 @@ export const useObsApi = () => {
           code: country.label
         }))
         
-        // Переводим названия стран и сортируем по популярности
+        // Переводим названия стран и сортируем по алфавиту
         const translatedCountries = translateCountries(mappedCountries, translateCountry) as Country[]
-        countries.value = sortCountriesByPopularity(translatedCountries) as Country[]
+        countries.value = translatedCountries.sort((a, b) => {
+          const aName = a.label || a.name || ''
+          const bName = b.label || b.name || ''
+          return aName.localeCompare(bName)
+        }) as Country[]
         logger.info(`Successfully loaded ${countries.value.length} countries for city ${departureCityId}`)
         return countries.value
       } else {

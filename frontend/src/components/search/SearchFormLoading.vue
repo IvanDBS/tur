@@ -2,18 +2,28 @@
   <div class="loading-overlay">
     <div class="spinner-container">
       <div class="blue-spinner spinner-large"></div>
-      <p class="spinner-text">{{ message }}</p>
+      <p class="spinner-text">{{ displayMessage }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { SearchFormLoadingProps } from '../../types/searchForm'
+import { useI18n } from '../../composables/useI18n'
 import '../../styles/spinners.css'
 
+// I18n
+const { t } = useI18n()
+
 // Props
-withDefaults(defineProps<SearchFormLoadingProps>(), {
-  message: 'Ищем лучшие туры для вас...'
+const props = withDefaults(defineProps<SearchFormLoadingProps>(), {
+  message: ''
+})
+
+// Computed message with translation
+const displayMessage = computed(() => {
+  return props.message || t('searchResults.spinner')
 })
 </script>
 

@@ -63,8 +63,15 @@ export const translatePackages = <T extends {label: string, originalLabel?: stri
   packages: T[],
   translatePackage: (key: string) => string
 ): T[] => {
-  return packages.map(pkg => ({
+  const translated = packages.map(pkg => ({
     ...pkg,
     label: translatePackage(pkg.originalLabel || pkg.label)
   }))
+  
+  // Сортируем по алфавиту по переведенному названию
+  return translated.sort((a, b) => {
+    const aName = a.label || ''
+    const bName = b.label || ''
+    return aName.localeCompare(bName)
+  })
 }

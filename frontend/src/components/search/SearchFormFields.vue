@@ -59,7 +59,7 @@
           :week-start="1"
           weekday-format="long"
           month-format="long"
-          locale="ru"
+          :locale="currentLocale"
           :title-format="{ month: 'long', year: 'numeric' }"
           month-name-format="long"
           :disabled="!searchForm.package || (!isPackageWithoutFlight && !searchForm.arrivalCity)"
@@ -86,7 +86,7 @@
           :week-start="1"
           weekday-format="long"
           month-format="long"
-          locale="ru"
+          :locale="currentLocale"
           :title-format="{ month: 'long', year: 'numeric' }"
           month-name-format="long"
           :disabled="!searchForm.checkInDate"
@@ -169,6 +169,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import type { SearchFormFieldsProps, SearchFormFieldsEmits } from '../../types/searchForm'
+import { useI18n } from '../../composables/useI18n'
 
 const SearchFieldDeparture = defineAsyncComponent(() => import('./fields/SearchFieldDeparture.vue'))
 const SearchFieldDestination = defineAsyncComponent(() => import('./fields/SearchFieldDestination.vue'))
@@ -182,6 +183,10 @@ const props = defineProps<SearchFormFieldsProps>()
 
 // Emits
 const emit = defineEmits<SearchFormFieldsEmits>()
+
+// I18n
+const { locale } = useI18n()
+const currentLocale = computed(() => locale.value)
 
 // Computed
 // Функция для определения пакетов без перелета

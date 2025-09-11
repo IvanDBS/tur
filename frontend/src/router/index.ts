@@ -36,11 +36,6 @@ const router = createRouter({
       component: () => import('../views/FormFieldTest.vue'),
     },
     {
-      path: '/i18n-test',
-      name: 'i18n-test',
-      component: () => import('../components/I18nTest.vue'),
-    },
-    {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),

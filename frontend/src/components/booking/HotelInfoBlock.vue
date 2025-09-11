@@ -1,7 +1,7 @@
 <template>
   <div class="hotel-info-block">
     <div class="block-header">
-      <h2 class="block-title">Информация об отеле</h2>
+      <h2 class="block-title">{{ $t('searchResults.hotelInfo') }}</h2>
     </div>
 
     <div class="hotel-content">
@@ -21,8 +21,8 @@
           </div>
         </div>
         <div class="hotel-badges">
-          <span v-if="hotel.is_exclusive" class="badge exclusive">Эксклюзив</span>
-          <span v-if="hotel.in_stop === true" class="badge stop-sale">STOP SALE</span>
+          <span v-if="hotel.is_exclusive" class="badge exclusive">{{ $t('hotelCard.exclusive') }}</span>
+          <span v-if="hotel.in_stop === true" class="badge stop-sale">{{ $t('hotelCard.stopSale') }}</span>
         </div>
       </div>
 
@@ -49,11 +49,11 @@
         <!-- Accommodation Details -->
         <div class="accommodation-details">
           <div class="detail-row">
-            <span class="detail-label">Размещение:</span>
+            <span class="detail-label">{{ $t('searchResults.accommodation') }}:</span>
             <span class="detail-value">{{ placement.name }}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Питание:</span>
+            <span class="detail-label">{{ $t('searchResults.meals') }}:</span>
             <span class="detail-value">
               {{ meal.full_name }}
             </span>
@@ -63,14 +63,14 @@
         <!-- Dates and Duration -->
         <div class="dates-section">
           <div class="detail-row">
-            <span class="detail-label">Даты проживания:</span>
+            <span class="detail-label">{{ $t('searchResults.accommodationDates') }}:</span>
             <span class="detail-value">
               {{ formatDate(dates.check_in) }} - {{ formatDate(dates.check_out) }}
             </span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Количество ночей:</span>
-            <span class="detail-value">{{ nights.total }} ночей</span>
+            <span class="detail-label">{{ $t('searchResults.numberOfNights') }}:</span>
+            <span class="detail-value">{{ nights.total }} {{ $t('searchResults.nights') }}</span>
           </div>
         </div>
 
@@ -80,7 +80,7 @@
             <span class="price-amount">{{ price.amount }}</span>
             <span class="price-currency">{{ price.currency }}</span>
           </div>
-          <div class="price-type">Базовая стоимость тура</div>
+          <div class="price-type">{{ $t('searchResults.baseCost') }}</div>
         </div>
       </div>
     </div>
@@ -90,6 +90,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { formatDate } from '../../utils/dateUtils'
+import { useI18n } from '../../composables/useI18n'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 import type { SelectedFlight, SelectedRoom } from '../../types/booking'
 
@@ -100,6 +101,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// I18n
+const { t: $t } = useI18n()
 
 // State
 const imageError = ref(false)

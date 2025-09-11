@@ -16,8 +16,8 @@
         </div>
       </div>
       <div class="hotel-badges-overlay">
-        <span v-if="result.hotel?.is_exclusive" class="badge exclusive">Эксклюзив</span>
-        <span v-if="result.hotel?.in_stop === true" class="badge stop-sale">STOP SALE</span>
+        <span v-if="result.hotel?.is_exclusive" class="badge exclusive">{{ $t('hotelCard.exclusive') }}</span>
+        <span v-if="result.hotel?.in_stop === true" class="badge stop-sale">{{ $t('hotelCard.stopSale') }}</span>
       </div>
     </div>
 
@@ -25,12 +25,12 @@
     <div class="flight-section">
       <!-- Flight Options Summary -->
       <div class="flight-options-summary">
-        <div class="flight-label">Варианты перелетов</div>
+        <div class="flight-label">{{ $t('hotelCard.flightOptions') }}</div>
         <div class="flight-count">
           {{ getFlightOptionsCount() }} {{ getFlightWord(getFlightOptionsCount()) }}
         </div>
         <div class="flight-price-range" v-if="result.minPrice !== result.maxPrice">
-          от {{ result.minPrice }} до {{ result.maxPrice }} {{ result.currency }}
+          {{ $t('hotelCard.from') }} {{ result.minPrice }} {{ $t('hotelCard.to') }} {{ result.maxPrice }} {{ result.currency }}
         </div>
         <div class="flight-price-range" v-else>
           {{ result.minPrice }} {{ result.currency }}
@@ -44,7 +44,7 @@
           <span v-if="(result.nights?.on_the_way || 0) > 0" class="on-the-way">+{{ result.nights.on_the_way }}</span>
         </div>
         <div class="dates">
-          с {{ formatDateShort(result.dates?.check_in || '') }} по {{ formatDateShort(result.dates?.check_out || '') }}
+          {{ $t('hotelCard.fromDate') }} {{ formatDateShort(result.dates?.check_in || '') }} {{ $t('hotelCard.toDate') }} {{ formatDateShort(result.dates?.check_out || '') }}
         </div>
       </div>
     </div>
@@ -52,7 +52,7 @@
     <!-- Hotel Information Section -->
     <div class="hotel-section">
       <div class="hotel-header">
-        <h3 class="hotel-name">{{ result.hotel?.name || 'Отель' }}</h3>
+        <h3 class="hotel-name">{{ result.hotel?.name || $t('hotelCard.hotel') }}</h3>
         <div class="hotel-rating">
           <div class="stars">
             <span v-for="star in getStarRating()" :key="star" class="star">★</span>
@@ -65,7 +65,7 @@
       <div v-if="result.hotel?.in_stop === true" class="stop-sale-warning">
         <div class="warning-icon">⚠️</div>
         <div class="warning-text">
-          <strong>Внимание!</strong> Ограниченное количество мест. Бронирование может быть недоступно.
+          <strong>{{ $t('hotelCard.attention') }}</strong> {{ $t('hotelCard.stopSaleWarning') }}
         </div>
       </div>
       
@@ -82,12 +82,12 @@
 
       <div class="accommodation-details">
         <div class="room-options-summary">
-          <div class="room-label">Варианты проживания</div>
+          <div class="room-label">{{ $t('hotelCard.accommodationOptions') }}</div>
           <div class="room-count">
             {{ result.roomOptions?.length || 1 }} {{ getRoomWord(result.roomOptions?.length || 1) }}
           </div>
           <div class="room-price-range" v-if="result.minPrice !== result.maxPrice">
-            от {{ result.minPrice }} до {{ result.maxPrice }} {{ result.currency }}
+            {{ $t('hotelCard.from') }} {{ result.minPrice }} {{ $t('hotelCard.to') }} {{ result.maxPrice }} {{ result.currency }}
           </div>
           <div class="room-price-range" v-else>
             {{ result.minPrice }} {{ result.currency }}
@@ -131,7 +131,7 @@
         </div>
         <div v-else class="normal-price">
           <div class="price" v-if="result.minPrice !== result.maxPrice">
-            от {{ result.minPrice }} {{ result.currency }}
+            {{ $t('hotelCard.from') }} {{ result.minPrice }} {{ result.currency }}
           </div>
           <div class="price" v-else>
             {{ result.minPrice }} {{ result.currency }}
@@ -152,14 +152,14 @@
           <span>{{ getAvailabilityText() }}</span>
         </button>
         
-        <button class="action-btn details" title="Детали отеля">
+        <button class="action-btn details" :title="$t('hotelCard.details')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2"/>
             <path d="M8 5V3a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
           </svg>
         </button>
         
-        <button class="action-btn compare" title="Сравнить">
+        <button class="action-btn compare" :title="$t('hotelCard.compare')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M9 19c-5 0-7-2-7-7s2-7 7-7 7 2 7 7-2 7-7 7z" stroke="currentColor" stroke-width="2"/>
             <path d="M15 5c5 0 7 2 7 7s-2 7-7 7" stroke="currentColor" stroke-width="2"/>
@@ -169,11 +169,11 @@
         <button 
           class="action-btn book" 
           :class="{ 'disabled': !canBook }"
-          :title="canBook ? 'Забронировать' : 'Бронирование недоступно'"
+          :title="canBook ? $t('hotelCard.book') : $t('hotelCard.notAvailable')"
           :disabled="!canBook"
           @click="handleBook"
         >
-          <span>Забронировать</span>
+          <span>{{ $t('hotelCard.book') }}</span>
         </button>
       </div>
     </div>
@@ -184,10 +184,14 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNightWord, formatDateShort } from '../../utils/dateUtils'
+import { useI18n } from '../../composables/useI18n'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 
 // Get router instance at the top level of setup()
 const router = useRouter()
+
+// I18n
+const { t: $t } = useI18n()
 
 interface Props {
   result: GroupedSearchResult
@@ -288,16 +292,14 @@ const getStarRating = () => {
 
 // Get flight word with correct declension
 const getFlightWord = (count: number) => {
-  if (count === 1) return 'вариант'
-  if (count >= 2 && count <= 4) return 'варианта'
-  return 'вариантов'
+  // Для простоты используем базовую форму, так как склонения сложно переводить
+  return $t('hotelCard.variant')
 }
 
 // Get room word with correct declension
 const getRoomWord = (count: number) => {
-  if (count === 1) return 'вариант'
-  if (count >= 2 && count <= 4) return 'варианта'
-  return 'вариантов'
+  // Для простоты используем базовую форму, так как склонения сложно переводить
+  return $t('hotelCard.variant')
 }
 
 // Get flight options count
@@ -332,16 +334,16 @@ const getAvailabilityClass = () => {
 
 const getAvailabilityText = () => {
   if (canBook.value) {
-    return 'Доступно'
+    return $t('hotelCard.availability')
   }
-  return 'Недоступно'
+  return $t('hotelCard.notAvailable')
 }
 
 const getAvailabilityTooltip = () => {
   if (canBook.value) {
-    return 'Бронирование доступно'
+    return $t('hotelCard.availability')
   }
-  return 'Бронирование недоступно'
+  return $t('hotelCard.notAvailable')
 }
 
 // Export component

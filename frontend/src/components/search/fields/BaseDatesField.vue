@@ -23,7 +23,7 @@
           :week-start="1"
           weekday-format="long"
           month-format="long"
-          locale="ru"
+          :locale="currentLocale"
           :title-format="{ month: 'long', year: 'numeric' }"
           month-name-format="long"
           :disabled="disabled"
@@ -54,7 +54,7 @@
           :week-start="1"
           weekday-format="long"
           month-format="long"
-          locale="ru"
+          :locale="currentLocale"
           :title-format="{ month: 'long', year: 'numeric' }"
           month-name-format="long"
           :disabled="!checkInDate"
@@ -67,8 +67,9 @@
 <script setup lang="ts">
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, computed } from 'vue'
 import { useCalendarHints } from '../../../composables/useCalendarHints'
+import { useI18n } from '../../../composables/useI18n'
 const BaseSearchField = defineAsyncComponent(() => import('./BaseSearchField.vue'))
 
 // Props
@@ -92,6 +93,10 @@ defineEmits<{
 
 // Calendar hints для ограничения доступных дат
 const { isDateAvailable, availableDates } = useCalendarHints()
+
+// I18n
+const { locale } = useI18n()
+const currentLocale = computed(() => locale.value)
 
 // Функция для проверки доступности даты в календаре
 const isDateDisabled = (date: Date) => {

@@ -1,11 +1,15 @@
 import { translateCountry, translateDepartureCity, translateArrivalCity, translatePackage, sortCountriesByPopularity } from '../utils/countryTranslations'
 import type { Country, DepartureCity, ArrivalCity, Package } from '../types/search'
+import { useI18n } from './useI18n'
 
 /**
  * Composable для локализации стран, городов и пакетов
  * Переводит названия стран, городов отправления, городов прилета и пакетов с английского на русский язык
  */
 export const useCountryLocalization = () => {
+  // Получаем доступ к текущей локали
+  const { getCurrentLocale } = useI18n()
+  
   /**
    * Переводит название страны на русский язык
    * @param englishName - название страны на английском
@@ -56,8 +60,8 @@ export const useCountryLocalization = () => {
       label: country.label ? translateCountryName(country.label) : country.label
     }))
     
-    // Сортируем по популярности
-    return sortCountriesByPopularity(translated)
+    // Возвращаем без сортировки (сортировка будет применена в useObsApi)
+    return translated
   }
 
   /**
@@ -110,11 +114,12 @@ export const useCountryLocalization = () => {
       label: pkg.label ? translatePackageName(pkg.label) : pkg.label
     }))
     
-    // Сортируем по алфавиту по русскому названию
+    // Сортируем по алфавиту с учетом текущей локали
+    const currentLocale = getCurrentLocale()
     return translated.sort((a, b) => {
       const aName = a.label || a.name || ''
       const bName = b.label || b.name || ''
-      return aName.localeCompare(bName, 'ru')
+      return aName.localeCompare(bName, currentLocale)
     })
   }
 

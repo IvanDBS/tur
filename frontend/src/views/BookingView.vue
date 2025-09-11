@@ -8,16 +8,16 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5m7-7l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Назад к поиску
+            {{ $t('searchResults.backToSearch') }}
           </button>
-          <h1 class="page-title">Бронирование тура</h1>
+          <h1 class="page-title">{{ $t('searchResults.tourBooking') }}</h1>
         </div>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Загрузка данных бронирования...</p>
+        <p>{{ $t('searchResults.loading') }}</p>
       </div>
 
       <!-- Error State -->
@@ -104,7 +104,7 @@
               </div>
               
               <div class="price-item total">
-                <div class="price-name">Итого</div>
+                <div class="price-name">{{ $t('searchResults.total') }}</div>
                 <div class="price-description"></div>
                 <div class="price-value">{{ totalPrice }} €</div>
               </div>
@@ -116,7 +116,7 @@
                 @click="handleBook"
                 :disabled="!canProceedToBooking"
               >
-                Забронировать
+                {{ $t('hotelCard.book') }}
               </button>
             </div>
           </div>
@@ -140,6 +140,7 @@
 import { ref, onMounted, watch, defineAsyncComponent } from 'vue'
 // import { useRoute, useRouter } from 'vue-router' // TODO: implement route usage
 import { useBooking } from '../composables/useBooking'
+import { useI18n } from '../composables/useI18n'
 // import { useSearchData } from '../composables/useSearchData' // TODO: implement search functionality
 // Import components dynamically to avoid TypeScript issues
 const HotelInfoBlock = defineAsyncComponent(() => import('../components/booking/HotelInfoBlock.vue'))
@@ -155,6 +156,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// I18n
+const { t: $t } = useI18n()
 
 // Composables
 // const route = useRoute() // TODO: implement route usage

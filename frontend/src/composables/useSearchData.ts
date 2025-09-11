@@ -1,5 +1,6 @@
 import { ref, computed, nextTick } from 'vue'
 import { useObsApi } from './useObsApi'
+import { useI18n } from './useI18n'
 import { logger } from '../utils/logger'
 import type { 
   DepartureCity, 
@@ -15,6 +16,7 @@ import type {
 // Опции для Multiselect
 export const useSearchData = () => {
   const obsApi = useObsApi()
+  const { t } = useI18n()
   
   const nightsOptions = ref([
     { value: 3, label: '3' },
@@ -60,8 +62,8 @@ export const useSearchData = () => {
     { value: 10, label: '10' },
   ])
 
-  const childrenOptions = ref([
-    { value: 0, label: 'Без детей' },
+  const childrenOptions = computed(() => [
+    { value: 0, label: t('search.noChildren') },
     { value: 1, label: '1' },
     { value: 2, label: '2' },
     { value: 3, label: '3' },

@@ -81,189 +81,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Button Test -->
-      <div class="button-test">
-        <h2>Тест кнопки "Войти" в коралловом стиле</h2>
-        
-        <div class="variant-section">
-          <h3>Кнопка "Войти" в коралловом стиле</h3>
-          <div class="button-group">
-            <button class="auth-btn coral-style" title="Войти">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Войти
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Checkbox Variants -->
-      <div class="checkbox-variants">
-        <h2>Варианты чекбоксов</h2>
-        
-        <!-- Variant 1: Minimal Square -->
-        <div class="variant-section">
-          <h3>Вариант 1: Минимальный квадрат</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v1">
-              <input type="checkbox" v-model="checkboxes.v1" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v1">
-              <input type="checkbox" v-model="checkboxes.v1b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 2: Rounded -->
-        <div class="variant-section">
-          <h3>Вариант 2: Скругленный</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v2">
-              <input type="checkbox" v-model="checkboxes.v2" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v2">
-              <input type="checkbox" v-model="checkboxes.v2b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 3: Toggle Switch -->
-        <div class="variant-section">
-          <h3>Вариант 3: Переключатель</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v3">
-              <input type="checkbox" v-model="checkboxes.v3" />
-              <span class="slider"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v3">
-              <input type="checkbox" v-model="checkboxes.v3b" />
-              <span class="slider"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 4: Circle -->
-        <div class="variant-section">
-          <h3>Вариант 4: Круглый</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v4">
-              <input type="checkbox" v-model="checkboxes.v4" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v4">
-              <input type="checkbox" v-model="checkboxes.v4b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 5: Minimal Line -->
-        <div class="variant-section">
-          <h3>Вариант 5: Минимальная линия</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v5">
-              <input type="checkbox" v-model="checkboxes.v5" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v5">
-              <input type="checkbox" v-model="checkboxes.v5b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 6: Rounded No Fill - Coral -->
-        <div class="variant-section">
-          <h3>Вариант 6: Скругленный без заливки (Коралловый)</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v6">
-              <input type="checkbox" v-model="checkboxes.v6" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v6">
-              <input type="checkbox" v-model="checkboxes.v6b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 7: Rounded No Fill - Dark Blue -->
-        <div class="variant-section">
-          <h3>Вариант 7: Скругленный без заливки (Темно-синий)</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v7">
-              <input type="checkbox" v-model="checkboxes.v7" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v7">
-              <input type="checkbox" v-model="checkboxes.v7b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 8: Rounded No Fill No Border - Dark Blue -->
-        <div class="variant-section">
-          <h3>Вариант 8: Скругленный без заливки и рамки (Темно-синий)</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v8">
-              <input type="checkbox" v-model="checkboxes.v8" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v8">
-              <input type="checkbox" v-model="checkboxes.v8b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Variant 9: Rounded No Fill Thin Border - Dark Blue -->
-        <div class="variant-section">
-          <h3>Вариант 9: Скругленный без заливки с тонкой рамкой (Темно-синий)</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-v9">
-              <input type="checkbox" v-model="checkboxes.v9" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 1</span>
-            </label>
-            <label class="checkbox-v9">
-              <input type="checkbox" v-model="checkboxes.v9b" />
-              <span class="checkmark"></span>
-              <span class="label-text">Опция 2</span>
-            </label>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Auth Modal -->
@@ -278,28 +95,6 @@
 
   const authStore = useAuthStore()
   const isAuthModalOpen = ref(false)
-
-  // Checkbox states
-  const checkboxes = ref({
-    v1: false,
-    v1b: false,
-    v2: false,
-    v2b: false,
-    v3: false,
-    v3b: false,
-    v4: false,
-    v4b: false,
-    v5: false,
-    v5b: false,
-    v6: false,
-    v6b: false,
-    v7: false,
-    v7b: false,
-    v8: false,
-    v8b: false,
-    v9: false,
-    v9b: false,
-  })
 
   // Computed
   const userDisplayName = computed(() => {
@@ -325,107 +120,121 @@
   }
 
   const handleLogout = async () => {
-    await authStore.logout()
-  }
-
-  const testGetCurrentUser = async () => {
-    await authStore.getCurrentUser()
+    try {
+      await authStore.logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const testRegister = async () => {
     try {
-      await authStore.register({
-        email: `test${Date.now()}@example.com`,
+      const testData = {
+        email: 'test@example.com',
         password: 'password123',
-        passwordConfirmation: 'password123',
         firstName: 'Test',
         lastName: 'User',
-      })
-      alert('Регистрация успешна!')
+        phone: '+37312345678'
+      }
+      
+      await authStore.register(testData)
+      console.log('Registration test completed')
     } catch (error) {
-      alert(`Ошибка регистрации: ${error}`)
+      console.error('Registration test error:', error)
     }
   }
 
   const testLogin = async () => {
     try {
-      await authStore.login({
-        email: 'test2@example.com',
-        password: 'password123',
-      })
-      alert('Вход успешен!')
+      const credentials = {
+        email: 'test@example.com',
+        password: 'password123'
+      }
+      
+      await authStore.login(credentials)
+      console.log('Login test completed')
     } catch (error) {
-      alert(`Ошибка входа: ${error}`)
+      console.error('Login test error:', error)
     }
   }
 
   const testAdminLogin = async () => {
     try {
-      await authStore.login({
+      const credentials = {
         email: 'admin@example.com',
-        password: 'password123',
-      })
-      alert('Вход админа успешен!')
+        password: 'password123'
+      }
+      
+      await authStore.login(credentials)
+      console.log('Admin login test completed')
     } catch (error) {
-      alert(`Ошибка входа админа: ${error}`)
+      console.error('Admin login test error:', error)
     }
   }
 
   const testLogout = async () => {
     try {
       await authStore.logout()
-      alert('Выход успешен!')
+      console.log('Logout test completed')
     } catch (error) {
-      alert(`Ошибка выхода: ${error}`)
+      console.error('Logout test error:', error)
+    }
+  }
+
+  const testGetCurrentUser = async () => {
+    try {
+      await authStore.getCurrentUser()
+      console.log('Get current user test completed')
+    } catch (error) {
+      console.error('Get current user test error:', error)
     }
   }
 
   // Lifecycle
   onMounted(() => {
-    // Try to get current user on mount
+    // Initialize auth state
     authStore.getCurrentUser()
   })
 </script>
 
 <style scoped>
   .auth-test {
-    min-height: calc(
-      100vh - 72px - 200px
-    ); /* Вычитаем высоту хедера и футера */
-    padding-top: 7rem;
-    padding-bottom: 2rem;
-    background: var(--color-background-soft);
+    min-height: calc(100vh - 64px - 200px);
+    padding: 2rem 0;
+    background: #f9fafb;
   }
 
   .container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 0 2rem;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: #1f2937;
-    margin-bottom: 2rem;
     text-align: center;
+    margin-bottom: 3rem;
   }
 
   h2 {
     font-size: 1.5rem;
     font-weight: 600;
     color: #374151;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .auth-status {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
 
   .status-card {
     background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
   }
 
   .status-item {
@@ -447,22 +256,28 @@
 
   .status-value {
     font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
   }
 
   .status--success {
-    color: #059669;
+    background: #d1fae5;
+    color: #065f46;
   }
 
   .status--error {
-    color: #dc2626;
+    background: #fee2e2;
+    color: #991b1b;
   }
 
   .status--loading {
-    color: #3b82f6;
+    background: #fef3c7;
+    color: #92400e;
   }
 
   .auth-actions {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
 
   .action-buttons {
@@ -472,7 +287,7 @@
   }
 
   .api-test {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
 
   .api-buttons {
@@ -482,515 +297,48 @@
   }
 
   .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s;
   }
 
   .btn--primary {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
   }
 
   .btn--primary:hover {
-    background: #2563eb;
+    background: #1d4ed8;
+    transform: translateY(-1px);
   }
 
   .btn--secondary {
-    background: #ef4444;
+    background: #6b7280;
     color: white;
   }
 
   .btn--secondary:hover {
-    background: #dc2626;
+    background: #4b5563;
+    transform: translateY(-1px);
   }
 
   .btn--outline {
-    background: white;
+    background: transparent;
     color: #374151;
-    border: 1px solid #d1d5db;
+    border: 2px solid #d1d5db;
   }
 
   .btn--outline:hover {
     background: #f9fafb;
     border-color: #9ca3af;
-  }
-
-  /* Button Test */
-  .button-test {
-    margin-bottom: 2rem;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  /* Base auth-btn styles */
-  .auth-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.25rem;
-    border: none;
-    border-radius: 6px;
-    font-family: var(--font-family);
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  /* Coral style for auth button */
-  .auth-btn.coral-style {
-    background: #ff6b6b;
-    color: white;
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-  }
-
-  .auth-btn.coral-style:hover {
-    transform: scale(1.02);
-    background: #ff5252;
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  }
-
-  /* Checkbox Variants */
-  .checkbox-variants {
-    margin-bottom: 2rem;
-  }
-
-  .variant-section {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 1rem;
-  }
-
-  .checkbox-group {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  /* Variant 1: Minimal Square */
-  .checkbox-v1 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v1 input {
-    display: none;
-  }
-
-  .checkbox-v1 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 2px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-
-  .checkbox-v1 input:checked + .checkmark {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  .checkbox-v1 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v1 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 2: Rounded */
-  .checkbox-v2 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v2 input {
-    display: none;
-  }
-
-  .checkbox-v2 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-
-  .checkbox-v2 input:checked + .checkmark {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  .checkbox-v2 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v2 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 3: Toggle Switch */
-  .checkbox-v3 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v3 input {
-    display: none;
-  }
-
-  .checkbox-v3 .slider {
-    width: 40px;
-    height: 20px;
-    background: #d1d5db;
-    border-radius: 20px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.3s ease;
-  }
-
-  .checkbox-v3 .slider::before {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: white;
-    top: 2px;
-    left: 2px;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-
-  .checkbox-v3 input:checked + .slider {
-    background: var(--color-primary);
-  }
-
-  .checkbox-v3 input:checked + .slider::before {
-    transform: translateX(20px);
-  }
-
-  .checkbox-v3 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 4: Circle */
-  .checkbox-v4 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v4 input {
-    display: none;
-  }
-
-  .checkbox-v4 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 50%;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-
-  .checkbox-v4 input:checked + .checkmark {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  .checkbox-v4 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v4 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 5: Minimal Line */
-  .checkbox-v5 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v5 input {
-    display: none;
-  }
-
-  .checkbox-v5 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 0;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-
-  .checkbox-v5 input:checked + .checkmark {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  .checkbox-v5 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v5 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 6: Rounded No Fill - Coral */
-  .checkbox-v6 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v6 input {
-    display: none;
-  }
-
-  .checkbox-v6 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-    background: transparent;
-  }
-
-  .checkbox-v6 input:checked + .checkmark {
-    border-color: #ff6b6b;
-    background: transparent;
-  }
-
-  .checkbox-v6 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid #ff6b6b;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v6 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 7: Rounded No Fill - Dark Blue */
-  .checkbox-v7 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v7 input {
-    display: none;
-  }
-
-  .checkbox-v7 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-    background: transparent;
-  }
-
-  .checkbox-v7 input:checked + .checkmark {
-    border-color: #1e3a8a;
-    background: transparent;
-  }
-
-  .checkbox-v7 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid #1e3a8a;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v7 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 8: Rounded No Fill No Border - Dark Blue */
-  .checkbox-v8 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v8 input {
-    display: none;
-  }
-
-  .checkbox-v8 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-    background: transparent;
-  }
-
-  .checkbox-v8 input:checked + .checkmark {
-    border-color: #d1d5db;
-    background: transparent;
-  }
-
-  .checkbox-v8 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: solid #1e3a8a;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v8 .label-text {
-    font-size: 14px;
-    color: #374151;
-  }
-
-  /* Variant 9: Rounded No Fill Thin Border - Dark Blue */
-  .checkbox-v9 {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-v9 input {
-    display: none;
-  }
-
-  .checkbox-v9 .checkmark {
-    width: 18px;
-    height: 18px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    margin-right: 8px;
-    position: relative;
-    transition: all 0.2s ease;
-    background: transparent;
-  }
-
-  .checkbox-v9 input:checked + .checkmark {
-    border-color: #1e3a8a;
-    background: transparent;
-  }
-
-  .checkbox-v9 input:checked + .checkmark::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 3px;
-    width: 4px;
-    height: 8px;
-    border: solid #1e3a8a;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  .checkbox-v9 .label-text {
-    font-size: 14px;
-    color: #374151;
   }
 
   @media (max-width: 768px) {
@@ -1004,6 +352,11 @@
       padding: 0 1rem;
     }
 
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+
     .action-buttons,
     .api-buttons {
       flex-direction: column;
@@ -1011,11 +364,7 @@
 
     .btn {
       width: 100%;
-    }
-
-    .checkbox-group {
-      flex-direction: column;
-      gap: 1rem;
+      justify-content: center;
     }
   }
 </style>

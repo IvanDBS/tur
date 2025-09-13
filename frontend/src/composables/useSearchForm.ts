@@ -561,10 +561,25 @@ export const useSearchForm = () => {
         logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
         return hotels
       })(),
-      meals: selectedFilters.value.meals.length > 0 ? [...new Set(selectedFilters.value.meals)].map(mealId => {
-        const meal = searchData.meals.value.find(m => m.id === mealId)
-        return meal?.name || meal?.label || mealId.toString()
-      }) : searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index), // Убираем дубликаты
+      meals: (() => {
+        // Если выбраны meals, обрабатываем их
+        if (selectedFilters.value.meals.length > 0) {
+          // Если выбран ID=1 ("Любой"), возвращаем все доступные meals
+          if (selectedFilters.value.meals.includes(1)) {
+            return searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean)
+          }
+          // Иначе возвращаем выбранные meals (исключая ID=1)
+          return selectedFilters.value.meals
+            .filter(id => id !== 1)
+            .map(mealId => {
+              const meal = searchData.meals.value.find(m => m.id === mealId)
+              return meal?.name || meal?.label || mealId.toString()
+            })
+            .filter(Boolean)
+        }
+        // Если ничего не выбрано, возвращаем все доступные meals
+        return searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index) // Убираем дубликаты
+      })(),
       options: selectedFilters.value.options.length > 0 ? selectedFilters.value.options.map(optionId => {
         return optionId.toString()
       }) : undefined

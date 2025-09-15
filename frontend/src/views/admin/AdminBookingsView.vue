@@ -1008,6 +1008,7 @@ onMounted(() => {
   width: 60px;
   max-width: 60px;
   min-width: 60px;
+  text-align: center;
 }
 
 .table th:nth-child(4),
@@ -1064,6 +1065,7 @@ onMounted(() => {
   width: 60px;
   max-width: 60px;
   min-width: 60px;
+  text-align: center;
 }
 
 .user-info {

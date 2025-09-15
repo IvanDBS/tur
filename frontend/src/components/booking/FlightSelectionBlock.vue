@@ -49,9 +49,9 @@
                     </div>
                     <div class="flight-info-line">
                       <span class="label">Наличие:</span>
-                      <span class="value availability-status">
-                        <span class="availability-indicator"></span>
-                        Под запрос
+                      <span class="value availability-status" :class="getAvailabilityClass(flightPair.outbound)">
+                        {{ getAvailabilityText(flightPair.outbound) }}
+                        <span v-if="getAvailabilityClass(flightPair.outbound) === 'available'" class="ticket-checkmark"></span>
                       </span>
                     </div>
                   </div>
@@ -103,9 +103,9 @@
                     </div>
                     <div class="flight-info-line">
                       <span class="label">Наличие:</span>
-                      <span class="value availability-status">
-                        <span class="availability-indicator"></span>
-                        Под запрос
+                      <span class="value availability-status" :class="getAvailabilityClass(flightPair.inbound)">
+                        {{ getAvailabilityText(flightPair.inbound) }}
+                        <span v-if="getAvailabilityClass(flightPair.inbound) === 'available'" class="ticket-checkmark"></span>
                       </span>
                     </div>
                   </div>
@@ -252,6 +252,61 @@ const selectFlightPair = (flightPair: any) => {
   }
   emit('update:selectedFlight', newSelectedFlight)
 }
+
+// Get availability text based on flight data
+const getAvailabilityText = (flight: any) => {
+  // Check if we have tickets data from the flight pair
+  const flightPair = flightPairs.value.find(pair => 
+    pair.outbound.id === flight.id || pair.inbound.id === flight.id
+  )
+  
+  // Get the original flight option to access on_request and has_tickets
+  const flightOption = flightOptions.value.find(option => 
+    option.from.id === flight.id || option.to.id === flight.id
+  )
+  
+  if (flightOption) {
+    if (flightOption.on_request === 'y') {
+      return 'Под запрос'
+    } else if (flightOption.has_tickets) {
+      return 'Есть билеты'
+    } else {
+      return 'Нет билетов'
+    }
+  }
+  
+  // Fallback to flight's own tickets data
+  if (flight.tickets !== null && flight.tickets > 0) {
+    return `Доступно (${flight.tickets} билетов)`
+  }
+  
+  return 'Под запрос'
+}
+
+// Get availability CSS class
+const getAvailabilityClass = (flight: any) => {
+  // Get the original flight option to access on_request and has_tickets
+  const flightOption = flightOptions.value.find(option => 
+    option.from.id === flight.id || option.to.id === flight.id
+  )
+  
+  if (flightOption) {
+    if (flightOption.on_request === 'y') {
+      return 'on-request'
+    } else if (flightOption.has_tickets) {
+      return 'available'
+    } else {
+      return 'unavailable'
+    }
+  }
+  
+  if (flight.tickets !== null && flight.tickets > 0) {
+    return 'available'
+  }
+  
+  return 'on-request'
+}
+
 </script>
 
 <style scoped>
@@ -456,36 +511,35 @@ const selectFlightPair = (flightPair: any) => {
 }
 
 .availability-status {
-  color: var(--color-warning);
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.availability-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #ff8c00;
-  opacity: 0.6;
-  animation: pulse 2s infinite;
+.availability-status.on-request {
+  color: var(--color-warning);
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
+.availability-status.available {
+  color: var(--color-secondary);
 }
+
+.availability-status.unavailable {
+  color: var(--color-error);
+}
+
+.ticket-checkmark {
+  width: 4px;
+  height: 8px;
+  border: solid #22c55e;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  display: inline-block;
+  position: relative;
+  top: -1px;
+}
+
 
 .flight-duration {
   font-size: 0.75rem;

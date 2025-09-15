@@ -235,7 +235,6 @@ export default {
     bookingNotes: 'Rezervasyon notları',
     comment: 'Yorum',
     enterComment: 'Yorumunuzu girin',
-    baseCost: 'Temel maliyet',
     accommodationMeals: 'HER ŞEY DAHİL sisteminde konaklama + yemekler',
     insuranceCost: 'Sigorta',
     transferCost: 'Transfer',
@@ -243,21 +242,7 @@ export default {
     accommodationSelection: 'Konaklama seçeneği seçimi',
     roomTypeLabel: 'Oda tipi',
     mealsLabel: 'Yemekler',
-    accommodationLabel: 'Konaklama',
-    flightSelection: 'Uçuş seçimi',
-    additionalServices: 'Ek hizmetler',
-    insurance: 'Sigorta',
-    included: 'dahil',
-    outbound: 'Gidiş',
-    inbound: 'Dönüş',
-    from: 'Nereden:',
-    to: 'Nereye:',
-    departureTime: 'Kalkış:',
-    arrivalTime: 'Varış:',
-    flight: 'Uçuş:',
-    availability: 'Müsaitlik:',
-    travelTime: 'Seyahat süresi:',
-    onRequest: 'Talep üzerine'
+    accommodationLabel: 'Konaklama'
   },
   daysOfWeek: {
     sun: 'Paz',
@@ -315,7 +300,6 @@ export default {
     insuranceDecline: 'Sigortayı reddet'
   },
   bookingSummary: {
-    baseCost: 'Temel maliyet',
     insurance: 'Sigorta',
     transfer: 'Transfer',
     covidInsurance: 'COVID-19 sigortası',
@@ -383,7 +367,7 @@ export default {
     tourists: 'Turistler',
     payment: 'Ödeme',
     amount: 'Tutar',
-    paymentStatus: 'Ödeme Durumu',
+    paymentStatusLabel: 'Ödeme Durumu',
     creationDate: 'Oluşturma Tarihi',
     confirmationDate: 'Onay Tarihi',
     print: 'Yazdır',

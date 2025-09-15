@@ -235,7 +235,6 @@ export default {
     bookingNotes: 'Примітки до бронювання',
     comment: 'Коментар',
     enterComment: 'Введіть коментар',
-    baseCost: 'Базова вартість',
     accommodationMeals: 'проживання + харчування за системою ALL INCLUSIVE',
     insuranceCost: 'Страхування',
     transferCost: 'Трансфер',
@@ -243,21 +242,7 @@ export default {
     accommodationSelection: 'Вибір варіанту проживання',
     roomTypeLabel: 'Тип номера',
     mealsLabel: 'Харчування',
-    accommodationLabel: 'Розміщення',
-    flightSelection: 'Вибір авіаперельоту',
-    additionalServices: 'Додаткові послуги',
-    insurance: 'Страхування',
-    included: 'включено',
-    outbound: 'Туди',
-    inbound: 'Назад',
-    from: 'З:',
-    to: 'В:',
-    departureTime: 'Виліт:',
-    arrivalTime: 'Приліт:',
-    flight: 'Рейс:',
-    availability: 'Наявність:',
-    travelTime: 'Час у дорозі:',
-    onRequest: 'За запитом'
+    accommodationLabel: 'Розміщення'
   },
   daysOfWeek: {
     sun: 'Нд',
@@ -315,7 +300,6 @@ export default {
     insuranceDecline: 'Відмова від страхування'
   },
   bookingSummary: {
-    baseCost: 'Базова вартість',
     insurance: 'Страхування',
     transfer: 'Трансфер',
     covidInsurance: 'Страхування COVID-19',
@@ -383,7 +367,7 @@ export default {
     tourists: 'Туристи',
     payment: 'Оплата',
     amount: 'Сума',
-    paymentStatus: 'Статус оплати',
+    paymentStatusLabel: 'Статус оплати',
     creationDate: 'Дата створення',
     confirmationDate: 'Дата підтвердження',
     print: 'Друкувати',

@@ -235,7 +235,6 @@ export default {
     bookingNotes: 'Примечания к бронированию',
     comment: 'Комментарий',
     enterComment: 'Введите комментарий',
-    baseCost: 'Базовая стоимость',
     accommodationMeals: 'проживание + питание по системе ALL INCLUSIVE',
     insuranceCost: 'Страховка',
     transferCost: 'Трансфер',
@@ -243,21 +242,7 @@ export default {
     accommodationSelection: 'Выбор варианта проживания',
     roomTypeLabel: 'Тип номера',
     mealsLabel: 'Питание',
-    accommodationLabel: 'Размещение',
-    flightSelection: 'Выбор авиаперелета',
-    additionalServices: 'Дополнительные услуги',
-    insurance: 'Страховка',
-    included: 'включен',
-    outbound: 'Туда',
-    inbound: 'Обратно',
-    from: 'Из:',
-    to: 'В:',
-    departureTime: 'Вылет:',
-    arrivalTime: 'Прилет:',
-    flight: 'Рейс:',
-    availability: 'Наличие:',
-    travelTime: 'Время в пути:',
-    onRequest: 'Под запрос'
+    accommodationLabel: 'Размещение'
   },
   daysOfWeek: {
     sun: 'Вс',
@@ -315,7 +300,6 @@ export default {
     insuranceDecline: 'Отказ от страховки'
   },
   bookingSummary: {
-    baseCost: 'Базовая стоимость',
     insurance: 'Страховка',
     transfer: 'Трансфер',
     covidInsurance: 'COVID-19 страховка',
@@ -383,7 +367,7 @@ export default {
     tourists: 'Туристы',
     payment: 'Оплата',
     amount: 'Сумма',
-    paymentStatus: 'Статус оплаты',
+    paymentStatusLabel: 'Статус оплаты',
     creationDate: 'Дата создания',
     confirmationDate: 'Дата подтверждения',
     print: 'Распечатать',

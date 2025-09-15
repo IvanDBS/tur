@@ -146,6 +146,10 @@ export const useCalendarHints = () => {
       availableNights.value = nights
       
       logger.info(`Loaded ${nights.length} available nights:`, nights)
+      logger.info('Available nights options will be:', nights.map(n => ({
+        value: n,
+        label: `${n} ${n === 1 ? 'ночь' : n < 5 ? 'ночи' : 'ночей'}`
+      })))
       
       return nights
     } catch (err) {

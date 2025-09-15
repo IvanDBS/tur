@@ -439,15 +439,35 @@ export const useObsApi = () => {
       queryParams.append('city_from', params.city_from.toString())
       queryParams.append('city_to', params.city_to)
       
-      const response = await apiClient.get<ApiResponse<{ available_nights: number[] }>>(`/search/available_nights?${queryParams.toString()}`)
+      const url = `/search/available_nights?${queryParams.toString()}`
+      logger.info('🌙 Fetching available nights from:', url)
+      logger.info('🌙 Request params:', params)
       
-      if (response.success) {
-        return response.data.available_nights
+      const response = await apiClient.get<{ success: boolean; message: string; data: number[] | { available_nights: number[] } }>(url)
+      
+      logger.info('🌙 Raw API response:', response)
+      
+      if (response && response.success) {
+        logger.info('🌙 Response data field:', response.data)
+        
+        if (Array.isArray(response.data)) {
+          logger.info(`🌙 Successfully loaded ${response.data.length} available nights:`, response.data)
+          return response.data
+        } else if (response.data && Array.isArray(response.data.available_nights)) {
+          // Fallback for different response format
+          logger.info(`🌙 Successfully loaded ${response.data.available_nights.length} available nights from nested field:`, response.data.available_nights)
+          return response.data.available_nights
+        } else {
+          logger.error('🌙 Data field is not an array:', response.data)
+          throw new Error('Data field is not an array')
+        }
       } else {
-        throw new Error(response.message)
+        logger.error('🌙 Invalid response format:', response)
+        throw new Error('Invalid response format')
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch available nights'
+      logger.error('🌙 Error fetching available nights:', err)
       setError(message)
       return []
     } finally {

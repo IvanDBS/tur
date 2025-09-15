@@ -1,7 +1,7 @@
 <template>
   <div class="flight-selection-block">
     <div class="block-header">
-      <h2 class="block-title">Выбор авиаперелета</h2>
+      <h2 class="block-title">{{ $t('searchResults.flightSelectionTitle') }}</h2>
     </div>
 
     <div class="flight-content">
@@ -29,26 +29,32 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
                     </svg>
-                    <span>Туда</span>
+                    <span>{{ $t('searchResults.outbound') }}</span>
+                    <img 
+                      v-if="getAirlineLogo(flightPair.outbound.airline)" 
+                      :src="getAirlineLogo(flightPair.outbound.airline)" 
+                      :alt="flightPair.outbound.airline?.airline || 'Airline'" 
+                      class="airline-logo" 
+                    />
                   </div>
                 </div>
                 
                 <div class="flight-sections">
                   <div class="flight-section departure">
                     <div class="flight-info-line">
-                      <span class="label">Из:</span>
+                      <span class="label">{{ $t('searchResults.fromLabel') }}</span>
                       <span class="value">{{ flightPair.outbound.airports.from.name }} ({{ flightPair.outbound.airports.from.prefix }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Вылет:</span>
+                      <span class="label">{{ $t('searchResults.departureLabel') }}</span>
                       <span class="value">{{ flightPair.outbound.departure.time }} {{ formatDateWithDay(flightPair.outbound.departure.date) }}</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Рейс:</span>
+                      <span class="label">{{ $t('searchResults.flightLabel') }}</span>
                       <span class="value">{{ flightPair.outbound.airline.iata_code }} {{ flightPair.outbound.name }} ({{ flightPair.outbound.airline.airline }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Наличие:</span>
+                      <span class="label">{{ $t('searchResults.availabilityLabel') }}</span>
                       <span class="value availability-status" :class="getAvailabilityClass(flightPair.outbound)">
                         {{ getAvailabilityText(flightPair.outbound) }}
                         <span v-if="getAvailabilityClass(flightPair.outbound) === 'available'" class="ticket-checkmark"></span>
@@ -58,15 +64,15 @@
                   
                   <div class="flight-section arrival">
                     <div class="flight-info-line">
-                      <span class="label">В:</span>
+                      <span class="label">{{ $t('searchResults.toLabel') }}</span>
                       <span class="value">{{ flightPair.outbound.airports.to.name }} ({{ flightPair.outbound.airports.to.prefix }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Прилет:</span>
+                      <span class="label">{{ $t('searchResults.arrivalLabel') }}</span>
                       <span class="value">{{ flightPair.outbound.arrival.time }} {{ formatDateWithDay(flightPair.outbound.arrival.date) }}</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Время в пути:</span>
+                      <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
                       <span class="value">{{ calculateDuration(flightPair.outbound.departure, flightPair.outbound.arrival) }}</span>
                     </div>
                   </div>
@@ -83,26 +89,32 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
                     </svg>
-                    <span>Обратно</span>
+                    <span>{{ $t('searchResults.inbound') }}</span>
+                    <img 
+                      v-if="getAirlineLogo(flightPair.inbound.airline)" 
+                      :src="getAirlineLogo(flightPair.inbound.airline)" 
+                      :alt="flightPair.inbound.airline?.airline || 'Airline'" 
+                      class="airline-logo" 
+                    />
                   </div>
                 </div>
                 
                 <div class="flight-sections">
                   <div class="flight-section departure">
                     <div class="flight-info-line">
-                      <span class="label">Из:</span>
+                      <span class="label">{{ $t('searchResults.fromLabel') }}</span>
                       <span class="value">{{ flightPair.inbound.airports.from.name }} ({{ flightPair.inbound.airports.from.prefix }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Вылет:</span>
+                      <span class="label">{{ $t('searchResults.departureLabel') }}</span>
                       <span class="value">{{ flightPair.inbound.departure.time }} {{ formatDateWithDay(flightPair.inbound.departure.date) }}</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Рейс:</span>
+                      <span class="label">{{ $t('searchResults.flightLabel') }}</span>
                       <span class="value">{{ flightPair.inbound.airline.iata_code }} {{ flightPair.inbound.name }} ({{ flightPair.inbound.airline.airline }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Наличие:</span>
+                      <span class="label">{{ $t('searchResults.availabilityLabel') }}</span>
                       <span class="value availability-status" :class="getAvailabilityClass(flightPair.inbound)">
                         {{ getAvailabilityText(flightPair.inbound) }}
                         <span v-if="getAvailabilityClass(flightPair.inbound) === 'available'" class="ticket-checkmark"></span>
@@ -112,15 +124,15 @@
                   
                   <div class="flight-section arrival">
                     <div class="flight-info-line">
-                      <span class="label">В:</span>
+                      <span class="label">{{ $t('searchResults.toLabel') }}</span>
                       <span class="value">{{ flightPair.inbound.airports.to.name }} ({{ flightPair.inbound.airports.to.prefix }})</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Прилет:</span>
+                      <span class="label">{{ $t('searchResults.arrivalLabel') }}</span>
                       <span class="value">{{ flightPair.inbound.arrival.time }} {{ formatDateWithDay(flightPair.inbound.arrival.date) }}</span>
                     </div>
                     <div class="flight-info-line">
-                      <span class="label">Время в пути:</span>
+                      <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
                       <span class="value">{{ calculateDuration(flightPair.inbound.departure, flightPair.inbound.arrival) }}</span>
                     </div>
                   </div>
@@ -140,6 +152,7 @@ import { computed } from 'vue'
 import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice } from '../../types/search'
 import type { SelectedFlight, FlightSegment, SelectedRoom } from '../../types/booking'
 import { formatDateWithDay, calculateDuration } from '../../utils/dateUtils'
+import { useI18n } from '../../composables/useI18n'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
@@ -151,6 +164,8 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:selectedFlight': [flight: SelectedFlight]
 }>()
+
+const { t: $t } = useI18n()
 
 // Computed
 const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
@@ -241,6 +256,7 @@ const selectedFlightPair = computed(() => {
   return flightPairs.value.find(pair => pair.id === pairId) || null
 })
 
+
 // Methods
 // Функции formatDateWithDay и calculateDuration теперь импортируются из dateUtils
 
@@ -267,20 +283,20 @@ const getAvailabilityText = (flight: any) => {
   
   if (flightOption) {
     if (flightOption.on_request === 'y') {
-      return 'Под запрос'
+      return $t('searchResults.onRequest')
     } else if (flightOption.has_tickets) {
-      return 'Есть билеты'
+      return $t('hotelCard.availability')
     } else {
-      return 'Нет билетов'
+      return $t('hotelCard.notAvailable')
     }
   }
   
   // Fallback to flight's own tickets data
   if (flight.tickets !== null && flight.tickets > 0) {
-    return `Доступно (${flight.tickets} билетов)`
+    return $t('hotelCard.availability')
   }
   
-  return 'Под запрос'
+  return $t('searchResults.onRequest')
 }
 
 // Get availability CSS class
@@ -305,6 +321,58 @@ const getAvailabilityClass = (flight: any) => {
   }
   
   return 'on-request'
+}
+
+// Get airline logo for current airline
+const getAirlineLogo = (airline: any): string | undefined => {
+  if (!airline) return undefined
+  
+  // Check by airline name (case insensitive)
+  const airlineName = airline.airline?.toLowerCase() || ''
+  const iataCode = airline.iata_code?.toLowerCase() || ''
+  
+  // FlyOne
+  if (airlineName.includes('flyone') || 
+      airlineName.includes('fly one') || 
+      iataCode === '5f' || 
+      airlineName.includes('flyone airline')) {
+    return '/assets/icons/airlines/flyone.svg'
+  }
+  
+  // MGA (Mavi Gök Airlines)
+  if (airlineName.includes('mavi gök') || 
+      airlineName.includes('mavi gok') || 
+      airlineName.includes('mga') || 
+      iataCode === '4m' || 
+      airlineName.includes('mavi')) {
+    return '/assets/icons/airlines/mga.svg'
+  }
+  
+  // HiSky Airlines
+  if (airlineName.includes('hisky') || 
+      airlineName.includes('hi sky') || 
+      iataCode === 'h7' || 
+      airlineName.includes('hi-sky')) {
+    return '/assets/icons/airlines/hisky.png'
+  }
+  
+  // Turkish Airlines
+  if (airlineName.includes('turkish') || 
+      airlineName.includes('turkish airlines') || 
+      iataCode === 'tk' || 
+      airlineName.includes('thy')) {
+    return '/assets/icons/airlines/turkish.svg'
+  }
+  
+  // SunExpress
+  if (airlineName.includes('sunexpress') || 
+      airlineName.includes('sun express') || 
+      iataCode === 'xq' || 
+      airlineName.includes('sun-express')) {
+    return '/assets/icons/airlines/sunexpress.svg'
+  }
+  
+  return undefined
 }
 
 </script>
@@ -426,6 +494,14 @@ const getAvailabilityClass = (flight: any) => {
   font-weight: 500;
   text-transform: none;
   letter-spacing: normal;
+}
+
+.airline-logo {
+  height: 20px;
+  width: auto;
+  max-width: 80px;
+  margin-left: 0.75rem;
+  object-fit: contain;
 }
 
 .flight-sections {

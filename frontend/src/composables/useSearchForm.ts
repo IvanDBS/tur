@@ -226,7 +226,7 @@ export const useSearchForm = () => {
   })
 
   // Автоматическое заполнение полей значениями по умолчанию после выбора даты заезда
-  watch(() => searchForm.value.checkInDate, (newDate) => {
+  watch(() => searchForm.value.checkInDate, async (newDate) => {
     if (newDate) {
       // Сбрасываем выбранные поля при смене даты для пошагового заполнения
       searchForm.value.nights = null
@@ -236,9 +236,32 @@ export const useSearchForm = () => {
       searchForm.value.childrenAges = []
       
       // Устанавливаем "Период заезда до" равным "Период заезда от" по умолчанию
-      // Это означает, что можно заселиться только в выбранную дату
+      // Пользователь может изменить это вручную, если нужно
       searchForm.value.checkOutDate = new Date(newDate)
-      logger.info('🔄 Set checkOutDate (max check-in date) equal to checkInDate (min check-in date):', newDate)
+      logger.info('🔄 Set checkOutDate (max check-in period) equal to checkInDate:', newDate)
+      
+      // Загружаем доступные ночи для выбранной даты и направления
+      if (searchForm.value.departureCity && searchForm.value.arrivalCity && searchForm.value.package && !isPackageWithoutFlight(searchForm.value.package)) {
+        try {
+          const formatDate = (date: Date) => {
+            const year = date.getFullYear()
+            const month = (date.getMonth() + 1).toString().padStart(2, '0')
+            const day = date.getDate().toString().padStart(2, '0')
+            return `${year}-${month}-${day}`
+          }
+          
+          await calendarHints.loadAvailableNights({
+            date_from: formatDate(newDate),
+            date_to: formatDate(newDate),
+            city_from: searchForm.value.departureCity.id,
+            city_to: searchForm.value.arrivalCity.id.toString()
+          })
+          
+          logger.info('✅ Available nights loaded for date:', newDate)
+        } catch (err) {
+          logger.warn('Failed to load available nights for date:', err)
+        }
+      }
     }
   })
 
@@ -258,16 +281,22 @@ export const useSearchForm = () => {
     )
   })
   
-  // Динамические опции ночей на основе calendar hints
+  // Динамические опции ночей на основе доступных ночей из API
   const dynamicNightsOptions = computed(() => {
     // Для пакетов без перелета используем стандартные опции
     if (isPackageWithoutFlight(searchForm.value.package)) {
       return searchData.nightsOptions.value
     }
     
-    // Если есть доступные ночи из calendar hints, используем их
+    // Если есть доступные ночи из API, создаем опции на их основе
     if (calendarHints.availableNights.value.length > 0) {
-      return calendarHints.availableNightsOptions.value
+      const availableNightsOptions = calendarHints.availableNights.value.map(nights => ({
+        value: nights,
+        label: `${nights} ${nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей'}`
+      }))
+      
+      logger.info('Using available nights from API:', availableNightsOptions)
+      return availableNightsOptions
     }
     
     // Иначе используем стандартные опции
@@ -403,6 +432,24 @@ export const useSearchForm = () => {
               city_to: searchForm.value.arrivalCity.id.toString()
             })
             logger.info('Calendar hints loaded successfully for flight package')
+            
+            // Загружаем доступные ночи для выбранной даты (если есть)
+            if (searchForm.value.checkInDate) {
+              const formatDate = (date: Date) => {
+                const year = date.getFullYear()
+                const month = (date.getMonth() + 1).toString().padStart(2, '0')
+                const day = date.getDate().toString().padStart(2, '0')
+                return `${year}-${month}-${day}`
+              }
+              
+              await calendarHints.loadAvailableNights({
+                date_from: formatDate(searchForm.value.checkInDate),
+                date_to: formatDate(searchForm.value.checkInDate),
+                city_from: searchForm.value.departureCity.id,
+                city_to: searchForm.value.arrivalCity.id.toString()
+              })
+              logger.info('Available nights loaded for package change')
+            }
           } catch (err) {
             logger.warn('Failed to load calendar hints:', err)
           }
@@ -562,13 +609,12 @@ export const useSearchForm = () => {
       })(),
       meals: selectedFilters.value.meals.length > 0 ? [...new Set(selectedFilters.value.meals)].map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
-        // Используем переведенные названия meals (API принимает переведенные названия)
         const originalMealName = meal?.name || meal?.label || mealId.toString()
         return originalMealName
       }) : searchData.meals.value.map(meal => {
         const originalMealName = meal.name || meal.label || meal.id.toString()
         return originalMealName
-      }).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index) // Убираем дубликаты
+      }).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index)
     }
     
     logger.info('🔍 Search parameters prepared:', {
@@ -581,9 +627,9 @@ export const useSearchForm = () => {
       nights_from: searchParams.nights_from,
       nights_to: searchParams.nights_to,
       adults: searchParams.adults,
+      meals: searchParams.meals,
       selected_hotels_count: searchParams.selected_hotels?.length || 0,
-      selected_hotels_first_5: searchParams.selected_hotels?.slice(0, 5) || [],
-      meals: searchParams.meals
+      selected_hotels_first_5: searchParams.selected_hotels?.slice(0, 5) || []
     })
     
     // Детальное логирование для отладки

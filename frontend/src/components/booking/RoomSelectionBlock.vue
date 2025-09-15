@@ -1,7 +1,7 @@
 <template>
   <div class="room-selection-block">
     <div class="block-header">
-      <h2 class="block-title">Выбор варианта проживания</h2>
+      <h2 class="block-title">{{ $t('searchResults.accommodationSelectionTitle') }}</h2>
     </div>
 
     <div class="room-content">
@@ -25,17 +25,17 @@
             <div class="room-details">
               <div class="room-info-columns">
                 <div class="room-column">
-                  <div class="column-label">Тип номера</div>
+                  <div class="column-label">{{ $t('searchResults.roomTypeBooking') }}</div>
                   <div class="room-name">{{ roomOption.room.name }}</div>
                 </div>
                 <div class="room-column">
-                  <div class="column-label">Питание</div>
+                  <div class="column-label">{{ $t('searchResults.mealsBooking') }}</div>
                   <div class="info-item">
                     {{ roomOption.meal.full_name }}
                   </div>
                 </div>
                 <div class="room-column">
-                  <div class="column-label">Размещение</div>
+                  <div class="column-label">{{ $t('searchResults.accommodationBooking') }}</div>
                   <div class="info-item">{{ roomOption.placement.name }}</div>
                 </div>
                 <div class="room-column price-column">

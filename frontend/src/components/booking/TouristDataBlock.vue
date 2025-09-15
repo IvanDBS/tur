@@ -1,15 +1,15 @@
 <template>
   <div class="tourist-data-block">
     <div class="block-header">
-      <h2 class="block-title">Информация о туристах</h2>
+      <h2 class="block-title">{{ $t('searchResults.touristInfoTitle') }}</h2>
       <div class="warning-notice">
         <div class="warning-icon">⚠️</div>
         <div class="warning-text">
-          <strong>Внимание!</strong> Туристы со сроком действия паспорта менее 6 месяцев будут сняты с рейсов!
+          <strong>{{ $t('searchResults.passportWarning') }}</strong>
         </div>
       </div>
       <div class="required-notice">
-        Поля, отмеченные звездочкой (*), обязательны для заполнения.
+        {{ $t('searchResults.requiredFields') }}
       </div>
     </div>
 
@@ -27,12 +27,12 @@
           <!-- Title -->
           <div class="form-field">
             <label class="field-label">
-              Обращение *
+              {{ $t('searchResults.title') }} *
             </label>
             <Multiselect
               :model-value="tourist.title"
               :options="titleOptions"
-              placeholder="Выберите обращение"
+              :placeholder="$t('searchResults.selectTitle')"
               :searchable="false"
               :can-clear="false"
               :can-deselect="false"
@@ -44,12 +44,12 @@
           <!-- Last Name -->
           <div class="form-field">
             <label class="field-label">
-              Фамилия *
+              {{ $t('searchResults.lastName') }} *
             </label>
           <input
             :value="tourist.lastName"
             @input="updateTourist(tourist.id, 'lastName', $event.target.value)"
-            placeholder="Введите фамилию"
+            :placeholder="$t('searchResults.enterLastName')"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'lastName') }"
           />
@@ -58,12 +58,12 @@
           <!-- First Name -->
           <div class="form-field">
             <label class="field-label">
-              Имя *
+              {{ $t('searchResults.firstName') }} *
             </label>
           <input
             :value="tourist.firstName"
             @input="updateTourist(tourist.id, 'firstName', $event.target.value)"
-            placeholder="Введите имя"
+            :placeholder="$t('searchResults.enterFirstName')"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'firstName') }"
           />
@@ -72,13 +72,13 @@
           <!-- Birth Date -->
           <div class="form-field">
             <label class="field-label">
-              Дата рождения *
+              {{ $t('searchResults.birthDate') }} *
             </label>
           <input
             :value="tourist.birthDate"
             @input="updateTourist(tourist.id, 'birthDate', $event.target.value)"
             type="date"
-            placeholder="дд.мм.гггг"
+            placeholder="dd.mm.yyyy"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'birthDate') }"
           />
@@ -87,12 +87,12 @@
           <!-- Passport Number -->
           <div class="form-field">
             <label class="field-label">
-              Номер паспорта *
+              {{ $t('searchResults.passportNumber') }} *
             </label>
           <input
             :value="tourist.passportNumber"
             @input="updateTourist(tourist.id, 'passportNumber', $event.target.value)"
-            placeholder="Введите номер паспорта"
+            :placeholder="$t('searchResults.enterPassportNumber')"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'passportNumber') }"
           />
@@ -101,13 +101,13 @@
           <!-- Passport Expiry -->
           <div class="form-field">
             <label class="field-label">
-              Действителен до *
+              {{ $t('searchResults.validUntil') }} *
             </label>
           <input
             :value="tourist.passportExpiry"
             @input="updateTourist(tourist.id, 'passportExpiry', $event.target.value)"
             type="date"
-            placeholder="дд.мм.гггг"
+            placeholder="dd.mm.yyyy"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'passportExpiry') }"
           />
@@ -116,12 +116,12 @@
           <!-- Nationality -->
           <div class="form-field">
             <label class="field-label">
-              Гражданство *
+              {{ $t('searchResults.citizenship') }} *
             </label>
             <Multiselect
               :model-value="tourist.nationality"
               :options="nationalityOptions"
-              placeholder="Выберите гражданство"
+              :placeholder="$t('touristInfo.selectCitizenship')"
               :searchable="true"
               :can-clear="false"
               :can-deselect="false"
@@ -133,12 +133,12 @@
           <!-- Fiscal Code -->
           <div class="form-field">
             <label class="field-label">
-              Фискальный код
+              {{ $t('searchResults.fiscalCode') }}
             </label>
           <input
             :value="tourist.fiscalCode"
             @input="updateTourist(tourist.id, 'fiscalCode', $event.target.value)"
-            placeholder="Введите фискальный код"
+            :placeholder="$t('searchResults.enterFiscalCode')"
             class="form-input"
           />
           </div>
@@ -148,7 +148,7 @@
         <div v-if="getPassportValidityWarning(tourist)" class="passport-warning">
           <div class="warning-icon">⚠️</div>
           <div class="warning-text">
-            Срок действия паспорта менее 6 месяцев!
+            {{ $t('touristInfo.passportValidityWarning') }}
           </div>
         </div>
       </div>
@@ -160,6 +160,7 @@
 import Multiselect from '@vueform/multiselect'
 import '@vueform/multiselect/themes/default.css'
 import type { TouristData } from '../../types/booking'
+import { useI18n } from '../../composables/useI18n'
 
 interface Props {
   tourists: TouristData[]
@@ -170,6 +171,8 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:tourist': [touristId: string, field: keyof TouristData, value: string | number | boolean]
 }>()
+
+const { t: $t } = useI18n()
 
 // Options
 const titleOptions = [
@@ -184,12 +187,12 @@ const nationalityOptions = [
   { value: 'UKRAINE', label: 'UKRAINE' },
   { value: 'RUSSIA', label: 'RUSSIA' },
   { value: 'BELARUS', label: 'BELARUS' },
-  { value: 'OTHER', label: 'Другое' }
+  { value: 'OTHER', label: $t('touristInfo.other') }
 ]
 
 // Methods
 const getTouristTitle = (index: number) => {
-  return `Турист ${index + 1}`
+  return `${$t('searchResults.tourist')} ${index + 1}`
 }
 
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {

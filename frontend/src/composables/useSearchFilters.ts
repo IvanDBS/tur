@@ -13,9 +13,10 @@ export const useSearchFilters = () => {
     
     // Если пользователь выбрал отели вручную, используем их
     if (selectedFilters.value.hotels.length > 0) {
-      // Если выбран ID=1 (все отели), возвращаем все доступные отели
+      // Если выбран ID=1 (все отели), возвращаем пустой массив (API сам выберет отели)
       if (selectedFilters.value.hotels.includes(1)) {
-        return searchData.hotels.value.map((hotel) => Number(hotel.id))
+        logger.debug(`🏨 "Any hotel" selected, returning empty array for API to handle`)
+        return []
       }
       // Иначе возвращаем выбранные отели (исключая ID=1)
       return selectedFilters.value.hotels
@@ -23,10 +24,9 @@ export const useSearchFilters = () => {
         .map(id => Number(id))
     }
     
-    // Если ничего не выбрано, возвращаем все доступные отели
-    const allHotels = searchData.hotels.value.map((hotel) => Number(hotel.id))
-    logger.debug(`🏨 Returning all hotels for search: ${allHotels.length} hotels`)
-    return allHotels
+    // Если ничего не выбрано, возвращаем пустой массив (API сам выберет отели)
+    logger.debug(`🏨 No hotels selected, returning empty array for API to handle`)
+    return []
   }
 
   // Сброс фильтров

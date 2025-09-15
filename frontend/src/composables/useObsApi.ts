@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { apiClient } from '@/utils/api'
 import { logger } from '@/utils/logger'
-import { translateCountries, translateDepartureCities, translateArrivalCities, translatePackages, sortCountriesByPopularity } from '@/utils/translations'
+import { translateCountries, translateDepartureCities, translateArrivalCities, translatePackages } from '@/utils/translations'
 import { useI18n } from './useI18n'
 import type { 
   DepartureCity, 
@@ -480,13 +480,13 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      logger.debug('performSearch called with params:', searchParams)
+      logger.info('🔍 performSearch called with params:', searchParams)
       
       // Separate search params from pagination params
       const { page, per_page, ...searchParamsOnly } = searchParams
       
       const requestBody = { search: searchParamsOnly }
-      logger.debug('Search request body prepared:', requestBody)
+      logger.info('🔍 Search request body prepared:', requestBody)
       
       // Add pagination parameters as query params
       const queryParams = new URLSearchParams()

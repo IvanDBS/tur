@@ -9,7 +9,7 @@ import { useSearchState } from './useSearchState'
 import { logger } from '../utils/logger'
 import { getAirportIdByPackageName } from '../constants/airports'
 import { debounce } from '../utils/debounce'
-import type { GroupedSearchResult } from '../types/search'
+import type { GroupedSearchResult, Package } from '../types/search'
 
 // Интерфейс для результатов поиска от OBS API
 interface ObsSearchResult {
@@ -523,13 +523,13 @@ export const useSearchForm = () => {
     
     logger.info('✅ Validation passed, proceeding with search...')
 
-    // Форматируем даты в формат DD.MM.YYYY для API (как требует документация)
+    // Форматируем даты в формат YYYY-MM-DD для API (как требует документация)
     const formatDate = (date: Date | null) => {
       if (!date) return ''
-      const day = date.getDate().toString().padStart(2, '0')
-      const month = (date.getMonth() + 1).toString().padStart(2, '0')
       const year = date.getFullYear()
-      return `${day}.${month}.${year}`
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const day = date.getDate().toString().padStart(2, '0')
+      return `${year}-${month}-${day}`
     }
     
     logger.info('📅 Formatted dates for API:', {
@@ -544,18 +544,17 @@ export const useSearchForm = () => {
     const dateFrom = searchForm.value.checkInDate ? formatDate(searchForm.value.checkInDate) : ''
     const dateTo = searchForm.value.checkOutDate ? formatDate(searchForm.value.checkOutDate) : dateFrom
     
+    // Получаем ISO код страны
     const searchParams = {
-      country: Number(searchForm.value.destination?.id),
+      country: Number(searchForm.value.destination?.id), // Используем числовой ID как в оригинале
       package_template: Number(searchForm.value.package?.id),
       airport_city_from: Number(searchForm.value.departureCity?.id),
       airport_city_to: airportCityTo,
       date_from: dateFrom,
       date_to: dateTo, // Диапазон дат заезда для поиска
       nights_from: Number(searchForm.value.nights),
-      nights_to: Number(searchForm.value.nights2),
+      nights_to: Number(searchForm.value.nights2 || searchForm.value.nights),
       adults: Number(searchForm.value.adults),
-      children: searchForm.value.children !== null ? Number(searchForm.value.children) : undefined,
-      children_age: searchForm.value.children !== null && searchForm.value.children > 0 ? searchForm.value.childrenAges : undefined,
       selected_hotels: (() => {
         const hotels = getSelectedHotelsForSearch(searchData)
         logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
@@ -563,11 +562,13 @@ export const useSearchForm = () => {
       })(),
       meals: selectedFilters.value.meals.length > 0 ? [...new Set(selectedFilters.value.meals)].map(mealId => {
         const meal = searchData.meals.value.find(m => m.id === mealId)
-        return meal?.name || meal?.label || mealId.toString()
-      }) : searchData.meals.value.map(meal => meal.name || meal.label || meal.id.toString()).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index), // Убираем дубликаты
-      options: selectedFilters.value.options.length > 0 ? selectedFilters.value.options.map(optionId => {
-        return optionId.toString()
-      }) : undefined
+        // Используем переведенные названия meals (API принимает переведенные названия)
+        const originalMealName = meal?.name || meal?.label || mealId.toString()
+        return originalMealName
+      }) : searchData.meals.value.map(meal => {
+        const originalMealName = meal.name || meal.label || meal.id.toString()
+        return originalMealName
+      }).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index) // Убираем дубликаты
     }
     
     logger.info('🔍 Search parameters prepared:', {
@@ -580,11 +581,13 @@ export const useSearchForm = () => {
       nights_from: searchParams.nights_from,
       nights_to: searchParams.nights_to,
       adults: searchParams.adults,
-      children: searchParams.children,
-      selected_hotels: searchParams.selected_hotels,
-      meals: searchParams.meals,
-      options: searchParams.options
+      selected_hotels_count: searchParams.selected_hotels?.length || 0,
+      selected_hotels_first_5: searchParams.selected_hotels?.slice(0, 5) || [],
+      meals: searchParams.meals
     })
+    
+    // Детальное логирование для отладки
+    logger.info('🔍 Full search parameters for debugging:', searchParams)
 
     isLoading.value = true
     isSearchPending.value = false // Сбрасываем флаг ожидания

@@ -119,6 +119,13 @@ class BaseApiService
     # Add authorization header if access_token is present
     headers = {}
     headers['Authorization'] = "Bearer #{access_token}" if access_token.present?
+    
+    # Add additional headers for OBS API compatibility
+    headers['Accept'] = 'application/json'
+    headers['Content-Type'] = 'application/json' if method == :post
+    headers['x-localization'] = 'ru'
+    headers['Cache-Control'] = 'no-cache'
+    headers['Pragma'] = 'no-cache'
 
     # Log request (without sensitive data)
     log_request(method, path, params, headers, start_time)

@@ -39,6 +39,16 @@ export const useCalendarHints = () => {
       calendarHintsType: typeof calendarHints.value,
       calendarHintsIsObject: calendarHints.value && typeof calendarHints.value === 'object'
     })
+    
+    // Дополнительная проверка для отладки
+    if (keys.length === 0) {
+      logger.warn('⚠️ No calendar hints keys found!', {
+        calendarHintsValue: calendarHints.value,
+        calendarHintsType: typeof calendarHints.value,
+        calendarHintsKeys: Object.keys(calendarHints.value)
+      })
+    }
+    
     return dates
   })
   

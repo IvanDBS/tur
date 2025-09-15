@@ -51,6 +51,12 @@ class ObsAdapter < BaseApiService
     access_token = get_access_token
     headers['Authorization'] = "Bearer #{access_token}" if access_token
 
+    # Debug: log actual headers being sent
+    Rails.logger.info "🔑 ObsAdapter sending headers: #{headers.inspect}"
+    
+    # Debug: log actual params being sent
+    Rails.logger.info "📋 ObsAdapter sending params: #{params.inspect}"
+
     # Log request (without sensitive data)
     log_request(method, path, params, headers, start_time)
 
@@ -73,15 +79,15 @@ class ObsAdapter < BaseApiService
   end
 
   def get_access_token
-    # First try site-level authentication
-    site_token = @site_auth_service.access_token
-    return site_token if site_token.present?
-
-    # Fallback to user-level authentication if available
+    # For search operations, prioritize user-level authentication if available
     if @auth_service&.user_id
       user_token = @auth_service.valid_access_token
       return user_token if user_token.present?
     end
+
+    # Fallback to site-level authentication
+    site_token = @site_auth_service.access_token
+    return site_token if site_token.present?
 
     nil
   end

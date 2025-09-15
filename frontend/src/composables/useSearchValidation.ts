@@ -83,23 +83,26 @@ export const useSearchValidation = () => {
       selectedFiltersHotelsContent: selectedFilters.hotels
     })
     
-    if (selectedFilters.hotels.length === 0) {
-      console.log('❌ No hotels selected')
-      showError('Ошибка поиска', 'Выберите отели или опцию "Любой" в фильтрах')
-      return false
-    }
+    // Убираем обязательную проверку отелей - если не выбраны, будут использованы все доступные
+    // if (selectedFilters.hotels.length === 0) {
+    //   console.log('❌ No hotels selected')
+    //   showError('Ошибка поиска', 'Выберите отели или опцию "Любой" в фильтрах')
+    //   return false
+    // }
 
     console.log('✅ All search form validations passed')
     return true
   }
 
   const validateDates = (searchForm: SearchForm): boolean => {
-    const { isDateAvailable, availableDates } = calendarHints
+    const { isDateAvailable, availableDates, calendarHints: calendarHintsData } = calendarHints
 
     console.log('🔍 Validating dates:', {
       checkInDate: searchForm.checkInDate,
       checkOutDate: searchForm.checkOutDate,
-      availableDatesCount: availableDates.value.length
+      availableDatesCount: availableDates.value.length,
+      calendarHintsKeys: Object.keys(calendarHintsData.value),
+      calendarHintsLength: Object.keys(calendarHintsData.value).length
     })
 
     if (!searchForm.checkInDate || !searchForm.checkOutDate) {
@@ -108,7 +111,8 @@ export const useSearchValidation = () => {
     }
 
     // Если нет доступных дат в календаре, пропускаем проверку
-    if (availableDates.value.length === 0) {
+    const calendarHintsKeys = Object.keys(calendarHintsData.value)
+    if (calendarHintsKeys.length === 0) {
       console.log('✅ No calendar hints, skipping date validation')
       return true
     }

@@ -175,7 +175,7 @@
               <td>
                 <BaseInput
                   v-model="searchFilters.departure_flight"
-                  placeholder="Рейс туда..."
+                  placeholder="Номер или дата..."
                   size="xs"
                   @input="debouncedSearch"
                 />
@@ -183,7 +183,7 @@
               <td>
                 <BaseInput
                   v-model="searchFilters.arrival_flight"
-                  placeholder="Рейс назад..."
+                  placeholder="Номер или дата..."
                   size="xs"
                   @input="debouncedSearch"
                 />
@@ -359,8 +359,13 @@ const bookings = computed(() => {
   if (searchFilters.value.departure_flight && searchFilters.value.departure_flight.trim()) {
     const searchFlight = searchFilters.value.departure_flight.trim().toLowerCase()
     filtered = filtered.filter(booking => {
-      const flightNumber = getFlightNumber(booking.tour_details.flight_info?.departure)
-      return flightNumber.toLowerCase().includes(searchFlight)
+      const departure = booking.tour_details.flight_info?.departure
+      if (!departure) return false
+      
+      const flightNumber = getFlightNumber(departure).toLowerCase()
+      const flightDate = formatDateDDMMYYYY(departure.date).toLowerCase()
+      
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
     })
   }
 
@@ -368,8 +373,13 @@ const bookings = computed(() => {
   if (searchFilters.value.arrival_flight && searchFilters.value.arrival_flight.trim()) {
     const searchFlight = searchFilters.value.arrival_flight.trim().toLowerCase()
     filtered = filtered.filter(booking => {
-      const flightNumber = getFlightNumber(booking.tour_details.flight_info?.arrival)
-      return flightNumber.toLowerCase().includes(searchFlight)
+      const arrival = booking.tour_details.flight_info?.arrival
+      if (!arrival) return false
+      
+      const flightNumber = getFlightNumber(arrival).toLowerCase()
+      const flightDate = formatDateDDMMYYYY(arrival.date).toLowerCase()
+      
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
     })
   }
 

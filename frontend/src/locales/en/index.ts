@@ -321,6 +321,7 @@ export default {
     insuranceDecline: 'Insurance decline'
   },
   bookingSummary: {
+    baseCost: 'Base tour cost',
     insurance: 'Insurance',
     transfer: 'Transfer',
     covidInsurance: 'COVID-19 insurance',

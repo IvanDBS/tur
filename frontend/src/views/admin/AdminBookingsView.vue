@@ -8,22 +8,24 @@
         <p>Загрузка бронирований...</p>
       </div>
 
-      <div v-else-if="bookings.length === 0" class="empty-state">
-        <p>Бронирования не найдены</p>
-      </div>
-
       <div v-else class="bookings-table">
         <table class="table">
           <thead>
             <tr>
               <th class="sortable" @click="sortBy('id')">
-                ID#
+                ID
                 <span v-if="sortField === 'id'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
+              <th class="sortable" @click="sortBy('operator')">
+                Оператор
+                <span v-if="sortField === 'operator'" class="sort-icon">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
               <th class="sortable" @click="sortBy('booking_number')">
-                Номер
+                Номера оператора
                 <span v-if="sortField === 'booking_number'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -41,7 +43,7 @@
                 </span>
               </th>
               <th class="sortable" @click="sortBy('hotel_name')">
-                Отели
+                Отель
                 <span v-if="sortField === 'hotel_name'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -58,20 +60,20 @@
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
-              <th class="sortable" @click="sortBy('tourists_count')">
+              <th class="sortable" @click="sortBy('tourists')">
                 Туристы
-                <span v-if="sortField === 'tourists_count'" class="sort-icon">
+                <span v-if="sortField === 'tourists'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
               <th class="sortable" @click="sortBy('departure_flight')">
-                Отправление рейс
+                Рейс туда
                 <span v-if="sortField === 'departure_flight'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
               <th class="sortable" @click="sortBy('arrival_flight')">
-                Прибытие рейс
+                Рейс назад
                 <span v-if="sortField === 'arrival_flight'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -94,7 +96,6 @@
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
-              <th>Действия</th>
             </tr>
             <!-- Search row -->
             <tr class="search-row">
@@ -107,6 +108,15 @@
                 />
               </td>
               <td>
+                <BaseSelect
+                  v-model="searchFilters.operator"
+                  :options="operatorOptions"
+                  placeholder="Все"
+                  size="xs"
+                  @update:model-value="debouncedSearch"
+                />
+              </td>
+              <td>
                 <BaseInput
                   v-model="searchFilters.booking_number"
                   placeholder="Номер..."
@@ -115,11 +125,11 @@
                 />
               </td>
               <td>
-                <BaseInput
+                <input
                   v-model="searchFilters.created_at"
-                  placeholder="Дата..."
-                  size="xs"
-                  @input="debouncedSearch"
+                  type="date"
+                  class="form-input form-input--xs"
+                  @change="debouncedSearch"
                 />
               </td>
               <td>
@@ -139,25 +149,25 @@
                 />
               </td>
               <td>
-                <BaseInput
+                <input
                   v-model="searchFilters.check_in"
-                  placeholder="Заезд..."
-                  size="xs"
-                  @input="debouncedSearch"
+                  type="date"
+                  class="form-input form-input--xs"
+                  @change="debouncedSearch"
                 />
               </td>
               <td>
-                <BaseInput
+                <input
                   v-model="searchFilters.check_out"
-                  placeholder="Выезд..."
-                  size="xs"
-                  @input="debouncedSearch"
+                  type="date"
+                  class="form-input form-input--xs"
+                  @change="debouncedSearch"
                 />
               </td>
               <td>
                 <BaseInput
-                  v-model="searchFilters.tourists_count"
-                  placeholder="Кол-во..."
+                  v-model="searchFilters.tourists"
+                  placeholder="Туристы..."
                   size="xs"
                   @input="debouncedSearch"
                 />
@@ -165,7 +175,7 @@
               <td>
                 <BaseInput
                   v-model="searchFilters.departure_flight"
-                  placeholder="Отправление..."
+                  placeholder="Рейс туда..."
                   size="xs"
                   @input="debouncedSearch"
                 />
@@ -173,7 +183,7 @@
               <td>
                 <BaseInput
                   v-model="searchFilters.arrival_flight"
-                  placeholder="Прибытие..."
+                  placeholder="Рейс назад..."
                   size="xs"
                   @input="debouncedSearch"
                 />
@@ -203,43 +213,39 @@
                   @update:model-value="debouncedSearch"
                 />
               </td>
-              <td>
-                <BaseButton 
-                  variant="ghost" 
-                  size="xs" 
-                  @click="clearAllFilters"
-                >
-                  Очистить
-                </BaseButton>
-              </td>
             </tr>
           </thead>
           <tbody>
+            <tr v-if="bookings.length === 0" class="empty-row">
+              <td colspan="14" class="empty-message">
+                Бронирования не найдены
+              </td>
+            </tr>
             <tr v-for="booking in bookings" :key="booking.id" class="table-row">
-              <td class="booking-id">#{{ booking.id }}</td>
+              <td class="booking-id">{{ booking.id }}</td>
+              <td class="operator">{{ getOperator(booking) }}</td>
               <td class="booking-number">{{ booking.obs_order_id || 'N/A' }}</td>
-              <td class="booking-date">{{ formatDate(booking.created_at) }}</td>
+              <td class="booking-date">{{ formatDateDDMMYYYY(booking.created_at) }}</td>
               <td class="country">{{ getCountryFromCity(getHotelCity(booking)) }}</td>
               <td class="hotel-info">
                 <div class="hotel-name">{{ getHotelName(booking) }}</div>
-                <div class="hotel-location">{{ getHotelCity(booking) }}</div>
               </td>
-              <td class="check-in">{{ getCheckInDate(booking) }}</td>
-              <td class="check-out">{{ getCheckOutDate(booking) }}</td>
-              <td class="tourists-count">{{ getTouristsCount(booking) }}</td>
+              <td class="check-in">{{ formatDateDDMMYYYY(getCheckInDate(booking)) }}</td>
+              <td class="check-out">{{ formatDateDDMMYYYY(getCheckOutDate(booking)) }}</td>
+              <td class="tourists">
+                <div class="tourists-list">{{ getTouristsNames(booking) }}</div>
+              </td>
               <td class="departure-flight">
                 <div v-if="booking.tour_details.flight_info?.departure">
-                  <div class="flight-date">{{ formatDate(booking.tour_details.flight_info.departure.date) }}</div>
-                  <div class="flight-time">{{ booking.tour_details.flight_info.departure.time }}</div>
-                  <div class="flight-airport">{{ booking.tour_details.flight_info.departure.airport }}</div>
+                  <div class="flight-date">{{ formatDateDDMMYYYY(booking.tour_details.flight_info.departure.date) }}</div>
+                  <div class="flight-number">{{ getFlightNumber(booking.tour_details.flight_info.departure) }}</div>
                 </div>
                 <span v-else>N/A</span>
               </td>
               <td class="arrival-flight">
                 <div v-if="booking.tour_details.flight_info?.arrival">
-                  <div class="flight-date">{{ formatDate(booking.tour_details.flight_info.arrival.date) }}</div>
-                  <div class="flight-time">{{ booking.tour_details.flight_info.arrival.time }}</div>
-                  <div class="flight-airport">{{ booking.tour_details.flight_info.arrival.airport }}</div>
+                  <div class="flight-date">{{ formatDateDDMMYYYY(booking.tour_details.flight_info.arrival.date) }}</div>
+                  <div class="flight-number">{{ getFlightNumber(booking.tour_details.flight_info.arrival) }}</div>
                 </div>
                 <span v-else>N/A</span>
               </td>
@@ -251,33 +257,6 @@
               <td class="status">
                 <StatusBadge :status="booking.status" />
               </td>
-              <td class="actions">
-                <div class="action-buttons">
-                  <BaseButton 
-                    variant="ghost" 
-                    size="sm" 
-                    @click="viewDetails(booking)"
-                  >
-                    Подробнее
-                  </BaseButton>
-                  <BaseButton 
-                    v-if="booking.status === 'pending'"
-                    variant="primary" 
-                    size="sm" 
-                    @click="confirmBooking(booking)"
-                  >
-                    Подтвердить
-                  </BaseButton>
-                  <BaseButton 
-                    v-if="booking.status === 'pending'"
-                    variant="danger" 
-                    size="sm" 
-                    @click="rejectBooking(booking)"
-                  >
-                    Отклонить
-                  </BaseButton>
-                </div>
-              </td>
             </tr>
           </tbody>
         </table>
@@ -285,7 +264,7 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="pagination-section">
+    <div v-if="totalPages > 1 && bookings.length > 0" class="pagination-section">
       <Pagination
         :current-page="currentPage"
         :total-pages="totalPages"
@@ -304,7 +283,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
@@ -320,11 +299,91 @@ import type { AdminBooking } from '../../types/admin'
 const { loading, getBookings, updateBookingStatus } = useAdminApi()
 
 // State
-const bookings = ref<AdminBooking[]>([])
+const allBookings = ref<AdminBooking[]>([])
 const selectedBooking = ref<AdminBooking | null>(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const totalCount = ref(0)
+
+// Computed filtered bookings
+const bookings = computed(() => {
+  let filtered = allBookings.value
+
+  // Filter by ID if specified
+  if (searchFilters.value.id && searchFilters.value.id.trim()) {
+    const searchId = searchFilters.value.id.trim()
+    filtered = filtered.filter(booking => 
+      booking.id.toString() === searchId
+    )
+  }
+
+  // Filter by operator if specified
+  if (searchFilters.value.operator && searchFilters.value.operator.trim()) {
+    filtered = filtered.filter(booking => 
+      getOperator(booking) === searchFilters.value.operator
+    )
+  }
+
+  // Filter by booking number if specified
+  if (searchFilters.value.booking_number && searchFilters.value.booking_number.trim()) {
+    const searchNumber = searchFilters.value.booking_number.trim().toLowerCase()
+    filtered = filtered.filter(booking => 
+      (booking.obs_order_id || '').toLowerCase().includes(searchNumber)
+    )
+  }
+
+  // Filter by hotel name if specified
+  if (searchFilters.value.hotel_name && searchFilters.value.hotel_name.trim()) {
+    const searchHotel = searchFilters.value.hotel_name.trim().toLowerCase()
+    filtered = filtered.filter(booking => 
+      getHotelName(booking).toLowerCase().includes(searchHotel)
+    )
+  }
+
+  // Filter by user name if specified
+  if (searchFilters.value.user_name && searchFilters.value.user_name.trim()) {
+    const searchUser = searchFilters.value.user_name.trim().toLowerCase()
+    filtered = filtered.filter(booking => 
+      (booking.user.first_name || booking.user.email).toLowerCase().includes(searchUser)
+    )
+  }
+
+  // Filter by status if specified
+  if (searchFilters.value.status && searchFilters.value.status.trim()) {
+    filtered = filtered.filter(booking => 
+      booking.status === searchFilters.value.status
+    )
+  }
+
+  // Filter by departure flight if specified
+  if (searchFilters.value.departure_flight && searchFilters.value.departure_flight.trim()) {
+    const searchFlight = searchFilters.value.departure_flight.trim().toLowerCase()
+    filtered = filtered.filter(booking => {
+      const flightNumber = getFlightNumber(booking.tour_details.flight_info?.departure)
+      return flightNumber.toLowerCase().includes(searchFlight)
+    })
+  }
+
+  // Filter by arrival flight if specified
+  if (searchFilters.value.arrival_flight && searchFilters.value.arrival_flight.trim()) {
+    const searchFlight = searchFilters.value.arrival_flight.trim().toLowerCase()
+    filtered = filtered.filter(booking => {
+      const flightNumber = getFlightNumber(booking.tour_details.flight_info?.arrival)
+      return flightNumber.toLowerCase().includes(searchFlight)
+    })
+  }
+
+  // Filter by tourists if specified
+  if (searchFilters.value.tourists && searchFilters.value.tourists.trim()) {
+    const searchTourists = searchFilters.value.tourists.trim().toLowerCase()
+    filtered = filtered.filter(booking => {
+      const touristsNames = getTouristsNames(booking).toLowerCase()
+      return touristsNames.includes(searchTourists)
+    })
+  }
+
+  return filtered
+})
 
 const filters = ref({
   status: '',
@@ -334,13 +393,14 @@ const filters = ref({
 // Search filters for each column
 const searchFilters = ref({
   id: '',
+  operator: '',
   booking_number: '',
   created_at: '',
   country: '',
   hotel_name: '',
   check_in: '',
   check_out: '',
-  tourists_count: '',
+  tourists: '',
   departure_flight: '',
   arrival_flight: '',
   total_amount: '',
@@ -369,10 +429,18 @@ const statusFilterOptions = [
   { value: 'failed', label: 'Ошибка' }
 ]
 
+const operatorOptions = [
+  { value: '', label: 'Все' },
+  { value: 'OBS', label: 'OBS' },
+  { value: 'operator2', label: 'Оператор 2' },
+  { value: 'operator3', label: 'Оператор 3' }
+]
+
 // Debounced search
 const debouncedSearch = debounce(() => {
   currentPage.value = 1
-  loadBookings()
+  // For local filters (ID, operator, etc.), no need to reload from server
+  // The computed property will handle filtering
 }, 500)
 
 // Methods
@@ -382,7 +450,12 @@ const loadBookings = async () => {
     const searchTerms = []
     Object.entries(searchFilters.value).forEach(([key, value]) => {
       if (value && value.trim()) {
-        searchTerms.push(`${key}:${value.trim()}`)
+        // For ID field, use exact search
+        if (key === 'id') {
+          searchTerms.push(value.trim())
+        } else {
+          searchTerms.push(`${key}:${value.trim()}`)
+        }
       }
     })
     
@@ -424,7 +497,7 @@ const loadBookings = async () => {
     
     // Transform API data to match AdminBooking interface
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    bookings.value = (data.bookings || []).map((booking: any) => {
+    allBookings.value = (data.bookings || []).map((booking: any) => {
       // Parse tour_details if it's a string
       let tourDetails = booking.tour_details
       if (typeof tourDetails === 'string') {
@@ -489,11 +562,11 @@ const loadBookings = async () => {
     totalPages.value = data.pagination?.total_pages || 1
     totalCount.value = data.pagination?.total_count || 0
     
-    console.log('Bookings loaded:', bookings.value.length)
+    console.log('Bookings loaded:', allBookings.value.length)
   } catch (error) {
     console.error('Failed to load bookings:', error)
     // Fallback to empty array on error
-    bookings.value = []
+    allBookings.value = []
     totalPages.value = 1
     totalCount.value = 0
   }
@@ -512,13 +585,14 @@ const clearAllFilters = () => {
   // Clear search filters
   searchFilters.value = {
     id: '',
+    operator: '',
     booking_number: '',
     created_at: '',
     country: '',
     hotel_name: '',
     check_in: '',
     check_out: '',
-    tourists_count: '',
+    tourists: '',
     departure_flight: '',
     arrival_flight: '',
     total_amount: '',
@@ -640,6 +714,14 @@ const sortBookings = () => {
       case 'status':
         aValue = a.status
         bValue = b.status
+        break
+      case 'operator':
+        aValue = getOperator(a)
+        bValue = getOperator(b)
+        break
+      case 'tourists':
+        aValue = getTouristsNames(a)
+        bValue = getTouristsNames(b)
         break
       default:
         return 0
@@ -771,6 +853,65 @@ const getTouristsCount = (booking: AdminBooking) => {
   return 0
 }
 
+// New helper functions
+const getOperator = (booking: AdminBooking) => {
+  // For now, return OBS as default, can be extended based on booking data
+  return 'OBS'
+}
+
+const getTouristsNames = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  const tourists = tourDetails?.tourists || []
+  
+  if (Array.isArray(tourists) && tourists.length > 0) {
+    // Get first two tourists, each on separate line
+    const firstTwo = tourists.slice(0, 2)
+    return firstTwo.map((tourist: any) => {
+      const firstName = tourist.first_name || tourist.firstName || ''
+      const lastName = tourist.last_name || tourist.lastName || ''
+      return `${firstName} ${lastName}`.trim()
+    }).join('\n')
+  }
+  
+  // Try to get from customer_data
+  const customerData = booking.customer_data as any
+  if (customerData && Array.isArray(customerData.tourists)) {
+    const firstTwo = customerData.tourists.slice(0, 2)
+    return firstTwo.map((tourist: any) => {
+      const firstName = tourist.first_name || tourist.firstName || ''
+      const lastName = tourist.last_name || tourist.lastName || ''
+      return `${firstName} ${lastName}`.trim()
+    }).join('\n')
+  }
+  
+  return 'N/A'
+}
+
+const formatDateDDMMYYYY = (dateString: string) => {
+  if (!dateString || dateString === 'N/A') return 'N/A'
+  
+  try {
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}.${month}.${year}`
+  } catch {
+    return 'N/A'
+  }
+}
+
+const getFlightNumber = (flightInfo: any) => {
+  if (!flightInfo) return 'N/A'
+  
+  // Try different possible field names for flight number
+  return flightInfo.flight_number || 
+         flightInfo.flightNumber || 
+         flightInfo.number || 
+         flightInfo.code || 
+         'N/A'
+}
+
 // Lifecycle
 onMounted(() => {
   // Check if we have user filter from URL
@@ -788,7 +929,8 @@ onMounted(() => {
 
 <style scoped>
 .admin-bookings {
-  padding: var(--spacing-xl);
+  padding: 0 var(--spacing-lg);
+  width: 100%;
 }
 
 
@@ -796,7 +938,9 @@ onMounted(() => {
   background: white;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
 }
 
 .loading-state,
@@ -835,9 +979,12 @@ onMounted(() => {
 
 .table th,
 .table td {
-  padding: var(--spacing-md);
+  padding: var(--spacing-xs);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
 }
 
 .table th {
@@ -845,6 +992,20 @@ onMounted(() => {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   font-size: var(--font-size-sm);
+}
+
+.table th:first-child {
+  width: 60px;
+  max-width: 60px;
+  min-width: 60px;
+}
+
+.table th:nth-child(4),
+.table th:nth-child(7),
+.table th:nth-child(8) {
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
 }
 
 .sortable {
@@ -890,38 +1051,24 @@ onMounted(() => {
 }
 
 .booking-id {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-secondary);
+  width: 60px;
+  max-width: 60px;
+  min-width: 60px;
 }
 
 .user-info {
   min-width: 150px;
 }
 
-.user-email {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
-
-.user-name {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
 
 .hotel-info {
   min-width: 200px;
 }
 
 .hotel-name {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
   margin-bottom: var(--spacing-xs);
 }
 
-.hotel-location {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
 
 .dates {
   min-width: 120px;
@@ -929,29 +1076,21 @@ onMounted(() => {
 
 .check-in,
 .check-out {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
 }
 
-.booking-number {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
 
 .booking-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  width: 100px;
+  max-width: 100px;
+  min-width: 100px;
 }
 
-.country {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
 
 .tourists-count {
   text-align: center;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
 }
 
 .departure-flight,
@@ -959,60 +1098,56 @@ onMounted(() => {
   min-width: 120px;
 }
 
-.flight-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
+
+
+.tourists {
+  min-width: 150px;
 }
 
-.flight-time {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
+.tourists-list {
+  white-space: pre-line;
+  line-height: 1.4;
 }
 
-.flight-airport {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
+/* Style date inputs but keep functionality */
+.form-input[type="date"] {
+  cursor: pointer;
+}
+
+.form-input[type="date"]::-webkit-inner-spin-button,
+.form-input[type="date"]::-webkit-clear-button {
+  display: none;
 }
 
 .owner {
   min-width: 150px;
 }
 
-.owner .user-name {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
+
+
+.empty-row {
+  background: var(--color-background-soft);
 }
 
-.owner .user-email {
-  font-size: var(--font-size-sm);
+.empty-message {
+  text-align: center;
+  padding: var(--spacing-xl);
   color: var(--color-text-soft);
+  font-style: italic;
+  font-size: var(--font-size-md);
 }
 
-.amount {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-}
 
-.created {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
-
-.actions {
-  min-width: 200px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
-}
 
 .pagination-section {
   margin-top: var(--spacing-lg);
   display: flex;
   justify-content: center;
+  padding: var(--spacing-lg);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Mobile responsive */
@@ -1028,7 +1163,7 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .admin-bookings {
-    padding: var(--spacing-sm);
+    padding: 0 var(--spacing-sm);
   }
 
   .page-header {
@@ -1084,15 +1219,6 @@ onMounted(() => {
     z-index: 1;
   }
 
-  .action-buttons {
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .action-buttons .btn {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
-  }
 
   .pagination {
     flex-direction: column;
@@ -1106,7 +1232,7 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .admin-bookings {
-    padding: var(--spacing-xs);
+    padding: 0 var(--spacing-xs);
   }
 
   .table {

@@ -96,6 +96,9 @@
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
+              <th class="actions-column">
+                Действия
+              </th>
             </tr>
             <!-- Search row -->
             <tr class="search-row">
@@ -213,11 +216,12 @@
                   @update:model-value="debouncedSearch"
                 />
               </td>
+              <td></td>
             </tr>
           </thead>
           <tbody>
             <tr v-if="bookings.length === 0" class="empty-row">
-              <td colspan="14" class="empty-message">
+              <td colspan="15" class="empty-message">
                 Бронирования не найдены
               </td>
             </tr>
@@ -256,6 +260,18 @@
               </td>
               <td class="status">
                 <StatusBadge :status="booking.status" />
+              </td>
+              <td class="actions">
+                <button 
+                  class="action-btn edit-btn" 
+                  @click="viewDetails(booking)"
+                  title="Просмотреть детали"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -939,7 +955,6 @@ onMounted(() => {
 
 <style scoped>
 .admin-bookings {
-  padding: 0 var(--spacing-lg);
   width: 100%;
 }
 
@@ -1004,7 +1019,8 @@ onMounted(() => {
   font-size: var(--font-size-sm);
 }
 
-.table th:first-child {
+.table th:first-child,
+.table td:first-child {
   width: 60px;
   max-width: 60px;
   min-width: 60px;
@@ -1065,7 +1081,7 @@ onMounted(() => {
   width: 60px;
   max-width: 60px;
   min-width: 60px;
-  text-align: center;
+  text-align: center !important;
 }
 
 .user-info {
@@ -1135,6 +1151,41 @@ onMounted(() => {
   min-width: 150px;
 }
 
+.actions-column {
+  width: 80px;
+  max-width: 80px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.actions {
+  text-align: center;
+  padding: var(--spacing-xs);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: white;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  margin-left: 8px; /* Смещаем правее для центрирования */
+  /* Убираем все анимации и hover эффекты */
+}
+
+/* Убираем все hover эффекты */
+.action-btn:hover,
+.edit-btn:hover {
+  background: white;
+  color: var(--color-text-soft);
+  border-color: var(--color-border);
+}
+
 
 
 .empty-row {
@@ -1174,9 +1225,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .admin-bookings {
-    padding: 0 var(--spacing-sm);
-  }
 
   .page-header {
     flex-direction: column;
@@ -1214,7 +1262,21 @@ onMounted(() => {
 
   .table {
     font-size: var(--font-size-xs);
-    min-width: 800px;
+    min-width: 600px; /* Уменьшаем минимальную ширину */
+  }
+
+  /* Скрываем менее важные столбцы на мобильных */
+  .table th:nth-child(3), /* Номера оператора */
+  .table td:nth-child(3),
+  .table th:nth-child(4), /* Дата брони */
+  .table td:nth-child(4),
+  .table th:nth-child(5), /* Страна */
+  .table td:nth-child(5),
+  .table th:nth-child(9), /* Рейс туда */
+  .table td:nth-child(9),
+  .table th:nth-child(10), /* Рейс назад */
+  .table td:nth-child(10) {
+    display: none;
   }
 
   .table th,
@@ -1231,6 +1293,24 @@ onMounted(() => {
     z-index: 1;
   }
 
+  /* Адаптация для столбца действий на мобильных */
+  .actions-column {
+    width: 60px;
+    max-width: 60px;
+    min-width: 60px;
+  }
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+  }
+
+  .action-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
 
   .pagination {
     flex-direction: column;
@@ -1243,13 +1323,20 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .admin-bookings {
-    padding: 0 var(--spacing-xs);
-  }
 
   .table {
-    min-width: 600px;
+    min-width: 400px; /* Еще больше уменьшаем для маленьких экранов */
     font-size: 10px;
+  }
+
+  /* Скрываем еще больше столбцов на очень маленьких экранах */
+  .table th:nth-child(6), /* Заезд */
+  .table td:nth-child(6),
+  .table th:nth-child(7), /* Выезд */
+  .table td:nth-child(7),
+  .table th:nth-child(8), /* Туристы */
+  .table td:nth-child(8) {
+    display: none;
   }
 
   .table th,
@@ -1265,5 +1352,24 @@ onMounted(() => {
   .page-title {
     font-size: var(--font-size-md);
   }
+
+  /* Адаптация для очень маленьких экранов */
+  .actions-column {
+    width: 50px;
+    max-width: 50px;
+    min-width: 50px;
+  }
+
+  .action-btn {
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+  }
+
+  .action-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
 }
 </style>

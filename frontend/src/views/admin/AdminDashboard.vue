@@ -1,64 +1,50 @@
 <template>
   <div class="admin-dashboard">
-    <div class="admin-layout">
-      <!-- Admin Sidebar -->
-      <aside class="admin-sidebar">
-        <div class="sidebar-header">
-          <h2 class="sidebar-title">Админ-панель</h2>
-        </div>
-        
-        <nav class="sidebar-nav">
-          <router-link 
-            to="/admin/bookings" 
-            class="nav-item"
-            :class="{ 'nav-item--active': $route.name === 'admin-bookings' }"
-          >
-            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Бронирования
-          </router-link>
-          
-          <router-link 
-            to="/admin/users" 
-            class="nav-item"
-            :class="{ 'nav-item--active': $route.name === 'admin-users' }"
-          >
-            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Пользователи
-          </router-link>
-        </nav>
-      </aside>
-
-      <!-- Admin Content -->
-      <main class="admin-content">
-        <div class="content-header">
+    <!-- Admin Content -->
+    <main class="admin-content">
+      <div class="content-header">
+        <div class="header-row">
           <h1 class="content-title">{{ pageTitle }}</h1>
-          <div class="content-actions">
-            <button class="btn btn--secondary btn--sm" @click="goBack">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5m7-7l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          
+          <div class="header-nav">
+            <router-link 
+              to="/admin/bookings" 
+              class="nav-item"
+              :class="{ 'nav-item--active': $route.name === 'admin-bookings' }"
+            >
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Назад на сайт
-            </button>
+              Бронирования
+            </router-link>
+            
+            <router-link 
+              to="/admin/users" 
+              class="nav-item"
+              :class="{ 'nav-item--active': $route.name === 'admin-users' }"
+            >
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Пользователи
+            </router-link>
           </div>
+          
+          <div class="header-spacer"></div>
         </div>
+      </div>
 
-        <div class="content-body">
-          <router-view />
-        </div>
-      </main>
-    </div>
+      <div class="content-body">
+        <router-view />
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
 const route = useRoute()
 
 const pageTitle = computed(() => {
@@ -72,9 +58,6 @@ const pageTitle = computed(() => {
   }
 })
 
-const goBack = () => {
-  router.push('/')
-}
 </script>
 
 <style scoped>
@@ -83,38 +66,42 @@ const goBack = () => {
   background: var(--color-background-soft);
 }
 
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
+/* Admin Content */
+.admin-content {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg) 0;
 }
 
-.admin-sidebar {
-  width: 280px;
+.content-header {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
   background: white;
-  border-right: 1px solid var(--color-border);
-  padding: var(--spacing-xl);
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-header {
-  margin-bottom: var(--spacing-xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.sidebar-title {
+.content-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   margin: 0;
+  flex: 1;
 }
 
-.sidebar-nav {
+.header-spacer {
+  flex: 1;
+}
+
+.header-nav {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
 }
 
 .nav-item {
@@ -127,6 +114,7 @@ const goBack = () => {
   color: var(--color-text-soft);
   font-weight: var(--font-weight-medium);
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -143,68 +131,60 @@ const goBack = () => {
   flex-shrink: 0;
 }
 
-.admin-content {
-  flex: 1;
-  margin-left: 280px;
-  padding: var(--spacing-xl);
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.content-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  margin: 0;
-}
-
-.content-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
 .content-body {
-  background: white;
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: 0;
+  border: none;
   min-height: 600px;
+  width: 100%;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .admin-sidebar {
-    width: 100%;
-    position: relative;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--color-border);
-  }
-
   .admin-content {
-    margin-left: 0;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md) 0;
   }
 
   .content-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
   }
 
-  .sidebar-nav {
-    flex-direction: row;
+
+  .header-row {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: flex-start;
+  }
+
+  .content-title,
+  .header-spacer {
+    flex: none;
+  }
+
+  .header-nav {
     overflow-x: auto;
+    padding-bottom: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-content {
+    padding: var(--spacing-xs) var(--spacing-sm) 0;
+  }
+
+  .content-header {
+    margin-bottom: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .content-title {
+    font-size: var(--font-size-lg);
   }
 
   .nav-item {
-    white-space: nowrap;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
   }
 }
 </style>

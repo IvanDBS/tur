@@ -137,17 +137,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, defineAsyncComponent } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 // import { useRoute, useRouter } from 'vue-router' // TODO: implement route usage
 import { useBooking } from '../composables/useBooking'
 import { useI18n } from '../composables/useI18n'
 // import { useSearchData } from '../composables/useSearchData' // TODO: implement search functionality
-// Import components dynamically to avoid TypeScript issues
-const HotelInfoBlock = defineAsyncComponent(() => import('../components/booking/HotelInfoBlock.vue'))
-const RoomSelectionBlock = defineAsyncComponent(() => import('../components/booking/RoomSelectionBlock.vue'))
-const FlightSelectionBlock = defineAsyncComponent(() => import('../components/booking/FlightSelectionBlock.vue'))
-const TouristDataBlock = defineAsyncComponent(() => import('../components/booking/TouristDataBlock.vue'))
-const AdditionalServicesBlock = defineAsyncComponent(() => import('../components/booking/AdditionalServicesBlock.vue'))
+// Import components directly
+import HotelInfoBlock from '../components/booking/HotelInfoBlock.vue'
+import RoomSelectionBlock from '../components/booking/RoomSelectionBlock.vue'
+import FlightSelectionBlock from '../components/booking/FlightSelectionBlock.vue'
+import TouristDataBlock from '../components/booking/TouristDataBlock.vue'
+import AdditionalServicesBlock from '../components/booking/AdditionalServicesBlock.vue'
 import type { BookingNotes, TouristData } from '../types/booking'
 
 // Props

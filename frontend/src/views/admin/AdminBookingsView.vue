@@ -96,6 +96,12 @@
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
+              <th class="sortable" @click="sortBy('operator_status')">
+                Статус оператора
+                <span v-if="sortField === 'operator_status'" class="sort-icon">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
               <th class="actions-column">
                 Действия
               </th>
@@ -216,12 +222,21 @@
                   @update:model-value="debouncedSearch"
                 />
               </td>
+              <td>
+                <BaseSelect
+                  v-model="searchFilters.operator_status"
+                  :options="operatorStatusFilterOptions"
+                  placeholder="Все"
+                  size="xs"
+                  @update:model-value="debouncedSearch"
+                />
+              </td>
               <td></td>
             </tr>
           </thead>
           <tbody>
             <tr v-if="bookings.length === 0" class="empty-row">
-              <td colspan="15" class="empty-message">
+              <td colspan="16" class="empty-message">
                 Бронирования не найдены
               </td>
             </tr>
@@ -260,6 +275,9 @@
               </td>
               <td class="status">
                 <StatusBadge :status="booking.status" />
+              </td>
+              <td class="operator-status">
+                <StatusBadge :status="booking.operator_status || 'N/A'" />
               </td>
               <td class="actions">
                 <button 
@@ -373,6 +391,13 @@ const bookings = computed(() => {
     )
   }
 
+  // Filter by operator status if specified
+  if (searchFilters.value.operator_status && searchFilters.value.operator_status.trim()) {
+    filtered = filtered.filter(booking => 
+      booking.operator_status === searchFilters.value.operator_status
+    )
+  }
+
   // Filter by departure flight if specified
   if (searchFilters.value.departure_flight && searchFilters.value.departure_flight.trim()) {
     const searchFlight = searchFilters.value.departure_flight.trim().toLowerCase()
@@ -433,7 +458,8 @@ const searchFilters = ref({
   arrival_flight: '',
   total_amount: '',
   user_name: '',
-  status: ''
+  status: '',
+  operator_status: ''
 })
 
 // Sorting state
@@ -452,9 +478,23 @@ const sortDirection = ref<'asc' | 'desc'>('asc')
 const statusFilterOptions = [
   { value: '', label: 'Все' },
   { value: 'pending', label: 'Ожидающие' },
+  { value: 'processing', label: 'Обрабатывается' },
   { value: 'confirmed', label: 'Подтверждено' },
+  { value: 'changed', label: 'Изменено' },
   { value: 'cancelled', label: 'Отменено' },
-  { value: 'failed', label: 'Ошибка' }
+  { value: 'failed', label: 'Ошибка' },
+  { value: 'expired', label: 'Истекло' }
+]
+
+const operatorStatusFilterOptions = [
+  { value: '', label: 'Все' },
+  { value: 'wait', label: 'Ожидание' },
+  { value: 'changed', label: 'Изменен' },
+  { value: 'confirmed', label: 'Подтвержден' },
+  { value: 'canceling', label: 'Отменяется' },
+  { value: 'canceled', label: 'Отменен' },
+  { value: 'not_confirmed', label: 'Не подтвержден' },
+  { value: 'penalty', label: 'Штраф' }
 ]
 
 const operatorOptions = [
@@ -629,7 +669,8 @@ const clearAllFilters = () => {
     arrival_flight: '',
     total_amount: '',
     user_name: '',
-    status: ''
+    status: '',
+    operator_status: ''
   }
   
   // Clear sorting

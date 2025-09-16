@@ -18,7 +18,8 @@ export interface AdminUser {
 export interface AdminBooking {
   id: number
   user: AdminUser
-  status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
+  status: 'pending' | 'processing' | 'confirmed' | 'changed' | 'cancelled' | 'failed' | 'expired'
+  operator_status?: string
   total_amount: number
   tour_details: {
     hotel?: {

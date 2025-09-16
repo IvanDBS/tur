@@ -1,3 +1,5 @@
+import { logger } from './logger'
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
 
@@ -34,23 +36,23 @@ class ApiClient {
     }
 
     try {
-      console.log('API Request:', { url, config })
+      logger.debug('API Request:', { url, config })
       const response = await fetch(url, config)
-      console.log('API Response:', { status: response.status, statusText: response.statusText })
+      logger.debug('API Response:', { status: response.status, statusText: response.statusText })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('API Error:', errorData)
+        logger.error('API Error:', errorData)
         throw new Error(
           errorData.message || `HTTP error! status: ${response.status}`
         )
       }
 
       const data = await response.json()
-      console.log('API Success:', data)
+      logger.debug('API Success:', data)
       return data
     } catch (error) {
-      console.error('API Request failed:', error)
+      logger.error('API Request failed:', error)
       // API request failed
       throw error
     }

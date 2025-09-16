@@ -120,6 +120,7 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { logger } from '@/utils/logger'
 import FormField from '@/components/ui/FormField.vue'
 import { useFormValidation, validationRules } from '@/composables/useFormValidation'
 
@@ -162,9 +163,9 @@ const handleValidateForm = () => {
   const isFormValid = validateForm()
   
   if (isFormValid) {
-    console.log('Form is valid!', testForm)
+    logger.debug('Form is valid!', testForm)
   } else {
-    console.log('Form has validation errors', errors.value)
+    logger.debug('Form has validation errors', errors.value)
   }
 }
 

@@ -91,6 +91,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { useAuthStore } from '@/stores/auth'
+  import { logger } from '@/utils/logger'
   import AuthModal from '@/components/auth/AuthModal.vue'
 
   const authStore = useAuthStore()
@@ -138,7 +139,7 @@
       }
       
       await authStore.register(testData)
-      console.log('Registration test completed')
+      logger.debug('Registration test completed')
     } catch (error) {
       console.error('Registration test error:', error)
     }
@@ -152,7 +153,7 @@
       }
       
       await authStore.login(credentials)
-      console.log('Login test completed')
+      logger.debug('Login test completed')
     } catch (error) {
       console.error('Login test error:', error)
     }
@@ -166,7 +167,7 @@
       }
       
       await authStore.login(credentials)
-      console.log('Admin login test completed')
+      logger.debug('Admin login test completed')
     } catch (error) {
       console.error('Admin login test error:', error)
     }
@@ -175,7 +176,7 @@
   const testLogout = async () => {
     try {
       await authStore.logout()
-      console.log('Logout test completed')
+      logger.debug('Logout test completed')
     } catch (error) {
       console.error('Logout test error:', error)
     }
@@ -184,7 +185,7 @@
   const testGetCurrentUser = async () => {
     try {
       await authStore.getCurrentUser()
-      console.log('Get current user test completed')
+      logger.debug('Get current user test completed')
     } catch (error) {
       console.error('Get current user test error:', error)
     }

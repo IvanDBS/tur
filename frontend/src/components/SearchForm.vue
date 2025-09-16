@@ -109,11 +109,13 @@
   import { defineAsyncComponent, onMounted } from 'vue'
   import { useSearchForm } from '../composables/useSearchForm'
   
-  // Используем defineAsyncComponent с правильной конфигурацией
-  const SearchFilters = defineAsyncComponent(() => import('./search/SearchFilters.vue'))
-  const SearchFormLoading = defineAsyncComponent(() => import('./search/SearchFormLoading.vue'))
-  const SearchFormFields = defineAsyncComponent(() => import('./search/SearchFormFields.vue'))
-  const SearchFormActions = defineAsyncComponent(() => import('./search/SearchFormActions.vue'))
+  // Импортируем компоненты напрямую для лучшей производительности
+  import SearchFilters from './search/SearchFilters.vue'
+  import SearchFormLoading from './search/SearchFormLoading.vue'
+  import SearchFormFields from './search/SearchFormFields.vue'
+  import SearchFormActions from './search/SearchFormActions.vue'
+  
+  // Только SearchResults загружаем асинхронно, так как он показывается по требованию
   const SearchResults = defineAsyncComponent(() => import('./SearchResults.vue'))
   import '../styles/spinners.css'
 

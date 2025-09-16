@@ -4,9 +4,31 @@ class Booking < ApplicationRecord
   belongs_to :user
   belongs_to :search_query, optional: true
 
+  # Constants
+  INTERNAL_STATUSES = %w[
+    pending
+    processing
+    confirmed
+    changed
+    cancelled
+    failed
+    expired
+  ].freeze
+
+  # OBS API status mapping
+  OBS_STATUS_MAPPING = {
+    'wait' => 'pending',
+    'changed' => 'changed',
+    'confirmed' => 'confirmed',
+    'canceling' => 'processing',
+    'canceled' => 'cancelled',
+    'not_confirmed' => 'failed',
+    'penalty' => 'failed'
+  }.freeze
+
   # Validations
   validates :obs_booking_hash, presence: true, uniqueness: true
-  validates :status, presence: true, inclusion: { in: %w[pending confirmed cancelled failed] }
+  validates :status, presence: true, inclusion: { in: INTERNAL_STATUSES }
 
   # Callbacks
   before_validation :set_default_status, on: :create
@@ -72,12 +94,29 @@ class Booking < ApplicationRecord
     status == 'failed'
   end
 
-  def expired?
-    expires_at.present? && expires_at < Time.current
-  end
-
   def can_be_cancelled?
     confirmed? && created_at > 24.hours.ago
+  end
+
+  # OBS status mapping methods
+  def self.map_obs_status(obs_status)
+    OBS_STATUS_MAPPING[obs_status] || 'unknown'
+  end
+
+  def map_obs_status(obs_status)
+    self.class.map_obs_status(obs_status)
+  end
+
+  def processing?
+    status == 'processing'
+  end
+
+  def changed?
+    status == 'changed'
+  end
+
+  def expired?
+    status == 'expired' || (expires_at.present? && expires_at < Time.current)
   end
 
   private

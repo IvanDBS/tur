@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { AuthApi } from '../utils/authApi'
+import { logger } from '../utils/logger'
 import type { User, LoginCredentials, RegisterCredentials } from '../types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -114,7 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Проверяем, не заблокирован ли пользователь
       if (response.user.banned) {
         // Если пользователь заблокирован, выходим из системы
-        console.log('User is banned, logging out...')
+        logger.warn('User is banned, logging out...')
         await logout()
         return null
       }
@@ -123,7 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
       return response.user
     } catch (err: unknown) {
       // Если токен недействителен или пользователь заблокирован, очищаем состояние
-      console.log('getCurrentUser error:', err)
+      logger.error('getCurrentUser error:', err)
       user.value = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')

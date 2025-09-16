@@ -293,6 +293,14 @@ export const useBooking = () => {
 
       // For debugging: send data in the format expected by the local booking controller
       // Use the same structure as seeds for consistency
+      
+      // Debug logging
+      logger.debug('createBooking - searchResult:', searchResult.value)
+      logger.debug('createBooking - dates:', {
+        check_in: searchResult.value.dates?.check_in,
+        check_out: searchResult.value.dates?.check_out
+      })
+      
       const requestData = {
         booking: {
           search_id: searchResult.value.unique_key,
@@ -304,8 +312,8 @@ export const useBooking = () => {
             city: searchResult.value.hotel?.city || searchResult.value.destination?.name || BOOKING_DEFAULTS.DEFAULTS.CITY,
             room_type: bookingData.selectedRoom?.room?.name || null,
             meal_plan: bookingData.selectedRoom?.meal?.name || null,
-            check_in: searchResult.value.check_in || null,
-            check_out: searchResult.value.check_out || null,
+            check_in: searchResult.value.dates?.check_in || null,
+            check_out: searchResult.value.dates?.check_out || null,
             nights: searchResult.value.nights || 0,
             currency: BOOKING_DEFAULTS.DEFAULTS.CURRENCY,
             tourists: bookingData.tourists || [],

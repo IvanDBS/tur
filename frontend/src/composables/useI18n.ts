@@ -1,17 +1,18 @@
 import { useI18n as useVueI18n } from 'vue-i18n'
 import { supportedLocales, localeNames, type SupportedLocale } from '@/locales'
+import { logger } from '../utils/logger'
 
 export function useI18n() {
   const { locale, t, setLocaleMessage } = useVueI18n()
 
   const changeLocale = (newLocale: SupportedLocale) => {
-    console.log('Changing locale to:', newLocale)
+    logger.debug('Changing locale to:', newLocale)
     locale.value = newLocale
     localStorage.setItem('preferred-locale', newLocale)
     // Обновляем заголовок страницы
     document.documentElement.lang = newLocale
     // Принудительно обновляем компоненты
-    console.log('Locale changed to:', newLocale, 'Current locale:', locale.value)
+    logger.debug('Locale changed to:', newLocale, 'Current locale:', locale.value)
   }
 
   const getCurrentLocale = (): SupportedLocale => {
@@ -49,12 +50,12 @@ export function useI18n() {
   // Инициализация локали из localStorage
   const initializeLocale = () => {
     const savedLocale = localStorage.getItem('preferred-locale') as SupportedLocale
-    console.log('Initializing locale, saved:', savedLocale, 'supported:', supportedLocales)
+    logger.debug('Initializing locale, saved:', savedLocale, 'supported:', supportedLocales)
     if (savedLocale && supportedLocales.includes(savedLocale)) {
       locale.value = savedLocale
-      console.log('Set locale to:', savedLocale)
+      logger.debug('Set locale to:', savedLocale)
     } else {
-      console.log('Using default locale: ro')
+      logger.debug('Using default locale: ro')
     }
     document.documentElement.lang = locale.value
   }

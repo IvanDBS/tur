@@ -459,7 +459,8 @@ onMounted(() => {
 
 <style scoped>
 .admin-users {
-  padding: var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
+  width: 100%;
 }
 
 .search-row {
@@ -487,8 +488,10 @@ onMounted(() => {
   background: white;
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   min-height: 400px;
   overflow-x: auto;
+  width: 100%;
 }
 
 .loading-state,
@@ -755,6 +758,11 @@ onMounted(() => {
   margin-top: var(--spacing-lg);
   display: flex;
   justify-content: center;
+  padding: var(--spacing-lg);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Mobile responsive */

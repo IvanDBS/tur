@@ -1,87 +1,33 @@
-/**
- * Централизованная система логирования
- * Автоматически отключается в продакшене
- */
+// Production-safe logger utility
+const isDevelopment = import.meta.env.DEV
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error'
-
-interface LoggerConfig {
-  level: LogLevel
-  enableConsole: boolean
-  enableRemote: boolean
-}
-
-class Logger {
-  private config: LoggerConfig
-
-  constructor() {
-    this.config = {
-      level: import.meta.env.DEV ? 'debug' : 'error',
-      enableConsole: import.meta.env.DEV,
-      enableRemote: import.meta.env.PROD
+export const logger = {
+  debug: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.log('[DEBUG]', ...args)
     }
-  }
-
-  private shouldLog(level: LogLevel): boolean {
-    const levels: Record<LogLevel, number> = {
-      debug: 0,
-      info: 1,
-      warn: 2,
-      error: 3
+  },
+  
+  info: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.info('[INFO]', ...args)
     }
-    return levels[level] >= levels[this.config.level]
-  }
-
-  private formatMessage(level: LogLevel, message: string): string {
-    const timestamp = new Date().toISOString()
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}`
-  }
-
-  debug(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('debug')) return
-    
-    if (this.config.enableConsole) {
-      console.debug(this.formatMessage('debug', message), ...args)
+  },
+  
+  warn: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.warn('[WARN]', ...args)
     }
-  }
-
-  info(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('info')) return
-    
-    if (this.config.enableConsole) {
-      console.info(this.formatMessage('info', message), ...args)
+  },
+  
+  error: (...args: unknown[]) => {
+    // Always log errors, even in production
+    console.error('[ERROR]', ...args)
+  },
+  
+  apiCall: (method: string, url: string) => {
+    if (isDevelopment) {
+      console.log(`[API] ${method} ${url}`)
     }
-  }
-
-  warn(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('warn')) return
-    
-    if (this.config.enableConsole) {
-      console.warn(this.formatMessage('warn', message), ...args)
-    }
-  }
-
-  error(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('error')) return
-    
-    if (this.config.enableConsole) {
-      console.error(this.formatMessage('error', message), ...args)
-    }
-  }
-
-  // Метод для логирования API вызовов
-  apiCall(method: string, url: string, params?: unknown): void {
-    this.debug(`API ${method.toUpperCase()} ${url}`, params)
-  }
-
-  // Метод для логирования ошибок API
-  apiError(method: string, url: string, error: unknown): void {
-    this.error(`API ${method.toUpperCase()} ${url} failed:`, error)
   }
 }
-
-// Создаем единственный экземпляр логгера
-export const logger = new Logger()
-
-// Экспортируем типы для использования в других файлах
-export type { LogLevel, LoggerConfig }

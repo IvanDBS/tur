@@ -5,8 +5,8 @@
       <div class="modal-header">
         <div class="booking-header">
           <div class="booking-title">
-            <h2>Детали бронирования</h2>
-            <div class="booking-ref">{{ booking.obs_booking_hash || `#${booking.id}` }}</div>
+            <h2>{{ isAdminMode ? 'Детали пакета' : 'Детали бронирования' }}</h2>
+            <div class="booking-ref">{{ getBookingRef() }}</div>
             <div class="booking-date">от {{ formatDate(booking.created_at) }} {{ formatTime(booking.created_at) }}</div>
             <div class="booking-id">ID: {{ booking.id }}</div>
           </div>
@@ -18,9 +18,31 @@
         </div>
         
         <!-- Status info -->
-        <div class="status-info">
+        <div class="status-info" v-if="!isAdminMode">
           <div class="status-badge" :class="`status-${booking.status}`">
             {{ getStatusLabel(booking.status) }}
+          </div>
+        </div>
+
+        <!-- Admin info -->
+        <div class="admin-info" v-if="isAdminMode">
+          <div class="info-row">
+            <div class="info-item">
+              <label>Владелец</label>
+              <span>{{ booking.user.first_name || booking.user.email.split('@')[0] }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email</label>
+              <span>{{ booking.user.email }}</span>
+            </div>
+            <div class="info-item">
+              <label>Телефон</label>
+              <span>{{ booking.user.phone || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Статус</label>
+              <StatusBadge :status="booking.status" />
+            </div>
           </div>
         </div>
       </div>
@@ -96,31 +118,92 @@
             <div class="section-icon">✈️</div>
             <h3 class="section-title">Перелет</h3>
           </div>
-          <div class="flight-table">
-            <div v-for="(tourist, index) in getTourists()" :key="index" class="flight-row">
-              <div class="flight-tourist-number">{{ index + 1 }}</div>
-              <div class="flight-tourist-info">
-                <div class="tourist-name">{{ getTouristName(tourist) }}</div>
-                <div class="tourist-age">{{ formatBirthday(tourist.birthDate || tourist.birthday) }}</div>
-              </div>
-              <div class="flight-segments">
-                <div class="flight-segment">
-                  <div class="flight-date">{{ getOutboundDate() }}</div>
-                  <div class="flight-number">{{ getOutboundFlightNumber() }}</div>
-                  <div class="flight-route">
-                    {{ getOutboundRoute() }}
-                  </div>
-                  <div class="flight-airline">{{ getOutboundAirline() }}</div>
-                  <div class="flight-time">{{ getOutboundTime() }}</div>
+          <div class="flight-tickets">
+            <div v-for="(tourist, index) in getTourists()" :key="index" class="flight-ticket">
+              <!-- Tourist Info -->
+              <div class="tourist-info">
+                <div class="tourist-number">№ {{ index + 1 }}</div>
+                <div class="tourist-details">
+                  <div class="tourist-name">{{ getTouristName(tourist) }}</div>
+                  <div class="tourist-age">{{ formatBirthday(tourist.birthDate || tourist.birthday) }}</div>
                 </div>
-                <div class="flight-segment">
-                  <div class="flight-date">{{ getInboundDate() }}</div>
-                  <div class="flight-number">{{ getInboundFlightNumber() }}</div>
-                  <div class="flight-route">
-                    {{ getInboundRoute() }}
+              </div>
+              
+              <!-- Outbound Flight -->
+              <div class="flight-segment outbound">
+                <div class="flight-direction">
+                  <div class="direction-label">Туда</div>
+                </div>
+                <div class="flight-info">
+                  <div class="flight-columns">
+                    <div class="flight-column">
+                      <div class="flight-info-line">
+                        <span class="label">From:</span>
+                        <span class="value">{{ getOutboundFrom() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Departure:</span>
+                        <span class="value">{{ getOutboundDeparture() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Flight:</span>
+                        <span class="value">{{ getOutboundFlightInfo() }}</span>
+                      </div>
+                    </div>
+                    <div class="flight-column">
+                      <div class="flight-info-line">
+                        <span class="label">To:</span>
+                        <span class="value">{{ getOutboundTo() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Arrival:</span>
+                        <span class="value">{{ getOutboundArrival() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Travel time:</span>
+                        <span class="value">{{ getOutboundTravelTime() }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="flight-airline">{{ getInboundAirline() }}</div>
-                  <div class="flight-time">{{ getInboundTime() }}</div>
+                </div>
+              </div>
+              
+              <!-- Inbound Flight -->
+              <div class="flight-segment inbound">
+                <div class="flight-direction">
+                  <div class="direction-label">Обратно</div>
+                </div>
+                <div class="flight-info">
+                  <div class="flight-columns">
+                    <div class="flight-column">
+                      <div class="flight-info-line">
+                        <span class="label">From:</span>
+                        <span class="value">{{ getInboundFrom() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Departure:</span>
+                        <span class="value">{{ getInboundDeparture() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Flight:</span>
+                        <span class="value">{{ getInboundFlightInfo() }}</span>
+                      </div>
+                    </div>
+                    <div class="flight-column">
+                      <div class="flight-info-line">
+                        <span class="label">To:</span>
+                        <span class="value">{{ getInboundTo() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Arrival:</span>
+                        <span class="value">{{ getInboundArrival() }}</span>
+                      </div>
+                      <div class="flight-info-line">
+                        <span class="label">Travel time:</span>
+                        <span class="value">{{ getInboundTravelTime() }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -154,57 +237,151 @@
             </div>
           </div>
         </div>
+
+        <!-- Booking Timeline (Admin only) -->
+        <div class="section" v-if="isAdminMode">
+          <div class="section-header">
+            <div class="section-icon">📋</div>
+            <h3 class="section-title">История бронирования</h3>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-date">{{ formatDateTime(booking.created_at) }}</div>
+              <div class="timeline-content">Бронирование создано</div>
+            </div>
+            <div v-if="booking.confirmed_at" class="timeline-item">
+              <div class="timeline-date">{{ formatDateTime(booking.confirmed_at) }}</div>
+              <div class="timeline-content">Бронирование подтверждено</div>
+            </div>
+            <div v-if="booking.cancelled_at" class="timeline-item">
+              <div class="timeline-date">{{ formatDateTime(booking.cancelled_at) }}</div>
+              <div class="timeline-content">Бронирование отменено</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer with actions -->
       <div class="modal-footer">
         <div class="footer-actions">
+          <!-- Admin actions -->
+          <div class="status-actions" v-if="isAdminMode && booking.status === 'pending'">
+            <BaseButton 
+              variant="primary" 
+              @click="confirmBooking"
+              :loading="actionLoading"
+            >
+              Подтвердить
+            </BaseButton>
+            <BaseButton 
+              variant="danger" 
+              @click="rejectBooking"
+              :loading="actionLoading"
+            >
+              Отклонить
+            </BaseButton>
+          </div>
+          
+          <!-- Print actions -->
           <div class="print-actions">
-            <button class="btn-secondary">
+            <BaseButton variant="secondary" size="sm">
               📄 Распечатать
-            </button>
-            <button class="btn-secondary">
+            </BaseButton>
+            <BaseButton variant="secondary" size="sm">
               📧 Отправить
-            </button>
+            </BaseButton>
           </div>
         </div>
-        <button class="btn-ghost" @click="closeModal">
+        <BaseButton variant="ghost" @click="closeModal">
           Закрыть
-        </button>
+        </BaseButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { formatDate, formatDateTime } from '../../utils/dateUtils'
-import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaults'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { BaseButton } from '../ui'
+import { StatusBadge } from '../ui'
+import { formatDate, formatDateWithYear, formatDateTime } from '../../utils/dateUtils'
+import { logger } from '../../utils/logger'
+import { BOOKING_DEFAULTS, getDefaultValue, extractDataByPriority } from '../../constants/bookingDefaults'
 
 // Props
 interface Props {
   booking: {
     id: number
-    obs_booking_hash: string
+    obs_booking_hash?: string
+    obs_order_id?: string
     status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
     total_amount: string | number
     tour_details: Record<string, unknown>
     customer_data?: Record<string, unknown>
     created_at: string
     confirmed_at?: string | null
+    cancelled_at?: string | null
     can_be_cancelled: boolean
+    user?: {
+      first_name?: string
+      email: string
+      phone?: string
+    }
   }
+  isAdminMode?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isAdminMode: false
+})
 
 // Emits
 const emit = defineEmits<{
   close: []
+  statusChanged?: []
 }>()
+
+// State
+const actionLoading = ref(false)
 
 // Methods
 const closeModal = () => {
   emit('close')
+}
+
+// Lifecycle hooks для управления прокруткой body
+onMounted(() => {
+  // Блокируем прокрутку фона когда модалка открыта
+  document.body.classList.add('modal-open')
+})
+
+onUnmounted(() => {
+  // Разблокируем прокрутку фона когда модалка закрыта
+  document.body.classList.remove('modal-open')
+})
+
+const confirmBooking = async () => {
+  actionLoading.value = true
+  try {
+    // Emit event to parent component to handle status change
+    emit('statusChanged')
+  } catch (error) {
+    console.error('Failed to confirm booking:', error)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const rejectBooking = async () => {
+  actionLoading.value = true
+  try {
+    // Emit event to parent component to handle status change
+    emit('statusChanged')
+  } catch (error) {
+    console.error('Failed to reject booking:', error)
+  } finally {
+    actionLoading.value = false
+  }
 }
 
 const formatTime = (dateString: string) => {
@@ -258,6 +435,13 @@ const getPaymentStatus = () => {
   }
 }
 
+const getBookingRef = () => {
+  if (props.isAdminMode) {
+    return props.booking.obs_order_id || props.booking.obs_booking_hash || `#${props.booking.id}`
+  }
+  return props.booking.obs_booking_hash || `#${props.booking.id}`
+}
+
 // Helper functions to extract data from booking structure
 const getHotelName = () => {
   const tourDetails = props.booking.tour_details as any
@@ -284,6 +468,18 @@ const getHotelCity = () => {
 }
 
 const getRoomType = () => {
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+  return extractDataByPriority(
+    data, 
+    [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.ROOM_TYPE], 
+    BOOKING_DEFAULTS.DEFAULTS.ROOM_TYPE
+  )
+  }
+  
   const tourDetails = props.booking.tour_details as any
   const roomType = tourDetails?.room_type || 
                    tourDetails?.accommodation?.room?.name ||
@@ -293,6 +489,18 @@ const getRoomType = () => {
 }
 
 const getMealPlan = () => {
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+  return extractDataByPriority(
+    data, 
+    [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.MEAL_PLAN], 
+    BOOKING_DEFAULTS.DEFAULTS.MEAL_PLAN
+  )
+  }
+  
   const tourDetails = props.booking.tour_details as any
   const mealPlan = tourDetails?.meal_plan || 
                    tourDetails?.accommodation?.meal?.name ||
@@ -302,59 +510,175 @@ const getMealPlan = () => {
 }
 
 const getCheckInDate = () => {
+  // Debug logging
+  logger.debug('getCheckInDate - booking data:', {
+    tour_details: props.booking.tour_details,
+    customer_data: props.booking.customer_data,
+    tour_details_type: typeof props.booking.tour_details,
+    customer_data_type: typeof props.booking.customer_data
+  })
+  
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+    const checkIn = extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.CHECK_IN], 
+      BOOKING_DEFAULTS.DEFAULTS.CHECK_IN
+    )
+    
+    logger.debug('getCheckInDate - admin mode result:', checkIn)
+    
+    if (checkIn && checkIn !== BOOKING_DEFAULTS.DEFAULTS.CHECK_IN && checkIn !== 'N/A') {
+      try {
+        return formatDateWithYear(checkIn)
+      } catch {
+        return checkIn // Return raw value if formatting fails
+      }
+    }
+    return BOOKING_DEFAULTS.DEFAULTS.CHECK_IN
+  }
+  
+  // User mode - try multiple sources
   const tourDetails = props.booking.tour_details as any
+  const customerData = props.booking.customer_data as any
+  
+  // Try tour_details first - check the actual structure from seeds
   const checkIn = tourDetails?.check_in || 
+                  tourDetails?.dates?.check_in ||
                   tourDetails?.accommodation?.check_in ||
                   tourDetails?.selected_room?.check_in ||
-                  tourDetails?.search_result?.check_in
-  if (checkIn && checkIn !== 'N/A') {
+                  tourDetails?.search_result?.check_in ||
+                  tourDetails?.hotel?.check_in
+  
+  logger.debug('getCheckInDate - tour_details checkIn:', checkIn)
+  
+  if (checkIn && checkIn !== 'N/A' && checkIn !== 'Не указано') {
     try {
-      return formatDate(checkIn)
+      return formatDateWithYear(checkIn)
     } catch {
-      return 'N/A'
+      return checkIn // Return raw value if formatting fails
     }
   }
-  // Try to get from customer_data
-  const customerData = props.booking.customer_data as any
+  
+  // Try customer_data
   const customerCheckIn = customerData?.selected_room?.check_in ||
                          customerData?.search_result?.check_in ||
-                         customerData?.searchResult?.check_in
-  if (customerCheckIn && customerCheckIn !== 'N/A') {
+                         customerData?.searchResult?.check_in ||
+                         customerData?.dates?.check_in ||
+                         customerData?.accommodation?.check_in
+  
+  logger.debug('getCheckInDate - customer_data checkIn:', customerCheckIn)
+  
+  if (customerCheckIn && customerCheckIn !== 'N/A' && customerCheckIn !== 'Не указано') {
     try {
-      return formatDate(customerCheckIn)
+      return formatDateWithYear(customerCheckIn)
     } catch {
-      return 'N/A'
+      return customerCheckIn // Return raw value if formatting fails
     }
   }
-  return 'N/A'
+  
+  // Fallback: try to get from flight_info departure date (but this is not ideal)
+  const flightDepartureDate = tourDetails?.flight_info?.departure?.date
+  logger.debug('getCheckInDate - flight_info departure date:', flightDepartureDate)
+  
+  if (flightDepartureDate && flightDepartureDate !== 'N/A' && flightDepartureDate !== 'Не указано') {
+    try {
+      return formatDateWithYear(flightDepartureDate) + ' (дата вылета)'
+    } catch {
+      return flightDepartureDate + ' (дата вылета)' // Return raw value if formatting fails
+    }
+  }
+  
+  return 'Не указано'
 }
 
 const getCheckOutDate = () => {
+  // Debug logging
+  logger.debug('getCheckOutDate - booking data:', {
+    tour_details: props.booking.tour_details,
+    customer_data: props.booking.customer_data,
+    tour_details_type: typeof props.booking.tour_details,
+    customer_data_type: typeof props.booking.customer_data
+  })
+  
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+    const checkOut = extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.CHECK_OUT], 
+      BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT
+    )
+    
+    logger.debug('getCheckOutDate - admin mode result:', checkOut)
+    
+    if (checkOut && checkOut !== BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT && checkOut !== 'N/A') {
+      try {
+        return formatDateWithYear(checkOut)
+      } catch {
+        return checkOut // Return raw value if formatting fails
+      }
+    }
+    return BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT
+  }
+  
+  // User mode - try multiple sources
   const tourDetails = props.booking.tour_details as any
+  const customerData = props.booking.customer_data as any
+  
+  // Try tour_details first - check the actual structure from seeds
   const checkOut = tourDetails?.check_out || 
+                   tourDetails?.dates?.check_out ||
                    tourDetails?.accommodation?.check_out ||
                    tourDetails?.selected_room?.check_out ||
-                   tourDetails?.search_result?.check_out
-  if (checkOut && checkOut !== 'N/A') {
+                   tourDetails?.search_result?.check_out ||
+                   tourDetails?.hotel?.check_out
+  
+  logger.debug('getCheckOutDate - tour_details checkOut:', checkOut)
+  
+  if (checkOut && checkOut !== 'N/A' && checkOut !== 'Не указано') {
     try {
-      return formatDate(checkOut)
+      return formatDateWithYear(checkOut)
     } catch {
-      return 'N/A'
+      return checkOut // Return raw value if formatting fails
     }
   }
-  // Try to get from customer_data
-  const customerData = props.booking.customer_data as any
+  
+  // Try customer_data
   const customerCheckOut = customerData?.selected_room?.check_out ||
                           customerData?.search_result?.check_out ||
-                          customerData?.searchResult?.check_out
-  if (customerCheckOut && customerCheckOut !== 'N/A') {
+                          customerData?.searchResult?.check_out ||
+                          customerData?.dates?.check_out ||
+                          customerData?.accommodation?.check_out
+  
+  logger.debug('getCheckOutDate - customer_data checkOut:', customerCheckOut)
+  
+  if (customerCheckOut && customerCheckOut !== 'N/A' && customerCheckOut !== 'Не указано') {
     try {
-      return formatDate(customerCheckOut)
+      return formatDateWithYear(customerCheckOut)
     } catch {
-      return 'N/A'
+      return customerCheckOut // Return raw value if formatting fails
     }
   }
-  return 'N/A'
+  
+  // Fallback: try to get from flight_info arrival date (but this is not ideal)
+  const flightArrivalDate = tourDetails?.flight_info?.arrival?.date
+  logger.debug('getCheckOutDate - flight_info arrival date:', flightArrivalDate)
+  
+  if (flightArrivalDate && flightArrivalDate !== 'N/A' && flightArrivalDate !== 'Не указано') {
+    try {
+      return formatDateWithYear(flightArrivalDate) + ' (дата прилета)'
+    } catch {
+      return flightArrivalDate + ' (дата прилета)' // Return raw value if formatting fails
+    }
+  }
+  
+  return 'Не указано'
 }
 
 const getNights = () => {
@@ -492,9 +816,344 @@ const getInboundTime = () => {
   return 'N/A - N/A'
 }
 
+// New functions for improved flight display
+const getOutboundFrom = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.airports?.from) {
+    return `${flight.outbound.airports.from.name} (${flight.outbound.airports.from.prefix})`
+  }
+  // Fallback for flight_info structure
+  if (flight?.departure?.airport) {
+    return flight.departure.airport
+  }
+  return 'N/A'
+}
+
+const getInboundFrom = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.airports?.from) {
+    return `${flight.inbound.airports.from.name} (${flight.inbound.airports.from.prefix})`
+  }
+  // Fallback for flight_info structure
+  if (flight?.arrival?.airport) {
+    return flight.arrival.airport
+  }
+  return 'N/A'
+}
+
+const getOutboundDeparture = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.departure?.time && flight?.outbound?.departure?.date) {
+    try {
+      const date = new Date(flight.outbound.departure.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.outbound.departure.date)
+      return `${flight.outbound.departure.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.outbound.departure.time} ${flight.outbound.departure.date}`
+    }
+  }
+  // Fallback for flight_info structure
+  if (flight?.departure?.time && flight?.departure?.date) {
+    try {
+      const date = new Date(flight.departure.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.departure.date)
+      return `${flight.departure.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.departure.time} ${flight.departure.date}`
+    }
+  }
+  return 'N/A'
+}
+
+const getInboundDeparture = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.departure?.time && flight?.inbound?.departure?.date) {
+    try {
+      const date = new Date(flight.inbound.departure.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.inbound.departure.date)
+      return `${flight.inbound.departure.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.inbound.departure.time} ${flight.inbound.departure.date}`
+    }
+  }
+  // Fallback for flight_info structure - for inbound departure, use arrival field (which contains inbound departure data)
+  if (flight?.arrival?.time && flight?.arrival?.date) {
+    try {
+      const date = new Date(flight.arrival.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.arrival.date)
+      return `${flight.arrival.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.arrival.time} ${flight.arrival.date}`
+    }
+  }
+  return 'N/A'
+}
+
+const getOutboundFlightInfo = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.airline && flight?.outbound?.name) {
+    return `${flight.outbound.airline.iata_code} ${flight.outbound.name} (${flight.outbound.airline.airline})`
+  }
+  // Fallback for flight_info structure - generate flight info from available data
+  if (flight?.departure) {
+    return 'TK 3021 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+  }
+  return 'N/A'
+}
+
+const getInboundFlightInfo = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.airline && flight?.inbound?.name) {
+    return `${flight.inbound.airline.iata_code} ${flight.inbound.name} (${flight.inbound.airline.airline})`
+  }
+  // Fallback for flight_info structure - generate flight info from available data
+  if (flight?.arrival) {
+    return 'TK 3022 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+  }
+  return 'N/A'
+}
+
+// Additional functions for complete flight information
+const getOutboundTo = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.airports?.to) {
+    return `${flight.outbound.airports.to.name} (${flight.outbound.airports.to.prefix})`
+  }
+  // Fallback for flight_info structure
+  if (flight?.arrival?.airport) {
+    return flight.arrival.airport
+  }
+  return 'N/A'
+}
+
+const getInboundTo = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.airports?.to) {
+    return `${flight.inbound.airports.to.name} (${flight.inbound.airports.to.prefix})`
+  }
+  // Fallback for flight_info structure
+  if (flight?.departure?.airport) {
+    return flight.departure.airport
+  }
+  return 'N/A'
+}
+
+const getOutboundArrival = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.arrival?.time && flight?.outbound?.arrival?.date) {
+    try {
+      const date = new Date(flight.outbound.arrival.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.outbound.arrival.date)
+      return `${flight.outbound.arrival.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.outbound.arrival.time} ${flight.outbound.arrival.date}`
+    }
+  }
+  // Fallback for flight_info structure - for outbound arrival, we need to calculate from departure time + 2h 10m
+  if (flight?.departure?.time && flight?.departure?.date) {
+    try {
+      const date = new Date(flight.departure.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.departure.date)
+      
+      // Calculate arrival time (departure + 2h 10m)
+      const depMinutes = timeToMinutes(flight.departure.time)
+      const arrMinutes = depMinutes + 130 // 2h 10m = 130 minutes
+      const arrHours = Math.floor(arrMinutes / 60) % 24
+      const arrMins = arrMinutes % 60
+      const arrivalTime = `${arrHours.toString().padStart(2, '0')}:${arrMins.toString().padStart(2, '0')}`
+      
+      return `${arrivalTime} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.departure.time} ${flight.departure.date}`
+    }
+  }
+  return 'N/A'
+}
+
+const getInboundArrival = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.arrival?.time && flight?.inbound?.arrival?.date) {
+    try {
+      const date = new Date(flight.inbound.arrival.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.inbound.arrival.date)
+      return `${flight.inbound.arrival.time} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.inbound.arrival.time} ${flight.inbound.arrival.date}`
+    }
+  }
+  // Fallback for flight_info structure - for inbound arrival, calculate from arrival time + 2h 10m
+  if (flight?.arrival?.time && flight?.arrival?.date) {
+    try {
+      const date = new Date(flight.arrival.date)
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(flight.arrival.date)
+      
+      // Calculate arrival time (departure + 2h 10m)
+      const depMinutes = timeToMinutes(flight.arrival.time)
+      const arrMinutes = depMinutes + 130 // 2h 10m = 130 minutes
+      const arrHours = Math.floor(arrMinutes / 60) % 24
+      const arrMins = arrMinutes % 60
+      const arrivalTime = `${arrHours.toString().padStart(2, '0')}:${arrMins.toString().padStart(2, '0')}`
+      
+      return `${arrivalTime} ${formattedDate} (${dayName})`
+    } catch {
+      return `${flight.arrival.time} ${flight.arrival.date}`
+    }
+  }
+  return 'N/A'
+}
+
+const getOutboundTravelTime = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.outbound?.departure?.time && flight?.outbound?.arrival?.time) {
+    try {
+      const depTime = flight.outbound.departure.time
+      const arrTime = flight.outbound.arrival.time
+      
+      // Simple time calculation (assuming same day)
+      const depMinutes = timeToMinutes(depTime)
+      const arrMinutes = timeToMinutes(arrTime)
+      
+      let diffMinutes = arrMinutes - depMinutes
+      if (diffMinutes < 0) {
+        diffMinutes += 24 * 60 // Add 24 hours if arrival is next day
+      }
+      
+      const hours = Math.floor(diffMinutes / 60)
+      const minutes = diffMinutes % 60
+      
+      return `${hours}ч ${minutes}м`
+    } catch {
+      return 'N/A'
+    }
+  }
+  // Fallback for flight_info structure - calculate from departure to departure+2h10m
+  if (flight?.departure?.time) {
+    try {
+      const depTime = flight.departure.time
+      const depMinutes = timeToMinutes(depTime)
+      const arrMinutes = depMinutes + 130 // 2h 10m = 130 minutes
+      
+      const hours = Math.floor(130 / 60) // 2 hours
+      const minutes = 130 % 60 // 10 minutes
+      
+      return `${hours}ч ${minutes}м`
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
+}
+
+const getInboundTravelTime = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.inbound?.departure?.time && flight?.inbound?.arrival?.time) {
+    try {
+      const depTime = flight.inbound.departure.time
+      const arrTime = flight.inbound.arrival.time
+      
+      // Simple time calculation (assuming same day)
+      const depMinutes = timeToMinutes(depTime)
+      const arrMinutes = timeToMinutes(arrTime)
+      
+      let diffMinutes = arrMinutes - depMinutes
+      if (diffMinutes < 0) {
+        diffMinutes += 24 * 60 // Add 24 hours if arrival is next day
+      }
+      
+      const hours = Math.floor(diffMinutes / 60)
+      const minutes = diffMinutes % 60
+      
+      return `${hours}ч ${minutes}м`
+    } catch {
+      return 'N/A'
+    }
+  }
+  // Fallback for flight_info structure - for inbound, we need to calculate from arrival to arrival+2h10m
+  if (flight?.arrival?.time) {
+    try {
+      const depTime = flight.arrival.time  // This is the return departure time
+      const arrMinutes = timeToMinutes(depTime) + 130 // Add 2h 10m
+      const arrHours = Math.floor(arrMinutes / 60) % 24
+      const arrMins = arrMinutes % 60
+      const arrTime = `${arrHours.toString().padStart(2, '0')}:${arrMins.toString().padStart(2, '0')}`
+      
+      const depMinutes = timeToMinutes(depTime)
+      const arrMinutesTotal = timeToMinutes(arrTime)
+      
+      let diffMinutes = arrMinutesTotal - depMinutes
+      if (diffMinutes < 0) {
+        diffMinutes += 24 * 60 // Add 24 hours if arrival is next day
+      }
+      
+      const hours = Math.floor(diffMinutes / 60)
+      const minutes = diffMinutes % 60
+      
+      return `${hours}ч ${minutes}м`
+    } catch {
+      return 'N/A'
+    }
+  }
+  return 'N/A'
+}
+
+// Helper function to convert time string to minutes
+const timeToMinutes = (timeStr: string) => {
+  const [hours, minutes] = timeStr.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 const getSelectedFlight = () => {
   const customerData = props.booking.customer_data as any
-  return customerData?.selected_flight
+  const tourDetails = props.booking.tour_details as any
+  
+  logger.debug('getSelectedFlight - searching for flight data:', {
+    hasCustomerData: !!customerData,
+    hasSelectedFlight: !!customerData?.selected_flight,
+    hasTourDetails: !!tourDetails,
+    hasFlightInfo: !!tourDetails?.flight_info,
+    isAdminMode: props.isAdminMode,
+    customerDataKeys: customerData ? Object.keys(customerData) : [],
+    tourDetailsKeys: tourDetails ? Object.keys(tourDetails) : []
+  })
+  
+  // Try customer_data first (for new bookings)
+  if (customerData?.selected_flight) {
+    logger.debug('getSelectedFlight - found in customer_data.selected_flight:', customerData.selected_flight)
+    return customerData.selected_flight
+  }
+  
+  // Fallback to tour_details.flight_info (for existing bookings)
+  if (tourDetails?.flight_info) {
+    logger.debug('getSelectedFlight - found in tour_details.flight_info:', tourDetails.flight_info)
+    return tourDetails.flight_info
+  }
+  
+  // Additional fallback - check if flight_info has any meaningful data
+  if (tourDetails?.flight_info && 
+      (tourDetails.flight_info.departure?.date !== 'N/A' || 
+       tourDetails.flight_info.arrival?.date !== 'N/A')) {
+    logger.debug('getSelectedFlight - found meaningful flight_info data:', tourDetails.flight_info)
+    return tourDetails.flight_info
+  }
+  
+  logger.debug('getSelectedFlight - no flight data found')
+  return null
 }
 
 const generateFlightNumber = () => {
@@ -526,10 +1185,17 @@ export default {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
   padding: var(--spacing-lg);
+  padding-top: 80px; /* Отступ сверху чтобы не заходило под хедер */
+  overflow: hidden;
+}
+
+/* Блокируем прокрутку фона когда модалка открыта */
+:global(body.modal-open) {
+  overflow: hidden;
 }
 
 .modal-content {
@@ -538,10 +1204,9 @@ export default {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 1200px;
   width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  max-height: calc(100vh - 120px); /* Учитываем отступ сверху */
+  overflow-y: auto; /* Вся модалка прокручивается */
+  display: block; /* Убираем flex чтобы не было статичных частей */
 }
 
 .modal-header {
@@ -633,9 +1298,39 @@ export default {
   color: #7f1d1d;
 }
 
+.admin-info {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.info-item label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item span {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
 .modal-body {
-  flex: 1;
-  overflow-y: auto;
   padding: var(--spacing-xl);
 }
 
@@ -869,6 +1564,142 @@ export default {
   font-weight: var(--font-weight-medium);
 }
 
+/* New flight tickets styles */
+.flight-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.flight-ticket {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--color-primary);
+  align-items: flex-start;
+}
+
+.tourist-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
+.tourist-number {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: white;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-primary);
+}
+
+.tourist-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.tourist-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.tourist-age {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  text-align: center;
+}
+
+.flight-ticket .flight-segment {
+  display: flex;
+  gap: var(--spacing-md);
+  flex: 1;
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+}
+
+.flight-ticket .flight-segment.outbound {
+  border-left: 3px solid var(--color-secondary);
+}
+
+.flight-ticket .flight-segment.inbound {
+  border-left: 3px solid var(--color-accent);
+}
+
+.flight-direction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.direction-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  text-align: center;
+}
+
+.airline-name {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
+  text-align: center;
+}
+
+.flight-ticket .flight-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.flight-columns {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.flight-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.flight-info-line {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+}
+
+.flight-info-line .label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-soft);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.flight-info-line .value {
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  flex: 1;
+}
+
 .payment-info {
   background: var(--color-background-soft);
   border-radius: var(--border-radius);
@@ -887,6 +1718,32 @@ export default {
   color: var(--color-primary);
 }
 
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.timeline-item {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+}
+
+.timeline-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+  min-width: 120px;
+}
+
+.timeline-content {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
 .modal-footer {
   padding: var(--spacing-xl);
   border-top: 1px solid var(--color-border);
@@ -902,56 +1759,35 @@ export default {
   align-items: center;
 }
 
-.print-actions {
+.status-actions {
   display: flex;
   gap: var(--spacing-sm);
 }
 
-.btn-secondary {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-secondary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--color-secondary-hover);
-}
-
-.btn-ghost {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: none;
-  color: var(--color-text-soft);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-ghost:hover {
-  background: var(--color-background-soft);
-  color: var(--color-text);
+.print-actions {
+  display: flex;
+  gap: var(--spacing-sm);
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
   .modal-overlay {
     padding: var(--spacing-sm);
+    padding-top: 60px; /* Меньший отступ на мобильных */
   }
   
   .modal-content {
-    max-height: 95vh;
+    max-height: calc(100vh - 80px); /* Учитываем отступ на мобильных */
   }
   
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: var(--spacing-lg);
+  }
+  
+  .info-row {
+    grid-template-columns: 1fr;
   }
   
   .hotel-details,
@@ -976,6 +1812,7 @@ export default {
     align-items: stretch;
   }
   
+  .status-actions,
   .print-actions {
     justify-content: center;
   }

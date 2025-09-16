@@ -12,6 +12,20 @@ export const formatDate = (dateString: string): string => {
 }
 
 /**
+ * Форматирует дату в формат DD.MM.YYYY
+ * @param dateString - строка даты
+ * @returns отформатированная дата с годом
+ */
+export const formatDateWithYear = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+/**
  * Форматирует дату и время в формат DD.MM.YYYY HH:MM
  * @param dateString - строка даты
  * @returns отформатированная дата и время

@@ -34,12 +34,11 @@
 </template>
 
 <script setup lang="ts">
-  import { defineAsyncComponent } from 'vue'
   import type { GroupedSearchResult } from '../types/search'
   
-  // Динамический импорт компонентов
-  const Pagination = defineAsyncComponent(() => import('./Pagination.vue'))
-  const HotelResultCard = defineAsyncComponent(() => import('./search/HotelResultCard.vue'))
+  // Импортируем компоненты напрямую для лучшей производительности
+  import Pagination from './Pagination.vue'
+  import HotelResultCard from './search/HotelResultCard.vue'
 
   // Props
   interface Props {

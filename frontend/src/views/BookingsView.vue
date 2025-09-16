@@ -95,6 +95,7 @@
   interface Booking {
     id: number
     obs_booking_hash: string
+    obs_order_id?: string
     status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
     total_amount: string | number
     tour_details: Record<string, unknown>
@@ -118,16 +119,25 @@
       
       // Check if user is authenticated
       const token = localStorage.getItem('accessToken')
-      console.log('Auth token:', token ? 'Present' : 'Missing')
+      logger.debug('Auth token:', token ? 'Present' : 'Missing')
       
       logger.apiCall('GET', '/bookings')
       const response = await apiClient.get<{ success: boolean; data: { bookings: Booking[] } }>('/bookings')
       
-      console.log('Bookings API response:', response)
+      logger.debug('Bookings API response:', response)
       logger.info('Bookings loaded:', response.data?.bookings)
-      bookings.value = response.data?.bookings || []
-      console.log('Bookings value after assignment:', bookings.value)
-      console.log('Bookings length:', bookings.value.length)
+      
+      // Handle both possible response structures
+      if (response.data?.bookings) {
+        bookings.value = response.data.bookings
+      } else if (Array.isArray(response.data)) {
+        bookings.value = response.data
+      } else {
+        bookings.value = []
+      }
+      logger.debug('Bookings value after assignment:', bookings.value)
+      logger.debug('Bookings length:', bookings.value.length)
+      logger.debug('First booking sample:', bookings.value[0])
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load bookings'
       error.value = message
@@ -163,7 +173,7 @@
   // Helper functions to extract data from booking
   const getHotelName = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getHotelName - tourDetails:', tourDetails)
+    logger.debug('getHotelName - tourDetails:', tourDetails)
     
     // Try different possible structures
     return tourDetails?.hotel?.name || 
@@ -175,7 +185,7 @@
 
   const getHotelCategory = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getHotelCategory - tourDetails:', tourDetails)
+    logger.debug('getHotelCategory - tourDetails:', tourDetails)
     
     return tourDetails?.hotel?.category || 
            tourDetails?.hotel_category || 
@@ -186,7 +196,7 @@
 
   const getHotelCity = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getHotelCity - tourDetails:', tourDetails)
+    logger.debug('getHotelCity - tourDetails:', tourDetails)
     
     return tourDetails?.hotel?.city || 
            tourDetails?.city || 
@@ -197,7 +207,7 @@
 
   const getNights = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getNights - tourDetails:', tourDetails)
+    logger.debug('getNights - tourDetails:', tourDetails)
     
     return tourDetails?.nights?.total || 
            tourDetails?.nights || 
@@ -209,7 +219,7 @@
 
   const getAdults = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getAdults - tourDetails:', tourDetails)
+    logger.debug('getAdults - tourDetails:', tourDetails)
     
     return tourDetails?.adults || 
            tourDetails?.tourists?.adults ||
@@ -220,7 +230,7 @@
 
   const getChildren = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getChildren - tourDetails:', tourDetails)
+    logger.debug('getChildren - tourDetails:', tourDetails)
     
     return tourDetails?.children || 
            tourDetails?.tourists?.children ||
@@ -231,7 +241,7 @@
 
   const getCheckIn = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getCheckIn - tourDetails:', tourDetails)
+    logger.debug('getCheckIn - tourDetails:', tourDetails)
     
     return tourDetails?.check_in || 
            tourDetails?.hotel?.check_in ||
@@ -243,7 +253,7 @@
 
   const getCheckOut = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    console.log('getCheckOut - tourDetails:', tourDetails)
+    logger.debug('getCheckOut - tourDetails:', tourDetails)
     
     return tourDetails?.check_out || 
            tourDetails?.hotel?.check_out ||
@@ -261,7 +271,7 @@
   onMounted(() => {
     // Check authentication status
     const token = localStorage.getItem('accessToken')
-    console.log('Page mounted - Auth token:', token ? 'Present' : 'Missing')
+    logger.debug('Page mounted - Auth token:', token ? 'Present' : 'Missing')
     
     if (!token) {
       console.warn('No auth token found, redirecting to login')

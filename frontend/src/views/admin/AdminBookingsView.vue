@@ -292,6 +292,7 @@
     <BookingDetailsModal
       v-if="selectedBooking"
       :booking="selectedBooking"
+      :is-admin-mode="true"
       @close="selectedBooking = null"
       @status-changed="handleStatusChanged"
     />
@@ -304,9 +305,10 @@ import { useRoute } from 'vue-router'
 import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
-import BookingDetailsModal from './components/admin/BookingDetailsModal.vue'
+import BookingDetailsModal from '../../components/booking/BookingDetailsModal.vue'
 import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
+import { logger } from '../../utils/logger'
 import { useAdminApi } from '../../composables/useAdminApi'
 import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaults'
 import type { AdminBooking } from '../../types/admin'
@@ -492,7 +494,7 @@ const loadBookings = async () => {
     
     const combinedSearch = searchTerms.length > 0 ? searchTerms.join(' ') : undefined
     
-    console.log('Loading bookings...', {
+    logger.debug('Loading bookings...', {
       page: currentPage.value,
       per_page: 20,
       status: filters.value.status || searchFilters.value.status || undefined,
@@ -510,7 +512,7 @@ const loadBookings = async () => {
       sort_direction: sortDirection.value || undefined
     })
     
-    console.log('Bookings response:', response)
+    logger.debug('Bookings response:', response)
     
     // API returns data in response.data structure
     const data = (response.data || response) as {
@@ -520,6 +522,9 @@ const loadBookings = async () => {
         total_count: number
       }
     }
+    
+    logger.debug('Processed data:', data)
+    logger.debug('Bookings count:', data.bookings?.length || 0)
     
     // Transform API data to match AdminBooking interface
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -588,7 +593,8 @@ const loadBookings = async () => {
     totalPages.value = data.pagination?.total_pages || 1
     totalCount.value = data.pagination?.total_count || 0
     
-    console.log('Bookings loaded:', allBookings.value.length)
+    logger.debug('Bookings loaded:', allBookings.value.length)
+    logger.debug('First booking sample:', allBookings.value[0])
   } catch (error) {
     console.error('Failed to load bookings:', error)
     // Fallback to empty array on error

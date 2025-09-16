@@ -1,11 +1,11 @@
 # OBS API Adapter
 # High-level interface for OBS API operations
-class ObsAdapter < BaseApiService
+class ObsAdapter < OperatorAdapter
   attribute :user_id, :integer
   attribute :base_url, :string, default: -> { ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md' }
 
   def initialize(attributes = {})
-    super
+    super(attributes.merge(operator_type: 'obs'))
     @auth_service = ObsAuthService.new(user_id: user_id) if user_id.present?
     @site_auth_service = ObsSiteAuthService.instance
   end

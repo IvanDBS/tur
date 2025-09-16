@@ -53,6 +53,20 @@ if Rails.env.production? || Rails.env.development?
       'class' => 'SyncHotelsJob',
       'args' => ['cities'],
       'description' => 'Weekly sync of departure/arrival cities'
+    },
+    
+    # System monitoring every 5 minutes
+    'system_monitoring' => {
+      'cron' => '*/5 * * * *',
+      'class' => 'SystemMonitoringJob',
+      'description' => 'System health monitoring every 5 minutes'
+    },
+    
+    # Operator health monitoring every 10 minutes
+    'operator_health_monitoring' => {
+      'cron' => '*/10 * * * *',
+      'class' => 'OperatorHealthMonitoringJob',
+      'description' => 'Operator health monitoring every 10 minutes'
     }
   })
   

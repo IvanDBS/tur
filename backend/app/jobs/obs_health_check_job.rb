@@ -7,6 +7,7 @@ class ObsHealthCheckJob < ApplicationJob
 
   def perform
     Rails.logger.info "Starting OBS API health check"
+    alert_service = AlertService.instance
 
     site_auth = ObsSiteAuthService.instance
 
@@ -15,9 +16,13 @@ class ObsHealthCheckJob < ApplicationJob
       
       if site_auth.reauthenticate
         Rails.logger.info "✅ OBS API re-authentication successful"
+        alert_service.info("OBS API re-authentication successful after health check failure")
       else
         Rails.logger.error "❌ OBS API re-authentication failed"
-        # Could trigger alerting here
+        alert_service.obs_auth_failed({
+          error: "Re-authentication failed during health check",
+          timestamp: Time.current.iso8601
+        })
       end
     else
       Rails.logger.info "✅ OBS API authentication healthy"
@@ -32,6 +37,8 @@ class ObsHealthCheckJob < ApplicationJob
   private
 
   def test_api_connectivity
+    alert_service = AlertService.instance
+    
     begin
       obs_service = ObsApiService.new(
         base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
@@ -45,10 +52,18 @@ class ObsHealthCheckJob < ApplicationJob
         Rails.logger.info "✅ OBS API connectivity test successful - found #{cities.size} departure cities"
       else
         Rails.logger.warn "⚠️ OBS API connectivity test returned unexpected data format"
+        alert_service.warning("OBS API returned unexpected data format", {
+          response_type: cities.class.name,
+          response_size: cities.respond_to?(:size) ? cities.size : 'unknown'
+        })
       end
     rescue StandardError => e
       Rails.logger.error "❌ OBS API connectivity test failed: #{e.message}"
-      # Could trigger alerting here
+      alert_service.obs_api_down({
+        error: e.message,
+        error_class: e.class.name,
+        timestamp: Time.current.iso8601
+      })
     end
   end
 end

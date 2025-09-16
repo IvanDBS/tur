@@ -17,7 +17,7 @@ Rails.application.configure do
 
   # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment
   # key such as config/credentials/production.key. This key is used to decrypt credentials (and other encrypted files).
-  # config.require_master_key = true
+  config.require_master_key = true
 
   # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
   # config.public_file_server.enabled = false
@@ -44,13 +44,24 @@ Rails.application.configure do
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
 
-  # Log to STDOUT by default
+  # Enhanced logging for production
   config.logger = ActiveSupport::Logger.new(STDOUT)
     .tap  { |logger| logger.formatter = ::Logger::Formatter.new }
     .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
 
   # Prepend all log lines with the following tags.
-  config.log_tags = [ :request_id ]
+  config.log_tags = [ :request_id, :remote_ip, :user_id ]
+
+  # Enhanced log formatting for production monitoring
+  config.log_formatter = proc do |severity, datetime, progname, msg|
+    {
+      timestamp: datetime.iso8601,
+      level: severity,
+      message: msg,
+      service: 'tour-booking-api',
+      environment: Rails.env
+    }.to_json + "\n"
+  end
 
   # "info" includes generic and useful information about system operation, but avoids logging too much
   # information to avoid inadvertent exposure of personally identifiable information (PII). If you
@@ -81,10 +92,13 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
+  config.hosts = [
+    ENV['PRODUCTION_HOST'] || 'migo.md',     # Main production domain
+    /.*\.migo\.md/,                          # Allow requests from subdomains like `api.migo.md`
+    /.*\.herokuapp\.com/,                    # Heroku domains if using Heroku
+    /.*\.railway\.app/,                      # Railway domains if using Railway
+    /.*\.fly\.dev/                           # Fly.io domains if using Fly.io
+  ]
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

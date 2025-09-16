@@ -35,17 +35,29 @@ class BaseApiService
     case response.status
     when 200..299
       response.body
+    when 400
+      raise ApiError::BadRequestError, "Bad request: #{response.body}"
     when 401
       raise ApiError::UnauthorizedError, "Authentication failed: #{response.body}"
+    when 403
+      raise ApiError::ForbiddenError, "Access forbidden: #{response.body}"
+    when 404
+      raise ApiError::NotFoundError, "Resource not found: #{response.body}"
     when 422
       raise ApiError::ValidationError, "Validation failed: #{response.body}"
     when 429
-      raise ApiError::RateLimitError, "Rate limit exceeded: #{response.body}"
+      handle_rate_limit(response)
     when 500..599
       raise ApiError::ServerError, "Server error: #{response.status} - #{response.body}"
     else
       raise ApiError::Error, "Unexpected response: #{response.status} - #{response.body}"
     end
+  end
+
+  # Обработка rate limiting
+  def handle_rate_limit(response)
+    retry_after = response.headers['Retry-After']&.to_i || 60
+    raise ApiError::RateLimitError, "Rate limit exceeded. Retry after #{retry_after} seconds: #{response.body}"
   end
 
   # Настройки повторных попыток
@@ -55,10 +67,22 @@ class BaseApiService
       interval: 0.5,
       backoff_factor: 2,
       retry_if: ->(env, exception) {
-        # Retry on network errors and 5xx responses
+        # Retry on network errors, 5xx responses, and rate limits
         exception.is_a?(Faraday::TimeoutError) ||
           exception.is_a?(Faraday::ConnectionFailed) ||
-          (env[:status] && env[:status] >= 500)
+          exception.is_a?(Faraday::SSLError) ||
+          (env[:status] && env[:status] >= 500) ||
+          (env[:status] && env[:status] == 429)
+      },
+      retry_block: ->(env, options, retries, exception) {
+        if env[:status] == 429
+          # Handle rate limiting with exponential backoff
+          retry_after = env[:response_headers]['Retry-After']&.to_i || 60
+          sleep(retry_after)
+        else
+          # Standard exponential backoff
+          sleep(options[:interval] * (options[:backoff_factor] ** retries))
+        end
       }
     }
   end
@@ -153,8 +177,13 @@ end
 module ApiError
   class Error < StandardError; end
   class NetworkError < Error; end
+  class BadRequestError < Error; end
   class UnauthorizedError < Error; end
+  class ForbiddenError < Error; end
+  class NotFoundError < Error; end
   class ValidationError < Error; end
   class RateLimitError < Error; end
   class ServerError < Error; end
+  class TimeoutError < Error; end
+  class CircuitOpenError < Error; end
 end

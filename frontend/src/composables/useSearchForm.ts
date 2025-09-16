@@ -602,6 +602,8 @@ export const useSearchForm = () => {
       nights_from: Number(searchForm.value.nights),
       nights_to: Number(searchForm.value.nights2 || searchForm.value.nights),
       adults: Number(searchForm.value.adults),
+      price_from: searchForm.value.priceFrom || undefined,
+      price_to: searchForm.value.priceTo || undefined,
       selected_hotels: (() => {
         const hotels = getSelectedHotelsForSearch(searchData)
         logger.info(`🏨 Selected hotels for search: ${hotels.length} hotels`, hotels.slice(0, 5))
@@ -627,6 +629,8 @@ export const useSearchForm = () => {
       nights_from: searchParams.nights_from,
       nights_to: searchParams.nights_to,
       adults: searchParams.adults,
+      price_from: searchParams.price_from,
+      price_to: searchParams.price_to,
       meals: searchParams.meals,
       selected_hotels_count: searchParams.selected_hotels?.length || 0,
       selected_hotels_first_5: searchParams.selected_hotels?.slice(0, 5) || []

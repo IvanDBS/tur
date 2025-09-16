@@ -210,6 +210,37 @@
           </div>
         </div>
 
+        <!-- Booking Notes and Comments -->
+        <div class="section" v-if="hasBookingNotes()">
+          <div class="section-header">
+            <div class="section-icon">📝</div>
+            <h3 class="section-title">Пометки и комментарии</h3>
+          </div>
+          <div class="booking-notes-info">
+            <div class="notes-section" v-if="getSelectedNotes().length > 0">
+              <h4 class="notes-subtitle">Выбранные пометки:</h4>
+              <div class="notes-list">
+                <div 
+                  v-for="note in getSelectedNotes()" 
+                  :key="note"
+                  class="note-item"
+                >
+                  <div class="note-icon">✓</div>
+                  <span class="note-text">{{ note }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="comment-section" v-if="getBookingComment()">
+              <h4 class="notes-subtitle">Комментарий:</h4>
+              <div class="comment-content">
+                <div class="comment-icon">💬</div>
+                <span class="comment-text">{{ getBookingComment() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Payment Information -->
         <div class="section">
           <div class="section-header">
@@ -1680,6 +1711,56 @@ const generateAirline = () => {
   const airlines = ['FLY ONE', 'MGA AIRLINES', 'WIZZ AIR', 'RYANAIR']
   return airlines[Math.floor(Math.random() * airlines.length)]
 }
+
+// Booking notes and comments methods
+const hasBookingNotes = () => {
+  const customerData = props.booking.customer_data || {}
+  const notes = customerData.notes || {}
+  
+  // Check if there are any selected notes
+  const hasSelectedNotes = Object.keys(notes).some(key => 
+    key !== 'comment' && notes[key] === true
+  )
+  
+  // Check if there's a comment
+  const hasComment = notes.comment && notes.comment.trim().length > 0
+  
+  return hasSelectedNotes || hasComment
+}
+
+const getSelectedNotes = (): string[] => {
+  const customerData = props.booking.customer_data || {}
+  const notes = customerData.notes || {}
+  const selectedNotes: string[] = []
+  
+  // Map of note keys to display labels
+  const noteLabels: Record<string, string> = {
+    honeymooners: 'Медовый месяц',
+    regularGuest: 'Постоянный гость отеля',
+    twinBeds: 'Две отдельные кровати',
+    groundFloor: 'Первый этаж',
+    notGroundFloor: 'НЕ первый этаж',
+    babyCot: 'Детская кроватка',
+    handicapAccessible: 'Доступная комната для инвалидов',
+    doubleBed: 'Двуспальная кровать'
+  }
+  
+  // Check each note and add to selectedNotes if true
+  Object.keys(noteLabels).forEach(key => {
+    if (notes[key] === true) {
+      selectedNotes.push(noteLabels[key])
+    }
+  })
+  
+  return selectedNotes
+}
+
+const getBookingComment = (): string => {
+  const customerData = props.booking.customer_data || {}
+  const notes = customerData.notes || {}
+  
+  return notes.comment || ''
+}
 </script>
 
 <script lang="ts">
@@ -2327,6 +2408,114 @@ export default {
   .status-actions,
   .print-actions {
     justify-content: center;
+  }
+}
+
+/* Booking Notes and Comments Styles */
+.booking-notes-info {
+  padding: var(--spacing-lg);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+}
+
+.notes-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.notes-section:last-child {
+  margin-bottom: 0;
+}
+
+.notes-subtitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-md) 0;
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.note-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: white;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border-light);
+}
+
+.note-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-success);
+  color: white;
+  border-radius: 50%;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.note-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.comment-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border-light);
+}
+
+.comment-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.comment-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Mobile responsive for booking notes */
+@media (max-width: 768px) {
+  .booking-notes-info {
+    padding: var(--spacing-md);
+  }
+  
+  .note-item,
+  .comment-content {
+    padding: var(--spacing-sm);
+  }
+  
+  .notes-subtitle {
+    font-size: var(--font-size-sm);
   }
 }
 </style>

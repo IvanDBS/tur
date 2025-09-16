@@ -1,0 +1,91 @@
+# Tour Operators Configuration
+# This file defines configuration for all tour operators
+
+# Primary operator (fallback)
+primary_operator: obs
+
+# Operator configurations
+operators:
+  # OBS Operator (current)
+  obs:
+    enabled: true
+    name: "OBS"
+    base_url: "https://test-v2.obs.md"
+    auth_type: "jwt"
+    priority: 1
+    weight: 1
+    timeout: 30
+    retry:
+      max_retries: 3
+      base_delay: 1.0
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout: 60
+      half_open_max_calls: 3
+    features:
+      - search
+      - booking
+      - cancellation
+      - status_check
+
+  # Example: Second Operator (disabled by default)
+  operator2:
+    enabled: false
+    name: "Operator 2"
+    base_url: "https://api.operator2.com"
+    auth_type: "api_key"
+    priority: 2
+    weight: 1
+    timeout: 30
+    retry:
+      max_retries: 3
+      base_delay: 1.0
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout: 60
+      half_open_max_calls: 3
+    features:
+      - search
+      - booking
+      - cancellation
+    api_key_header: "X-API-Key"
+    api_key: "your_api_key_here"
+
+  # Example: Third Operator (disabled by default)
+  operator3:
+    enabled: false
+    name: "Operator 3"
+    base_url: "https://api.operator3.com"
+    auth_type: "basic"
+    priority: 3
+    weight: 1
+    timeout: 30
+    retry:
+      max_retries: 3
+      base_delay: 1.0
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout: 60
+      half_open_max_calls: 3
+    features:
+      - search
+      - booking
+    username: "your_username"
+    password: "your_password"
+
+# Global settings
+global:
+  # Load balancing strategy: round_robin, weighted, priority
+  load_balancing_strategy: "weighted"
+  
+  # Fallback behavior when primary operator fails
+  fallback_enabled: true
+  
+  # Health check interval (seconds)
+  health_check_interval: 300
+  
+  # Metrics collection
+  metrics_enabled: true
+  
+  # Circuit breaker global settings
+  circuit_breaker_enabled: true

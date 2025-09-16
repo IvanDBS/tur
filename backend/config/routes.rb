@@ -45,6 +45,20 @@ Rails.application.routes.draw do
         end
       end
       
+      # Operators routes
+      resources :operators, only: [:index] do
+        member do
+          get :health
+          get :metrics
+          post :test
+          patch :toggle
+        end
+        collection do
+          get :metrics, action: :all_metrics
+          get :config
+        end
+      end
+      
       # Admin routes
       get 'admin/stats', to: 'admin#stats'
       get 'admin/bookings', to: 'admin#bookings'

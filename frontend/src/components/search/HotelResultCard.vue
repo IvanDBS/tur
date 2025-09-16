@@ -245,8 +245,8 @@ const canBook = computed(() => {
 const handleBook = () => {
   // Booking button clicked
   
-  // Create unique key for grouped result
-  const uniqueKey = `${props.result.hotel.id}`
+  // Create unique key for grouped result (same format as in useSearchForm)
+  const uniqueKey = `${props.result.hotel.id}-${props.result.roomOptions[0]?.room.id || 0}-${props.result.roomOptions[0]?.meal.id || 0}`
   
   // Navigate to booking page with search result data
   // Navigating to booking page

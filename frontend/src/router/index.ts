@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import BookingView from '../views/BookingView.vue'
+import SearchView from '../views/SearchView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -13,7 +15,7 @@ const router = createRouter({
     {
       path: '/search',
       name: 'search',
-      component: () => import('../views/SearchView.vue'),
+      component: SearchView,
     },
     {
       path: '/bookings',
@@ -48,7 +50,7 @@ const router = createRouter({
     {
       path: '/booking/:searchResultId',
       name: 'booking',
-      component: () => import('../views/BookingView.vue'),
+      component: BookingView,
       props: true,
     },
     {

@@ -82,31 +82,24 @@
 
     <!-- Результаты поиска -->
     <div v-if="searchResults && Object.keys(searchResults).length > 0" class="search-results-section">
-      <Suspense>
-        <template #default>
-          <SearchResults 
-            :results="paginatedResults" 
-            :is-loading="isLoading"
-            :is-loading-more="isLoadingMore"
-            :current-page="currentPage"
-            :total-pages="totalPages"
-            :prev-page="currentPage > 1 ? currentPage - 1 : null"
-            :next-page="currentPage < totalPages ? currentPage + 1 : null"
-            @book="handleBook"
-            @page-change="handlePageChange"
-            @save-search-state="saveSearchState"
-          />
-        </template>
-        <template #fallback>
-          <div class="loading-placeholder">Загрузка результатов...</div>
-        </template>
-      </Suspense>
+      <SearchResults 
+        :results="paginatedResults" 
+        :is-loading="isLoading"
+        :is-loading-more="isLoadingMore"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :prev-page="currentPage > 1 ? currentPage - 1 : null"
+        :next-page="currentPage < totalPages ? currentPage + 1 : null"
+        @book="handleBook"
+        @page-change="handlePageChange"
+        @save-search-state="saveSearchState"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { defineAsyncComponent, onMounted } from 'vue'
+  import { onMounted } from 'vue'
   import { useSearchForm } from '../composables/useSearchForm'
   
   // Импортируем компоненты напрямую для лучшей производительности
@@ -114,9 +107,7 @@
   import SearchFormLoading from './search/SearchFormLoading.vue'
   import SearchFormFields from './search/SearchFormFields.vue'
   import SearchFormActions from './search/SearchFormActions.vue'
-  
-  // Только SearchResults загружаем асинхронно, так как он показывается по требованию
-  const SearchResults = defineAsyncComponent(() => import('./SearchResults.vue'))
+  import SearchResults from './SearchResults.vue'
   import '../styles/spinners.css'
 
   // Используем композабл для всей логики формы

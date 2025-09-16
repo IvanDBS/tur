@@ -237,18 +237,44 @@ const loadSearchResult = async () => {
     
     // TODO: Implement loading search result by ID from API/store
     // For now, we'll need to get the search result from the search results
-    // This should be implemented based on how search results are stored/managed
-    
-    // Loading search result for ID
-    
-    // For now, show error if no search result ID
+    // Load search result from sessionStorage
     if (!props.searchResultId) {
       throw new Error('Search result ID is required')
     }
     
-    // TODO: Replace with actual search result loading logic
-    // const result = await loadSearchResultById(props.searchResultId)
-    // initializeBooking(result)
+    // Try to load from bookingSearchResult first (most recent)
+    const bookingSearchResult = sessionStorage.getItem('bookingSearchResult')
+    if (bookingSearchResult) {
+      const result = JSON.parse(bookingSearchResult)
+      initializeBooking(result)
+      return
+    }
+    
+    // Try to load from searchState
+    const searchState = sessionStorage.getItem('searchState')
+    if (searchState) {
+      const parsedState = JSON.parse(searchState)
+      const searchResults = parsedState.searchResults
+      
+      if (searchResults && searchResults[props.searchResultId]) {
+        const result = searchResults[props.searchResultId]
+        initializeBooking(result)
+        return
+      }
+    }
+    
+    // If not found in sessionStorage, try to load from allLoadedResults
+    const allLoadedResults = sessionStorage.getItem('allLoadedResults')
+    if (allLoadedResults) {
+      const parsedResults = JSON.parse(allLoadedResults)
+      if (parsedResults[props.searchResultId]) {
+        const result = parsedResults[props.searchResultId]
+        initializeBooking(result)
+        return
+      }
+    }
+    
+    throw new Error('Search result not found')
     
   } catch (err) {
     // Failed to load search result

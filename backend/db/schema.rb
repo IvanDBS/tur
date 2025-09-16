@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_10_064014) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_16_093309) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,9 +54,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_10_064014) do
     t.datetime "cancelled_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "operator_type", default: "obs"
+    t.string "operator_booking_id"
+    t.string "operator_status"
+    t.datetime "last_synced_at"
+    t.json "payment_data"
+    t.json "comments_data"
+    t.boolean "is_checked", default: false
     t.index ["expires_at"], name: "index_bookings_on_expires_at"
+    t.index ["last_synced_at"], name: "index_bookings_on_last_synced_at"
     t.index ["obs_booking_hash"], name: "index_bookings_on_obs_booking_hash", unique: true
     t.index ["obs_order_id"], name: "index_bookings_on_obs_order_id"
+    t.index ["operator_booking_id"], name: "index_bookings_on_operator_booking_id"
+    t.index ["operator_status"], name: "index_bookings_on_operator_status"
+    t.index ["operator_type"], name: "index_bookings_on_operator_type"
     t.index ["search_query_id"], name: "index_bookings_on_search_query_id"
     t.index ["status"], name: "index_bookings_on_status"
     t.index ["user_id"], name: "index_bookings_on_user_id"

@@ -111,7 +111,7 @@ class SyncBookingStatusesJob < ApplicationJob
       tourists: prepare_tourists_data(booking),
       transfers: prepare_transfers_data(booking),
       insurance: prepare_insurance_data(booking),
-      comment: booking.notes || '',
+      comment: extract_comment_from_notes(booking),
       notes: prepare_notes_data(booking),
       total_sum: booking.total_amount
     }
@@ -124,20 +124,40 @@ class SyncBookingStatusesJob < ApplicationJob
 
     tourists.map do |tourist|
       {
-        category: tourist['category'] || 'MR',
+        category: tourist['title'] || tourist['category'] || 'MR',
         first_name: transliterate_to_english(tourist['firstName'] || tourist['first_name'] || 'John'),
         last_name: transliterate_to_english(tourist['lastName'] || tourist['last_name'] || 'Doe'),
         birth_date: tourist['birthDate'] || tourist['birth_date'],
-        passport_expiry_date: tourist['passportExpiryDate'] || tourist['passport_expiry_date'],
+        passport_expiry_date: tourist['passportExpiry'] || tourist['passportExpiryDate'] || tourist['passport_expiry_date'],
         passport_number: tourist['passportNumber'] || tourist['passport_number'],
         fiscal_code: tourist['fiscalCode'] || tourist['fiscal_code'],
-        citizenship: tourist['citizenship'] || 'MOLDOVA'
+        citizenship: tourist['nationality'] || tourist['citizenship'] || 'MOLDOVA'
       }
     end
   end
 
   def prepare_transfers_data(booking)
-    # Extract transfer data from customer_data
+    # Get transfers from tour_details first (most accurate)
+    tour_details = booking.tour_details_hash
+    services = tour_details['services'] || {}
+    values = tour_details['values'] || {}
+    
+    # Try to get transfers from values (this is the correct format from OBS)
+    if values['transfers'].present?
+      return values['transfers']
+    end
+    
+    # Fallback to services transfers
+    transfers = services['transfers'] || []
+    if transfers.any?
+      # Extract ID from first transfer
+      first_transfer = transfers.first
+      if first_transfer.is_a?(Hash) && first_transfer['id'].present?
+        return first_transfer['id']
+      end
+    end
+    
+    # Final fallback - get from customer_data
     customer_data = booking.customer_data_hash
     additional_services = customer_data['additional_services'] || {}
     transfer = additional_services['transfer'] || {}
@@ -171,12 +191,95 @@ class SyncBookingStatusesJob < ApplicationJob
   end
 
   def prepare_notes_data(booking)
-    # Extract notes from customer_data or use default
-    customer_data = booking.customer_data_hash
-    notes = customer_data['notes'] || []
+    # Get notes from tour_details first (most accurate)
+    tour_details = booking.tour_details_hash
+    tour_notes = tour_details['notes'] || []
     
-    # Ensure notes is an array
-    notes.is_a?(Array) ? notes : [notes].compact
+    # If we have notes from tour_details, use them
+    if tour_notes.any?
+      return tour_notes
+    end
+    
+    # Convert booking notes from customer_data to OBS format
+    notes = []
+    customer_data = booking.customer_data_hash
+    notes_data = customer_data['notes'] || {}
+    
+    # Handle both object format (new) and direct fields (legacy)
+    if notes_data.is_a?(Hash)
+      # New format: notes is an object with checkboxes
+      if notes_data['honeymooners']
+        notes << 'Honeymooners'
+      end
+      if notes_data['regularGuest']
+        notes << "Hotel's regular guest(s)"
+      end
+      if notes_data['twinBeds']
+        notes << 'Twin beds (according possibility)'
+      end
+      if notes_data['groundFloor']
+        notes << 'Ground floor'
+      end
+      if notes_data['notGroundFloor']
+        notes << 'NOT ground floor'
+      end
+      if notes_data['babyCot']
+        notes << 'Baby cot'
+      end
+      if notes_data['handicapAccessible']
+        notes << 'Handicap accessible room (according possibility)'
+      end
+      if notes_data['doubleBed']
+        notes << 'Double bed/King size (according possibility)'
+      end
+    else
+      # Legacy format: checkboxes are direct fields in customer_data
+      if customer_data['honeymooners']
+        notes << 'Honeymooners'
+      end
+      if customer_data['regularGuest']
+        notes << "Hotel's regular guest(s)"
+      end
+      if customer_data['twinBeds']
+        notes << 'Twin beds (according possibility)'
+      end
+      if customer_data['groundFloor']
+        notes << 'Ground floor'
+      end
+      if customer_data['notGroundFloor']
+        notes << 'NOT ground floor'
+      end
+      if customer_data['babyCot']
+        notes << 'Baby cot'
+      end
+      if customer_data['handicapAccessible']
+        notes << 'Handicap accessible room (according possibility)'
+      end
+      if customer_data['doubleBed']
+        notes << 'Double bed/King size (according possibility)'
+      end
+    end
+    
+    notes
+  end
+
+  def extract_comment_from_notes(booking)
+    # Get comment from customer_data.notes.comment first
+    customer_data = booking.customer_data_hash
+    notes = customer_data['notes'] || {}
+    
+    # If notes is an object with comment field
+    if notes.is_a?(Hash) && notes['comment'].present?
+      return notes['comment']
+    end
+    
+    # If notes is a string (legacy format)
+    if notes.is_a?(String) && notes.present?
+      return notes
+    end
+    
+    # Fallback to booking.notes
+    booking.notes || ''
   end
 
   def transliterate_to_english(text)

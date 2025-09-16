@@ -17,6 +17,7 @@ module Api
                              status: booking.status,
                              total_amount: booking.total_amount,
                              tour_details: booking.tour_details_hash,
+                             customer_data: booking.customer_data_hash,
                              created_at: booking.created_at,
                              confirmed_at: booking.confirmed_at,
                              can_be_cancelled: booking.can_be_cancelled?
@@ -105,24 +106,30 @@ module Api
                   last_synced_at: Time.current
                 )
                 Rails.logger.info "Booking updated with OBS data: order_id=#{booking.obs_order_id}, status=#{booking.operator_status}"
+                
+                # Return success only if OBS booking was created
+                render_success({
+                                 booking: {
+                                   id: booking.id,
+                                   obs_booking_hash: booking.obs_booking_hash,
+                                   obs_order_id: booking.obs_order_id,
+                                   status: booking.status,
+                                   operator_status: booking.operator_status,
+                                   total_amount: booking.total_amount,
+                                   tour_details: booking.tour_details_hash
+                                 }
+                               }, :created)
+              else
+                # OBS response is empty - this is an error
+                Rails.logger.error "OBS booking creation failed: empty response"
+                booking.destroy # Remove the local booking since OBS failed
+                render_error("Failed to create booking with operator: empty response", :bad_gateway)
               end
             rescue ObsAdapter::Error => obs_error
               Rails.logger.error "Failed to create booking on OBS server: #{obs_error.message}"
-              # Don't fail the entire request if OBS creation fails
-              # The booking is still created locally and can be synced later
+              booking.destroy # Remove the local booking since OBS failed
+              render_error("Failed to create booking with operator: #{obs_error.message}", :bad_gateway)
             end
-
-            render_success({
-                             booking: {
-                               id: booking.id,
-                               obs_booking_hash: booking.obs_booking_hash,
-                               obs_order_id: booking.obs_order_id,
-                               status: booking.status,
-                               operator_status: booking.operator_status,
-                               total_amount: booking.total_amount,
-                               tour_details: booking.tour_details_hash
-                             }
-                           }, :created)
           else
             render_error("Failed to create booking: #{booking.errors.full_messages.join(', ')}", :unprocessable_entity)
           end
@@ -279,7 +286,7 @@ module Api
           tourists: prepare_tourists_data(booking),
           transfers: prepare_transfers_data(booking),
           insurance: prepare_insurance_data(booking),
-          comment: booking.notes || '',
+          comment: extract_comment_from_notes(booking),
           notes: prepare_notes_data(booking),
           total_sum: booking.total_amount
         }
@@ -292,20 +299,40 @@ module Api
 
         tourists.map do |tourist|
           {
-            category: tourist['category'] || 'MR',
+            category: tourist['title'] || tourist['category'] || 'MR',
             first_name: transliterate_to_english(tourist['firstName'] || tourist['first_name'] || 'John'),
             last_name: transliterate_to_english(tourist['lastName'] || tourist['last_name'] || 'Doe'),
             birth_date: tourist['birthDate'] || tourist['birth_date'],
-            passport_expiry_date: tourist['passportExpiryDate'] || tourist['passport_expiry_date'],
+            passport_expiry_date: tourist['passportExpiry'] || tourist['passportExpiryDate'] || tourist['passport_expiry_date'],
             passport_number: tourist['passportNumber'] || tourist['passport_number'],
             fiscal_code: tourist['fiscalCode'] || tourist['fiscal_code'],
-            citizenship: tourist['citizenship'] || 'ROMANIA'
+            citizenship: tourist['nationality'] || tourist['citizenship'] || 'MOLDOVA'
           }
         end
       end
 
       def prepare_transfers_data(booking = @booking)
-        # Extract transfer data from customer_data
+        # Get transfers from tour_details first (most accurate)
+        tour_details = booking.tour_details_hash
+        services = tour_details['services'] || {}
+        values = tour_details['values'] || {}
+        
+        # Try to get transfers from values (this is the correct format from OBS)
+        if values['transfers'].present?
+          return values['transfers']
+        end
+        
+        # Fallback to services transfers
+        transfers = services['transfers'] || []
+        if transfers.any?
+          # Extract ID from first transfer
+          first_transfer = transfers.first
+          if first_transfer.is_a?(Hash) && first_transfer['id'].present?
+            return first_transfer['id']
+          end
+        end
+        
+        # Final fallback - get from customer_data
         customer_data = booking.customer_data_hash
         additional_services = customer_data['additional_services'] || {}
         transfer = additional_services['transfer'] || {}
@@ -377,36 +404,95 @@ module Api
       end
 
       def prepare_notes_data(booking = @booking)
-        # Convert booking notes to OBS format
+        # Get notes from tour_details first (most accurate)
+        tour_details = booking.tour_details_hash
+        tour_notes = tour_details['notes'] || []
+        
+        # If we have notes from tour_details, use them
+        if tour_notes.any?
+          return tour_notes
+        end
+        
+        # Convert booking notes from customer_data to OBS format
         notes = []
         customer_data = booking.customer_data_hash
+        notes_data = customer_data['notes'] || {}
         
-        if customer_data['honeymooners']
-          notes << 'Honeymooners'
-        end
-        if customer_data['regularGuest']
-          notes << "Hotel's regular guest(s)"
-        end
-        if customer_data['twinBeds']
-          notes << 'Twin beds (according possibility)'
-        end
-        if customer_data['groundFloor']
-          notes << 'Ground floor'
-        end
-        if customer_data['notGroundFloor']
-          notes << 'NOT ground floor'
-        end
-        if customer_data['babyCot']
-          notes << 'Baby cot'
-        end
-        if customer_data['handicapAccessible']
-          notes << 'Handicap accessible room (according possibility)'
-        end
-        if customer_data['doubleBed']
-          notes << 'Double bed/King size (according possibility)'
+        # Handle both object format (new) and direct fields (legacy)
+        if notes_data.is_a?(Hash)
+          # New format: notes is an object with checkboxes
+          if notes_data['honeymooners']
+            notes << 'Honeymooners'
+          end
+          if notes_data['regularGuest']
+            notes << "Hotel's regular guest(s)"
+          end
+          if notes_data['twinBeds']
+            notes << 'Twin beds (according possibility)'
+          end
+          if notes_data['groundFloor']
+            notes << 'Ground floor'
+          end
+          if notes_data['notGroundFloor']
+            notes << 'NOT ground floor'
+          end
+          if notes_data['babyCot']
+            notes << 'Baby cot'
+          end
+          if notes_data['handicapAccessible']
+            notes << 'Handicap accessible room (according possibility)'
+          end
+          if notes_data['doubleBed']
+            notes << 'Double bed/King size (according possibility)'
+          end
+        else
+          # Legacy format: checkboxes are direct fields in customer_data
+          if customer_data['honeymooners']
+            notes << 'Honeymooners'
+          end
+          if customer_data['regularGuest']
+            notes << "Hotel's regular guest(s)"
+          end
+          if customer_data['twinBeds']
+            notes << 'Twin beds (according possibility)'
+          end
+          if customer_data['groundFloor']
+            notes << 'Ground floor'
+          end
+          if customer_data['notGroundFloor']
+            notes << 'NOT ground floor'
+          end
+          if customer_data['babyCot']
+            notes << 'Baby cot'
+          end
+          if customer_data['handicapAccessible']
+            notes << 'Handicap accessible room (according possibility)'
+          end
+          if customer_data['doubleBed']
+            notes << 'Double bed/King size (according possibility)'
+          end
         end
 
         notes
+      end
+
+      def extract_comment_from_notes(booking = @booking)
+        # Get comment from customer_data.notes.comment first
+        customer_data = booking.customer_data_hash
+        notes = customer_data['notes'] || {}
+        
+        # If notes is an object with comment field
+        if notes.is_a?(Hash) && notes['comment'].present?
+          return notes['comment']
+        end
+        
+        # If notes is a string (legacy format)
+        if notes.is_a?(String) && notes.present?
+          return notes
+        end
+        
+        # Fallback to booking.notes
+        booking.notes || ''
       end
     end
   end

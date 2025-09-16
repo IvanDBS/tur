@@ -174,6 +174,13 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
+  const initializeAuth = async () => {
+    const token = localStorage.getItem('accessToken')
+    if (token && !user.value) {
+      await getCurrentUser()
+    }
+  }
+
   return {
     // State
     user,
@@ -192,5 +199,6 @@ export const useAuthStore = defineStore('auth', () => {
     updateProfile,
     changePassword,
     clearError,
+    initializeAuth,
   }
 })

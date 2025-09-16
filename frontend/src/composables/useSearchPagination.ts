@@ -145,6 +145,9 @@ export const useSearchPagination = () => {
           gala_dinner: result.gala_dinner,
           aquapark_services: result.aquapark_services,
           tourists: result.tourists,
+          // Сохраняем оригинальные поля OBS API для бронирования
+          rid: result.rid,
+          unique_key: result.unique_key,
           roomOptions: [{
             id: roomKey,
             room: result.accommodation.room,

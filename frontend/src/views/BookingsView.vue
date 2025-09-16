@@ -119,13 +119,12 @@
       
       // Check if user is authenticated
       const token = localStorage.getItem('accessToken')
-      logger.debug('Auth token:', token ? 'Present' : 'Missing')
+      logger.auth('Auth token:', token ? 'Present' : 'Missing')
       
       logger.apiCall('GET', '/bookings')
       const response = await apiClient.get<{ success: boolean; data: { bookings: Booking[] } }>('/bookings')
       
-      logger.debug('Bookings API response:', response)
-      logger.info('Bookings loaded:', response.data?.bookings)
+      logger.info('Bookings loaded:', response.data?.bookings?.length || 0, 'items')
       
       // Handle both possible response structures
       if (response.data?.bookings) {
@@ -135,9 +134,7 @@
       } else {
         bookings.value = []
       }
-      logger.debug('Bookings value after assignment:', bookings.value)
-      logger.debug('Bookings length:', bookings.value.length)
-      logger.debug('First booking sample:', bookings.value[0])
+      logger.debug('Bookings loaded:', bookings.value.length, 'items')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load bookings'
       error.value = message
@@ -173,21 +170,32 @@
   // Helper functions to extract data from booking
   const getHotelName = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getHotelName - tourDetails:', tourDetails)
     
     // Try different possible structures
-    return tourDetails?.hotel?.name || 
-           tourDetails?.hotel_name || 
-           tourDetails?.accommodation?.hotel?.name ||
-           tourDetails?.hotel?.hotel_name ||
-           'Отель не указан'
+    if (tourDetails?.hotel?.hotel) {
+      return tourDetails.hotel.hotel
+    }
+    if (tourDetails?.hotel?.name) {
+      return tourDetails.hotel.name
+    }
+    if (tourDetails?.hotel_name) {
+      return tourDetails.hotel_name
+    }
+    if (tourDetails?.accommodation?.hotel?.name) {
+      return tourDetails.accommodation.hotel.name
+    }
+    if (tourDetails?.hotel?.hotel_name) {
+      return tourDetails.hotel.hotel_name
+    }
+    
+    return 'Отель не указан'
   }
 
   const getHotelCategory = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getHotelCategory - tourDetails:', tourDetails)
     
-    return tourDetails?.hotel?.category || 
+    return tourDetails?.hotel?.hotel_category || 
+           tourDetails?.hotel?.category || 
            tourDetails?.hotel_category || 
            tourDetails?.accommodation?.hotel?.category ||
            tourDetails?.hotel?.hotel_category ||
@@ -196,7 +204,6 @@
 
   const getHotelCity = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getHotelCity - tourDetails:', tourDetails)
     
     return tourDetails?.hotel?.city || 
            tourDetails?.city || 
@@ -207,41 +214,76 @@
 
   const getNights = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getNights - tourDetails:', tourDetails)
     
-    return tourDetails?.nights?.total || 
+    return tourDetails?.hotel?.nights ||
+           tourDetails?.nights?.total || 
            tourDetails?.nights || 
            tourDetails?.duration ||
-           tourDetails?.hotel?.nights ||
            tourDetails?.accommodation?.nights ||
            0
   }
 
   const getAdults = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getAdults - tourDetails:', tourDetails)
     
-    return tourDetails?.adults || 
-           tourDetails?.tourists?.adults ||
-           tourDetails?.hotel?.adults ||
-           tourDetails?.accommodation?.adults ||
-           0
+    // If we have tourists array, count adults (category MR/MRS)
+    if (Array.isArray(tourDetails?.tourists)) {
+      return tourDetails.tourists.filter((t: any) => 
+        t.category === 'MR' || t.category === 'MRS' || t.category === 'ADULT'
+      ).length
+    }
+    
+    // Try different possible structures
+    if (tourDetails?.tourists?.adults !== undefined) {
+      return tourDetails.tourists.adults
+    }
+    if (tourDetails?.adults !== undefined) {
+      return tourDetails.adults
+    }
+    if (tourDetails?.hotel?.adults !== undefined) {
+      return tourDetails.hotel.adults
+    }
+    if (tourDetails?.accommodation?.adults !== undefined) {
+      return tourDetails.accommodation.adults
+    }
+    
+    return 0
   }
 
   const getChildren = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getChildren - tourDetails:', tourDetails)
     
-    return tourDetails?.children || 
-           tourDetails?.tourists?.children ||
-           tourDetails?.hotel?.children ||
-           tourDetails?.accommodation?.children ||
-           0
+    // If we have tourists array, count children (category CHD)
+    if (Array.isArray(tourDetails?.tourists)) {
+      return tourDetails.tourists.filter((t: any) => 
+        t.category === 'CHD' || t.category === 'CHILD'
+      ).length
+    }
+    
+    // Try different possible structures
+    if (tourDetails?.tourists?.children !== undefined) {
+      return tourDetails.tourists.children
+    }
+    if (tourDetails?.children !== undefined) {
+      return tourDetails.children
+    }
+    if (tourDetails?.hotel?.children !== undefined) {
+      return tourDetails.hotel.children
+    }
+    if (tourDetails?.accommodation?.children !== undefined) {
+      return tourDetails.accommodation.children
+    }
+    
+    // If we have tourists array with children_ages, count them
+    if (Array.isArray(tourDetails?.tourists?.children_ages)) {
+      return tourDetails.tourists.children_ages.length
+    }
+    
+    return 0
   }
 
   const getCheckIn = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getCheckIn - tourDetails:', tourDetails)
     
     return tourDetails?.check_in || 
            tourDetails?.hotel?.check_in ||
@@ -253,7 +295,6 @@
 
   const getCheckOut = (booking: Booking) => {
     const tourDetails = booking.tour_details as any
-    logger.debug('getCheckOut - tourDetails:', tourDetails)
     
     return tourDetails?.check_out || 
            tourDetails?.hotel?.check_out ||
@@ -271,7 +312,7 @@
   onMounted(() => {
     // Check authentication status
     const token = localStorage.getItem('accessToken')
-    logger.debug('Page mounted - Auth token:', token ? 'Present' : 'Missing')
+    logger.auth('Page mounted - Auth token:', token ? 'Present' : 'Missing')
     
     if (!token) {
       console.warn('No auth token found, redirecting to login')

@@ -159,6 +159,7 @@ export default {
     'EMIRATES NO AVIA': 'UAE (🏨 Hotel only)'
   },
   searchResults: {
+    loading: 'Loading results...',
     spinner: 'Searching for the best tours for you...',
     flightOptions: 'Flight options',
     variants: 'variants',

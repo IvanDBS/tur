@@ -43,3 +43,21 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+## Logging Configuration
+
+The application uses a structured logging system with different levels:
+
+- **INFO**: General application flow (always shown in development)
+- **WARN**: Warnings and non-critical issues
+- **ERROR**: Errors (always shown, even in production)
+- **DEBUG**: Detailed debugging information (only shown when `VITE_VERBOSE_LOGGING=true`)
+- **BOOKING**: Booking-related operations
+- **AUTH**: Authentication-related operations
+
+To enable verbose debug logging, set the environment variable:
+```bash
+VITE_VERBOSE_LOGGING=true
+```
+
+This will show detailed debug information in the browser console.

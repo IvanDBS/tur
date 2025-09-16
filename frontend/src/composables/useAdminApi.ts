@@ -174,6 +174,46 @@ export const useAdminApi = () => {
     }
   }
 
+  // Sync all bookings
+  const syncAllBookings = async () => {
+    try {
+      loading.value = true
+      clearError()
+
+      logger.apiCall('POST', '/admin/bookings/sync_all')
+      const response = await apiClient.post('/admin/bookings/sync_all')
+      
+      logger.info('All bookings sync initiated successfully:', response)
+      return response.data
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to sync all bookings'
+      setError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Sync single booking
+  const syncBooking = async (bookingId: number) => {
+    try {
+      loading.value = true
+      clearError()
+
+      logger.apiCall('POST', `/admin/bookings/${bookingId}/sync`)
+      const response = await apiClient.post(`/admin/bookings/${bookingId}/sync`)
+      
+      logger.info('Booking sync initiated successfully:', response)
+      return response.data
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to sync booking'
+      setError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -183,6 +223,8 @@ export const useAdminApi = () => {
     updateBookingStatus,
     getStats,
     getUsers,
-    updateUserStatus
+    updateUserStatus,
+    syncAllBookings,
+    syncBooking
   }
 }

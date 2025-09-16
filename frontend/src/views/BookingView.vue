@@ -299,7 +299,7 @@ const retryLoad = () => {
 // }
 
 const handleBook = async () => {
-  const result = await createBooking()
+  const result = await createBooking(bookingNotes.value)
   if (result) {
     // Booking created
     // User will be redirected to bookings page

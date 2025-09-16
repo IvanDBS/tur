@@ -149,7 +149,7 @@ export const useBooking = () => {
         placement: firstRoom.placement,
         price: firstRoom.price
       }
-      logger.info('Auto-selected first room:', bookingData.selectedRoom)
+      logger.booking('Auto-selected first room')
     } else if ('accommodation' in result && result.accommodation) {
       // For regular SearchResult
       bookingData.selectedRoom = {
@@ -158,7 +158,7 @@ export const useBooking = () => {
         placement: result.accommodation.placement,
         price: result.price
       }
-      logger.info('Auto-selected room from regular result:', bookingData.selectedRoom)
+      logger.booking('Auto-selected room from regular result')
     }
     
     // Auto-select first flight if available
@@ -168,14 +168,14 @@ export const useBooking = () => {
         outbound: firstFlight.from,
         inbound: firstFlight.to
       }
-      logger.info('Auto-selected first flight:', bookingData.selectedFlight)
+      logger.booking('Auto-selected first flight')
     } else if ('tickets' in result && result.tickets) {
       // For regular SearchResult
       bookingData.selectedFlight = {
         outbound: result.tickets.from,
         inbound: result.tickets.to
       }
-      logger.info('Auto-selected flight from regular result:', bookingData.selectedFlight)
+      logger.booking('Auto-selected flight from regular result')
     }
     
     // Initialize tourists based on search result
@@ -214,25 +214,25 @@ export const useBooking = () => {
       })
     }
     
-    logger.info('Booking initialized with search result:', result)
+    logger.booking('Booking initialized')
   }
 
   // Update selected flight
   const updateSelectedFlight = (flight: SelectedFlight) => {
     bookingData.selectedFlight = flight
-    logger.info('Selected flight updated:', flight)
+    logger.booking('Selected flight updated')
   }
 
   // Update selected room
   const updateSelectedRoom = (room: SelectedRoom) => {
     bookingData.selectedRoom = room
-    logger.info('Selected room updated:', room)
+    logger.booking('Selected room updated')
   }
 
   // Reset selected flight (when room changes)
   const resetSelectedFlight = () => {
     bookingData.selectedFlight = undefined
-    logger.info('Selected flight reset due to room change')
+    logger.booking('Selected flight reset due to room change')
   }
 
   // Update tourist data
@@ -240,14 +240,14 @@ export const useBooking = () => {
     const index = bookingData.tourists.findIndex(t => t.id === touristId)
     if (index !== -1) {
       bookingData.tourists[index] = { ...bookingData.tourists[index], ...data }
-      logger.info('Tourist data updated:', touristId, data)
+      logger.booking('Tourist data updated:', touristId)
     }
   }
 
   // Update additional services
   const updateAdditionalServices = (services: Partial<AdditionalServices>) => {
     bookingData.additionalServices = { ...bookingData.additionalServices, ...services }
-    logger.info('Additional services updated:', services)
+    logger.booking('Additional services updated')
   }
 
   // Calculate booking price
@@ -258,8 +258,17 @@ export const useBooking = () => {
       loading.value = true
       clearError()
 
-      // For debugging: send data in the format expected by the local booking controller
+      // Create proper OBS booking hash from search result
+      const obsBookingHash = searchResult.value.rid && searchResult.value.unique_key 
+        ? `${searchResult.value.rid}:${searchResult.value.unique_key}`
+        : null
+
+      if (!obsBookingHash) {
+        throw new Error('Invalid search result: missing rid or unique_key for calculation')
+      }
+
       const requestData = {
+        booking_hash: obsBookingHash,
         customer_data: {
           tourists: bookingData.tourists,
           selected_flight: bookingData.selectedFlight,
@@ -272,7 +281,7 @@ export const useBooking = () => {
       logger.apiCall('POST', '/bookings/calculate')
       const response = await apiClient.post<BookingCalculationResponse>('/bookings/calculate', requestData)
 
-      logger.info('Booking calculation response:', response)
+      logger.booking('Booking calculation completed')
       return response
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to calculate booking'
@@ -284,7 +293,7 @@ export const useBooking = () => {
   }
 
   // Create booking
-  const createBooking = async (): Promise<BookingCreateResponse | null> => {
+  const createBooking = async (bookingNotes?: any): Promise<BookingCreateResponse | null> => {
     if (!searchResult.value) return null
 
     try {
@@ -295,16 +304,25 @@ export const useBooking = () => {
       // Use the same structure as seeds for consistency
       
       // Debug logging
-      logger.debug('createBooking - searchResult:', searchResult.value)
       logger.debug('createBooking - dates:', {
         check_in: searchResult.value.dates?.check_in,
         check_out: searchResult.value.dates?.check_out
       })
       
+      // Create proper OBS booking hash from search result
+      // According to OBS API docs: hash = rid:unique_key
+      const obsBookingHash = searchResult.value.rid && searchResult.value.unique_key 
+        ? `${searchResult.value.rid}:${searchResult.value.unique_key}`
+        : null
+
+      if (!obsBookingHash) {
+        throw new Error('Invalid search result: missing rid or unique_key for booking')
+      }
+
       const requestData = {
         booking: {
           search_id: searchResult.value.unique_key,
-          booking_hash: `LOCAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          booking_hash: obsBookingHash,
           total_amount: totalPrice.value,
           tour_details: {
             hotel_name: searchResult.value.hotel?.name || BOOKING_DEFAULTS.DEFAULTS.HOTEL_NAME,
@@ -337,7 +355,7 @@ export const useBooking = () => {
             selected_flight: bookingData.selectedFlight,
             selected_room: bookingData.selectedRoom,
             additional_services: bookingData.additionalServices,
-            notes: bookingData.notes
+            notes: bookingNotes || bookingData.notes
           }
         }
       }
@@ -345,12 +363,12 @@ export const useBooking = () => {
       logger.apiCall('POST', '/bookings')
       const response = await apiClient.post<BookingCreateResponse>('/bookings', requestData)
 
-      logger.info('Booking created successfully:', response)
+      logger.booking('Booking created successfully')
       
       // Clear saved search state since booking is complete
       try {
         sessionStorage.removeItem('searchState')
-        logger.info('🗑️ Search state cleared after successful booking')
+        logger.booking('Search state cleared after successful booking')
       } catch (error) {
         logger.warn('Failed to clear search state:', error)
       }

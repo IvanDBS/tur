@@ -97,7 +97,7 @@
                 </div>
                 <div class="detail-item">
                   <label>ДАТА РОЖДЕНИЯ</label>
-                  <span>{{ formatBirthday(tourist.birthDate || tourist.birthday) }}</span>
+                  <span>{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</span>
                 </div>
                 <div class="detail-item">
                   <label>ПАСПОРТ</label>
@@ -125,7 +125,7 @@
                 <div class="tourist-number">№ {{ index + 1 }}</div>
                 <div class="tourist-details">
                   <div class="tourist-name">{{ getTouristName(tourist) }}</div>
-                  <div class="tourist-age">{{ formatBirthday(tourist.birthDate || tourist.birthday) }}</div>
+                  <div class="tourist-age">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</div>
                 </div>
               </div>
               
@@ -138,29 +138,29 @@
                   <div class="flight-columns">
                     <div class="flight-column">
                       <div class="flight-info-line">
-                        <span class="label">From:</span>
+                        <span class="label">{{ $t('searchResults.fromLabel') }}</span>
                         <span class="value">{{ getOutboundFrom() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Departure:</span>
+                        <span class="label">{{ $t('searchResults.departureLabel') }}</span>
                         <span class="value">{{ getOutboundDeparture() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Flight:</span>
+                        <span class="label">{{ $t('searchResults.flightLabel') }}</span>
                         <span class="value">{{ getOutboundFlightInfo() }}</span>
                       </div>
                     </div>
                     <div class="flight-column">
                       <div class="flight-info-line">
-                        <span class="label">To:</span>
+                        <span class="label">{{ $t('searchResults.toLabel') }}</span>
                         <span class="value">{{ getOutboundTo() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Arrival:</span>
+                        <span class="label">{{ $t('searchResults.arrivalLabel') }}</span>
                         <span class="value">{{ getOutboundArrival() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Travel time:</span>
+                        <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
                         <span class="value">{{ getOutboundTravelTime() }}</span>
                       </div>
                     </div>
@@ -177,29 +177,29 @@
                   <div class="flight-columns">
                     <div class="flight-column">
                       <div class="flight-info-line">
-                        <span class="label">From:</span>
+                        <span class="label">{{ $t('searchResults.fromLabel') }}</span>
                         <span class="value">{{ getInboundFrom() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Departure:</span>
+                        <span class="label">{{ $t('searchResults.departureLabel') }}</span>
                         <span class="value">{{ getInboundDeparture() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Flight:</span>
+                        <span class="label">{{ $t('searchResults.flightLabel') }}</span>
                         <span class="value">{{ getInboundFlightInfo() }}</span>
                       </div>
                     </div>
                     <div class="flight-column">
                       <div class="flight-info-line">
-                        <span class="label">To:</span>
+                        <span class="label">{{ $t('searchResults.toLabel') }}</span>
                         <span class="value">{{ getInboundTo() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Arrival:</span>
+                        <span class="label">{{ $t('searchResults.arrivalLabel') }}</span>
                         <span class="value">{{ getInboundArrival() }}</span>
                       </div>
                       <div class="flight-info-line">
-                        <span class="label">Travel time:</span>
+                        <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
                         <span class="value">{{ getInboundTravelTime() }}</span>
                       </div>
                     </div>
@@ -307,6 +307,7 @@ import { StatusBadge } from '../ui'
 import { formatDate, formatDateWithYear, formatDateTime } from '../../utils/dateUtils'
 import { logger } from '../../utils/logger'
 import { BOOKING_DEFAULTS, getDefaultValue, extractDataByPriority } from '../../constants/bookingDefaults'
+import { useI18n } from '../../composables/useI18n'
 
 // Props
 interface Props {
@@ -340,6 +341,9 @@ const emit = defineEmits<{
   close: []
   statusChanged?: []
 }>()
+
+// I18n
+const { t: $t } = useI18n()
 
 // State
 const actionLoading = ref(false)
@@ -398,7 +402,25 @@ const formatBirthday = (birthday: string) => {
   }
   
   try {
-    const date = new Date(birthday)
+    let date: Date
+    
+    // Handle different date formats
+    if (typeof birthday === 'string' && birthday.includes('-')) {
+      // Handle YYYY-MM-DD format
+      date = new Date(birthday)
+    } else if (typeof birthday === 'string' && birthday.includes('.')) {
+      // Handle DD.MM.YYYY format
+      const parts = birthday.split('.')
+      if (parts.length === 3) {
+        const [day, month, year] = parts
+        date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+      } else {
+        date = new Date(birthday)
+      }
+    } else {
+      date = new Date(birthday)
+    }
+    
     if (isNaN(date.getTime())) {
       return 'N/A'
     }
@@ -444,7 +466,23 @@ const getBookingRef = () => {
 
 // Helper functions to extract data from booking structure
 const getHotelName = () => {
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+    return extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.HOTEL_NAME], 
+      BOOKING_DEFAULTS.DEFAULTS.HOTEL_NAME
+    )
+  }
+  
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.hotel) {
+    return tourDetails.hotel.hotel
+  }
   if (tourDetails?.hotel?.name) {
     return tourDetails.hotel.name
   }
@@ -452,7 +490,23 @@ const getHotelName = () => {
 }
 
 const getHotelCategory = () => {
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+    return extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.HOTEL_CATEGORY], 
+      BOOKING_DEFAULTS.DEFAULTS.HOTEL_CATEGORY
+    )
+  }
+  
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.hotel_category) {
+    return tourDetails.hotel.hotel_category
+  }
   if (tourDetails?.hotel?.category) {
     return tourDetails.hotel.category
   }
@@ -460,7 +514,20 @@ const getHotelCategory = () => {
 }
 
 const getHotelCity = () => {
+  if (props.isAdminMode) {
+    const data = {
+      tour_details: props.booking.tour_details,
+      customer_data: props.booking.customer_data
+    }
+    return extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.CITY], 
+      BOOKING_DEFAULTS.DEFAULTS.CITY
+    )
+  }
+  
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
   if (tourDetails?.hotel?.city) {
     return tourDetails.hotel.city
   }
@@ -473,14 +540,18 @@ const getRoomType = () => {
       tour_details: props.booking.tour_details,
       customer_data: props.booking.customer_data
     }
-  return extractDataByPriority(
-    data, 
-    [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.ROOM_TYPE], 
-    BOOKING_DEFAULTS.DEFAULTS.ROOM_TYPE
-  )
+    return extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.ROOM_TYPE], 
+      BOOKING_DEFAULTS.DEFAULTS.ROOM_TYPE
+    )
   }
   
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.room) {
+    return tourDetails.hotel.room
+  }
   const roomType = tourDetails?.room_type || 
                    tourDetails?.accommodation?.room?.name ||
                    tourDetails?.selected_room?.room?.name ||
@@ -494,14 +565,18 @@ const getMealPlan = () => {
       tour_details: props.booking.tour_details,
       customer_data: props.booking.customer_data
     }
-  return extractDataByPriority(
-    data, 
-    [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.MEAL_PLAN], 
-    BOOKING_DEFAULTS.DEFAULTS.MEAL_PLAN
-  )
+    return extractDataByPriority(
+      data, 
+      [...BOOKING_DEFAULTS.EXTRACTION_PRIORITY.MEAL_PLAN], 
+      BOOKING_DEFAULTS.DEFAULTS.MEAL_PLAN
+    )
   }
   
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.meal) {
+    return tourDetails.hotel.meal
+  }
   const mealPlan = tourDetails?.meal_plan || 
                    tourDetails?.accommodation?.meal?.name ||
                    tourDetails?.selected_room?.meal?.name ||
@@ -533,6 +608,15 @@ const getCheckInDate = () => {
     
     if (checkIn && checkIn !== BOOKING_DEFAULTS.DEFAULTS.CHECK_IN && checkIn !== 'N/A') {
       try {
+        // Handle DD.MM.YYYY format
+        if (typeof checkIn === 'string' && checkIn.includes('.')) {
+          const parts = checkIn.split('.')
+          if (parts.length === 3) {
+            const [day, month, year] = parts
+            const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+            return formatDateWithYear(date.toISOString())
+          }
+        }
         return formatDateWithYear(checkIn)
       } catch {
         return checkIn // Return raw value if formatting fails
@@ -546,17 +630,26 @@ const getCheckInDate = () => {
   const customerData = props.booking.customer_data as any
   
   // Try tour_details first - check the actual structure from seeds
-  const checkIn = tourDetails?.check_in || 
+  const checkIn = tourDetails?.hotel?.check_in ||
+                  tourDetails?.check_in || 
                   tourDetails?.dates?.check_in ||
                   tourDetails?.accommodation?.check_in ||
                   tourDetails?.selected_room?.check_in ||
-                  tourDetails?.search_result?.check_in ||
-                  tourDetails?.hotel?.check_in
+                  tourDetails?.search_result?.check_in
   
   logger.debug('getCheckInDate - tour_details checkIn:', checkIn)
   
   if (checkIn && checkIn !== 'N/A' && checkIn !== 'Не указано') {
     try {
+      // Handle DD.MM.YYYY format
+      if (typeof checkIn === 'string' && checkIn.includes('.')) {
+        const parts = checkIn.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+          return formatDateWithYear(date.toISOString())
+        }
+      }
       return formatDateWithYear(checkIn)
     } catch {
       return checkIn // Return raw value if formatting fails
@@ -574,6 +667,15 @@ const getCheckInDate = () => {
   
   if (customerCheckIn && customerCheckIn !== 'N/A' && customerCheckIn !== 'Не указано') {
     try {
+      // Handle DD.MM.YYYY format
+      if (typeof customerCheckIn === 'string' && customerCheckIn.includes('.')) {
+        const parts = customerCheckIn.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+          return formatDateWithYear(date.toISOString())
+        }
+      }
       return formatDateWithYear(customerCheckIn)
     } catch {
       return customerCheckIn // Return raw value if formatting fails
@@ -619,6 +721,15 @@ const getCheckOutDate = () => {
     
     if (checkOut && checkOut !== BOOKING_DEFAULTS.DEFAULTS.CHECK_OUT && checkOut !== 'N/A') {
       try {
+        // Handle DD.MM.YYYY format
+        if (typeof checkOut === 'string' && checkOut.includes('.')) {
+          const parts = checkOut.split('.')
+          if (parts.length === 3) {
+            const [day, month, year] = parts
+            const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+            return formatDateWithYear(date.toISOString())
+          }
+        }
         return formatDateWithYear(checkOut)
       } catch {
         return checkOut // Return raw value if formatting fails
@@ -632,17 +743,26 @@ const getCheckOutDate = () => {
   const customerData = props.booking.customer_data as any
   
   // Try tour_details first - check the actual structure from seeds
-  const checkOut = tourDetails?.check_out || 
+  const checkOut = tourDetails?.hotel?.check_out ||
+                   tourDetails?.check_out || 
                    tourDetails?.dates?.check_out ||
                    tourDetails?.accommodation?.check_out ||
                    tourDetails?.selected_room?.check_out ||
-                   tourDetails?.search_result?.check_out ||
-                   tourDetails?.hotel?.check_out
+                   tourDetails?.search_result?.check_out
   
   logger.debug('getCheckOutDate - tour_details checkOut:', checkOut)
   
   if (checkOut && checkOut !== 'N/A' && checkOut !== 'Не указано') {
     try {
+      // Handle DD.MM.YYYY format
+      if (typeof checkOut === 'string' && checkOut.includes('.')) {
+        const parts = checkOut.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+          return formatDateWithYear(date.toISOString())
+        }
+      }
       return formatDateWithYear(checkOut)
     } catch {
       return checkOut // Return raw value if formatting fails
@@ -660,6 +780,15 @@ const getCheckOutDate = () => {
   
   if (customerCheckOut && customerCheckOut !== 'N/A' && customerCheckOut !== 'Не указано') {
     try {
+      // Handle DD.MM.YYYY format
+      if (typeof customerCheckOut === 'string' && customerCheckOut.includes('.')) {
+        const parts = customerCheckOut.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+          return formatDateWithYear(date.toISOString())
+        }
+      }
       return formatDateWithYear(customerCheckOut)
     } catch {
       return customerCheckOut // Return raw value if formatting fails
@@ -683,6 +812,10 @@ const getCheckOutDate = () => {
 
 const getNights = () => {
   const tourDetails = props.booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.nights) {
+    return tourDetails.hotel.nights
+  }
   if (tourDetails?.nights?.total) {
     return tourDetails.nights.total
   }
@@ -693,33 +826,80 @@ const getNights = () => {
 }
 
 const getTourists = () => {
-  const tourists = props.booking.tour_details?.tourists
-  if (Array.isArray(tourists)) {
-    return tourists
-  }
-  // Try to get tourists from customer_data
-  const customerData = props.booking.customer_data
+  // Try customer_data first (this is where the actual tourist data is)
+  const customerData = props.booking.customer_data as any
+  logger.debug('getTourists - customer_data:', customerData)
+  
   if (customerData && Array.isArray(customerData.tourists)) {
+    logger.debug('getTourists - found in customer_data:', customerData.tourists)
     return customerData.tourists
   }
+  
+  // Fallback to tour_details
+  const tourists = props.booking.tour_details?.tourists
+  logger.debug('getTourists - tour_details.tourists:', tourists)
+  
+  if (Array.isArray(tourists)) {
+    logger.debug('getTourists - found in tour_details:', tourists)
+    return tourists
+  }
+  
+  logger.debug('getTourists - no tourists found')
   return []
 }
 
 const getTouristName = (tourist: any) => {
+  logger.debug('getTouristName - tourist data:', tourist)
+  
+  // Try different possible field names
   if (tourist.firstName && tourist.lastName) {
-    return `${tourist.firstName} ${tourist.lastName}`
+    const name = `${tourist.firstName} ${tourist.lastName}`
+    logger.debug('getTouristName - using firstName/lastName:', name)
+    return name
+  }
+  if (tourist.first_name && tourist.last_name) {
+    const name = `${tourist.first_name} ${tourist.last_name}`
+    logger.debug('getTouristName - using first_name/last_name:', name)
+    return name
   }
   if (tourist.name) {
+    logger.debug('getTouristName - using name:', tourist.name)
     return tourist.name
   }
+  
+  // Additional fallback - check if we have title + some other field
+  if (tourist.title && (tourist.firstName || tourist.first_name)) {
+    const firstName = tourist.firstName || tourist.first_name || ''
+    const lastName = tourist.lastName || tourist.last_name || ''
+    const name = `${firstName} ${lastName}`.trim()
+    if (name) {
+      logger.debug('getTouristName - using title + name:', name)
+      return name
+    }
+  }
+  
+  logger.debug('getTouristName - no name found, returning N/A')
   return 'N/A'
 }
 
 const getTouristPassport = (tourist: any) => {
+  logger.debug('getTouristPassport - tourist data:', tourist)
+  
+  // Try different possible field names
   if (tourist.passportNumber) {
     const expiry = tourist.passportExpiry || 'N/A'
-    return `${tourist.passportNumber} (${expiry})`
+    const passport = `${tourist.passportNumber} (${expiry})`
+    logger.debug('getTouristPassport - using passportNumber:', passport)
+    return passport
   }
+  if (tourist.passport_number) {
+    const expiry = tourist.passport_expiry || 'N/A'
+    const passport = `${tourist.passport_number} (${expiry})`
+    logger.debug('getTouristPassport - using passport_number:', passport)
+    return passport
+  }
+  
+  logger.debug('getTouristPassport - no passport found, returning N/A')
   return 'N/A'
 }
 
@@ -819,41 +999,110 @@ const getInboundTime = () => {
 // New functions for improved flight display
 const getOutboundFrom = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundFrom - flight data:', flight)
+  
   if (flight?.outbound?.airports?.from) {
-    return `${flight.outbound.airports.from.name} (${flight.outbound.airports.from.prefix})`
+    const from = `${flight.outbound.airports.from.name} (${flight.outbound.airports.from.prefix})`
+    logger.debug('getOutboundFrom - using outbound.airports.from:', from)
+    return from
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.departure?.airport) {
+    const airport = flight.there.departure.airport
+    const from = `${airport.name} (${airport.prefix})`
+    logger.debug('getOutboundFrom - using there.departure.airport:', from)
+    return from
+  }
+  
   // Fallback for flight_info structure
   if (flight?.departure?.airport) {
+    logger.debug('getOutboundFrom - using departure.airport:', flight.departure.airport)
     return flight.departure.airport
   }
+  
+  logger.debug('getOutboundFrom - no data found, returning N/A')
   return 'N/A'
 }
 
 const getInboundFrom = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getInboundFrom - flight data:', flight)
+  
   if (flight?.inbound?.airports?.from) {
-    return `${flight.inbound.airports.from.name} (${flight.inbound.airports.from.prefix})`
+    const from = `${flight.inbound.airports.from.name} (${flight.inbound.airports.from.prefix})`
+    logger.debug('getInboundFrom - using inbound.airports.from:', from)
+    return from
   }
+  
+  // Try OBS flights structure
+  if (flight?.back?.departure?.airport) {
+    const airport = flight.back.departure.airport
+    const from = `${airport.name} (${airport.prefix})`
+    logger.debug('getInboundFrom - using back.departure.airport:', from)
+    return from
+  }
+  
   // Fallback for flight_info structure
   if (flight?.arrival?.airport) {
+    logger.debug('getInboundFrom - using arrival.airport:', flight.arrival.airport)
     return flight.arrival.airport
   }
+  
+  logger.debug('getInboundFrom - no data found, returning N/A')
   return 'N/A'
 }
 
 const getOutboundDeparture = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundDeparture - flight data:', flight)
+  
   if (flight?.outbound?.departure?.time && flight?.outbound?.departure?.date) {
     try {
       const date = new Date(flight.outbound.departure.date)
       const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
       const dayName = dayNames[date.getDay()]
       const formattedDate = formatDate(flight.outbound.departure.date)
-      return `${flight.outbound.departure.time} ${formattedDate} (${dayName})`
+      const result = `${flight.outbound.departure.time} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundDeparture - using outbound.departure:', result)
+      return result
     } catch {
-      return `${flight.outbound.departure.time} ${flight.outbound.departure.date}`
+      const result = `${flight.outbound.departure.time} ${flight.outbound.departure.date}`
+      logger.debug('getOutboundDeparture - using outbound.departure (fallback):', result)
+      return result
     }
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.departure?.time && flight?.there?.date) {
+    try {
+      // Handle DD.MM.YYYY format
+      let date: Date
+      if (typeof flight.there.date === 'string' && flight.there.date.includes('.')) {
+        const parts = flight.there.date.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+        } else {
+          date = new Date(flight.there.date)
+        }
+      } else {
+        date = new Date(flight.there.date)
+      }
+      
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(date.toISOString())
+      const result = `${flight.there.departure.time} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundDeparture - using there.departure:', result)
+      return result
+    } catch {
+      const result = `${flight.there.departure.time} ${flight.there.date}`
+      logger.debug('getOutboundDeparture - using there.departure (fallback):', result)
+      return result
+    }
+  }
+  
   // Fallback for flight_info structure
   if (flight?.departure?.time && flight?.departure?.date) {
     try {
@@ -861,27 +1110,70 @@ const getOutboundDeparture = () => {
       const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
       const dayName = dayNames[date.getDay()]
       const formattedDate = formatDate(flight.departure.date)
-      return `${flight.departure.time} ${formattedDate} (${dayName})`
+      const result = `${flight.departure.time} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundDeparture - using departure:', result)
+      return result
     } catch {
-      return `${flight.departure.time} ${flight.departure.date}`
+      const result = `${flight.departure.time} ${flight.departure.date}`
+      logger.debug('getOutboundDeparture - using departure (fallback):', result)
+      return result
     }
   }
+  
+  logger.debug('getOutboundDeparture - no data found, returning N/A')
   return 'N/A'
 }
 
 const getInboundDeparture = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getInboundDeparture - flight data:', flight)
+  
   if (flight?.inbound?.departure?.time && flight?.inbound?.departure?.date) {
     try {
       const date = new Date(flight.inbound.departure.date)
       const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
       const dayName = dayNames[date.getDay()]
       const formattedDate = formatDate(flight.inbound.departure.date)
-      return `${flight.inbound.departure.time} ${formattedDate} (${dayName})`
+      const result = `${flight.inbound.departure.time} ${formattedDate} (${dayName})`
+      logger.debug('getInboundDeparture - using inbound.departure:', result)
+      return result
     } catch {
-      return `${flight.inbound.departure.time} ${flight.inbound.departure.date}`
+      const result = `${flight.inbound.departure.time} ${flight.inbound.departure.date}`
+      logger.debug('getInboundDeparture - using inbound.departure (fallback):', result)
+      return result
     }
   }
+  
+  // Try OBS flights structure
+  if (flight?.back?.departure?.time && flight?.back?.date) {
+    try {
+      // Handle DD.MM.YYYY format
+      let date: Date
+      if (typeof flight.back.date === 'string' && flight.back.date.includes('.')) {
+        const parts = flight.back.date.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+        } else {
+          date = new Date(flight.back.date)
+        }
+      } else {
+        date = new Date(flight.back.date)
+      }
+      
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(date.toISOString())
+      const result = `${flight.back.departure.time} ${formattedDate} (${dayName})`
+      logger.debug('getInboundDeparture - using back.departure:', result)
+      return result
+    } catch {
+      const result = `${flight.back.departure.time} ${flight.back.date}`
+      logger.debug('getInboundDeparture - using back.departure (fallback):', result)
+      return result
+    }
+  }
+  
   // Fallback for flight_info structure - for inbound departure, use arrival field (which contains inbound departure data)
   if (flight?.arrival?.time && flight?.arrival?.date) {
     try {
@@ -889,76 +1181,187 @@ const getInboundDeparture = () => {
       const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
       const dayName = dayNames[date.getDay()]
       const formattedDate = formatDate(flight.arrival.date)
-      return `${flight.arrival.time} ${formattedDate} (${dayName})`
+      const result = `${flight.arrival.time} ${formattedDate} (${dayName})`
+      logger.debug('getInboundDeparture - using arrival:', result)
+      return result
     } catch {
-      return `${flight.arrival.time} ${flight.arrival.date}`
+      const result = `${flight.arrival.time} ${flight.arrival.date}`
+      logger.debug('getInboundDeparture - using arrival (fallback):', result)
+      return result
     }
   }
+  
+  logger.debug('getInboundDeparture - no data found, returning N/A')
   return 'N/A'
 }
 
 const getOutboundFlightInfo = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundFlightInfo - flight data:', flight)
+  
   if (flight?.outbound?.airline && flight?.outbound?.name) {
-    return `${flight.outbound.airline.iata_code} ${flight.outbound.name} (${flight.outbound.airline.airline})`
+    const info = `${flight.outbound.airline.iata_code} ${flight.outbound.name} (${flight.outbound.airline.airline})`
+    logger.debug('getOutboundFlightInfo - using outbound:', info)
+    return info
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.flight_number && flight?.there?.airline) {
+    const flightNumber = flight.there.flight_number
+    const airline = flight.there.airline
+    const info = `${flightNumber.prefix} ${flightNumber.number} (${airline.name})`
+    logger.debug('getOutboundFlightInfo - using there:', info)
+    return info
+  }
+  
   // Fallback for flight_info structure - generate flight info from available data
   if (flight?.departure) {
-    return 'TK 3021 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+    const info = 'TK 3021 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+    logger.debug('getOutboundFlightInfo - using departure (fallback):', info)
+    return info
   }
+  
+  logger.debug('getOutboundFlightInfo - no data found, returning N/A')
   return 'N/A'
 }
 
 const getInboundFlightInfo = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getInboundFlightInfo - flight data:', flight)
+  
   if (flight?.inbound?.airline && flight?.inbound?.name) {
-    return `${flight.inbound.airline.iata_code} ${flight.inbound.name} (${flight.inbound.airline.airline})`
+    const info = `${flight.inbound.airline.iata_code} ${flight.inbound.name} (${flight.inbound.airline.airline})`
+    logger.debug('getInboundFlightInfo - using inbound:', info)
+    return info
   }
+  
+  // Try OBS flights structure
+  if (flight?.back?.flight_number && flight?.back?.airline) {
+    const flightNumber = flight.back.flight_number
+    const airline = flight.back.airline
+    const info = `${flightNumber.prefix} ${flightNumber.number} (${airline.name})`
+    logger.debug('getInboundFlightInfo - using back:', info)
+    return info
+  }
+  
   // Fallback for flight_info structure - generate flight info from available data
   if (flight?.arrival) {
-    return 'TK 3022 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+    const info = 'TK 3022 (TURKISH AIRLINES)' // This should be dynamic based on actual data
+    logger.debug('getInboundFlightInfo - using arrival (fallback):', info)
+    return info
   }
+  
+  logger.debug('getInboundFlightInfo - no data found, returning N/A')
   return 'N/A'
 }
 
 // Additional functions for complete flight information
 const getOutboundTo = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundTo - flight data:', flight)
+  
   if (flight?.outbound?.airports?.to) {
-    return `${flight.outbound.airports.to.name} (${flight.outbound.airports.to.prefix})`
+    const to = `${flight.outbound.airports.to.name} (${flight.outbound.airports.to.prefix})`
+    logger.debug('getOutboundTo - using outbound.airports.to:', to)
+    return to
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.arrival?.airport) {
+    const airport = flight.there.arrival.airport
+    const to = `${airport.name} (${airport.prefix})`
+    logger.debug('getOutboundTo - using there.arrival.airport:', to)
+    return to
+  }
+  
   // Fallback for flight_info structure
   if (flight?.arrival?.airport) {
+    logger.debug('getOutboundTo - using arrival.airport:', flight.arrival.airport)
     return flight.arrival.airport
   }
+  
+  logger.debug('getOutboundTo - no data found, returning N/A')
   return 'N/A'
 }
 
 const getInboundTo = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getInboundTo - flight data:', flight)
+  
   if (flight?.inbound?.airports?.to) {
-    return `${flight.inbound.airports.to.name} (${flight.inbound.airports.to.prefix})`
+    const to = `${flight.inbound.airports.to.name} (${flight.inbound.airports.to.prefix})`
+    logger.debug('getInboundTo - using inbound.airports.to:', to)
+    return to
   }
+  
+  // Try OBS flights structure
+  if (flight?.back?.arrival?.airport) {
+    const airport = flight.back.arrival.airport
+    const to = `${airport.name} (${airport.prefix})`
+    logger.debug('getInboundTo - using back.arrival.airport:', to)
+    return to
+  }
+  
   // Fallback for flight_info structure
   if (flight?.departure?.airport) {
+    logger.debug('getInboundTo - using departure.airport:', flight.departure.airport)
     return flight.departure.airport
   }
+  
+  logger.debug('getInboundTo - no data found, returning N/A')
   return 'N/A'
 }
 
 const getOutboundArrival = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundArrival - flight data:', flight)
+  
   if (flight?.outbound?.arrival?.time && flight?.outbound?.arrival?.date) {
     try {
       const date = new Date(flight.outbound.arrival.date)
       const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
       const dayName = dayNames[date.getDay()]
       const formattedDate = formatDate(flight.outbound.arrival.date)
-      return `${flight.outbound.arrival.time} ${formattedDate} (${dayName})`
+      const result = `${flight.outbound.arrival.time} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundArrival - using outbound.arrival:', result)
+      return result
     } catch {
-      return `${flight.outbound.arrival.time} ${flight.outbound.arrival.date}`
+      const result = `${flight.outbound.arrival.time} ${flight.outbound.arrival.date}`
+      logger.debug('getOutboundArrival - using outbound.arrival (fallback):', result)
+      return result
     }
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.arrival?.time && flight?.there?.date) {
+    try {
+      // Handle DD.MM.YYYY format
+      let date: Date
+      if (typeof flight.there.date === 'string' && flight.there.date.includes('.')) {
+        const parts = flight.there.date.split('.')
+        if (parts.length === 3) {
+          const [day, month, year] = parts
+          date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+        } else {
+          date = new Date(flight.there.date)
+        }
+      } else {
+        date = new Date(flight.there.date)
+      }
+      
+      const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const dayName = dayNames[date.getDay()]
+      const formattedDate = formatDate(date.toISOString())
+      const result = `${flight.there.arrival.time} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundArrival - using there.arrival:', result)
+      return result
+    } catch {
+      const result = `${flight.there.arrival.time} ${flight.there.date}`
+      logger.debug('getOutboundArrival - using there.arrival (fallback):', result)
+      return result
+    }
+  }
+  
   // Fallback for flight_info structure - for outbound arrival, we need to calculate from departure time + 2h 10m
   if (flight?.departure?.time && flight?.departure?.date) {
     try {
@@ -974,11 +1377,17 @@ const getOutboundArrival = () => {
       const arrMins = arrMinutes % 60
       const arrivalTime = `${arrHours.toString().padStart(2, '0')}:${arrMins.toString().padStart(2, '0')}`
       
-      return `${arrivalTime} ${formattedDate} (${dayName})`
+      const result = `${arrivalTime} ${formattedDate} (${dayName})`
+      logger.debug('getOutboundArrival - using departure (calculated):', result)
+      return result
     } catch {
-      return `${flight.departure.time} ${flight.departure.date}`
+      const result = `${flight.departure.time} ${flight.departure.date}`
+      logger.debug('getOutboundArrival - using departure (fallback):', result)
+      return result
     }
   }
+  
+  logger.debug('getOutboundArrival - no data found, returning N/A')
   return 'N/A'
 }
 
@@ -1020,6 +1429,8 @@ const getInboundArrival = () => {
 
 const getOutboundTravelTime = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getOutboundTravelTime - flight data:', flight)
+  
   if (flight?.outbound?.departure?.time && flight?.outbound?.arrival?.time) {
     try {
       const depTime = flight.outbound.departure.time
@@ -1037,11 +1448,28 @@ const getOutboundTravelTime = () => {
       const hours = Math.floor(diffMinutes / 60)
       const minutes = diffMinutes % 60
       
-      return `${hours}ч ${minutes}м`
+      const result = `${hours}ч ${minutes}м`
+      logger.debug('getOutboundTravelTime - using outbound:', result)
+      return result
     } catch {
+      logger.debug('getOutboundTravelTime - error calculating outbound time')
       return 'N/A'
     }
   }
+  
+  // Try OBS flights structure
+  if (flight?.there?.flight_time) {
+    try {
+      const flightTime = flight.there.flight_time
+      const result = flightTime.replace(':', 'ч ') + 'м'
+      logger.debug('getOutboundTravelTime - using there.flight_time:', result)
+      return result
+    } catch {
+      logger.debug('getOutboundTravelTime - error parsing there.flight_time')
+      return 'N/A'
+    }
+  }
+  
   // Fallback for flight_info structure - calculate from departure to departure+2h10m
   if (flight?.departure?.time) {
     try {
@@ -1052,16 +1480,23 @@ const getOutboundTravelTime = () => {
       const hours = Math.floor(130 / 60) // 2 hours
       const minutes = 130 % 60 // 10 minutes
       
-      return `${hours}ч ${minutes}м`
+      const result = `${hours}ч ${minutes}м`
+      logger.debug('getOutboundTravelTime - using departure (calculated):', result)
+      return result
     } catch {
+      logger.debug('getOutboundTravelTime - error calculating departure time')
       return 'N/A'
     }
   }
+  
+  logger.debug('getOutboundTravelTime - no data found, returning N/A')
   return 'N/A'
 }
 
 const getInboundTravelTime = () => {
   const flight = getSelectedFlight() as any
+  logger.debug('getInboundTravelTime - flight data:', flight)
+  
   if (flight?.inbound?.departure?.time && flight?.inbound?.arrival?.time) {
     try {
       const depTime = flight.inbound.departure.time
@@ -1079,11 +1514,28 @@ const getInboundTravelTime = () => {
       const hours = Math.floor(diffMinutes / 60)
       const minutes = diffMinutes % 60
       
-      return `${hours}ч ${minutes}м`
+      const result = `${hours}ч ${minutes}м`
+      logger.debug('getInboundTravelTime - using inbound:', result)
+      return result
     } catch {
+      logger.debug('getInboundTravelTime - error calculating inbound time')
       return 'N/A'
     }
   }
+  
+  // Try OBS flights structure
+  if (flight?.back?.flight_time) {
+    try {
+      const flightTime = flight.back.flight_time
+      const result = flightTime.replace(':', 'ч ') + 'м'
+      logger.debug('getInboundTravelTime - using back.flight_time:', result)
+      return result
+    } catch {
+      logger.debug('getInboundTravelTime - error parsing back.flight_time')
+      return 'N/A'
+    }
+  }
+  
   // Fallback for flight_info structure - for inbound, we need to calculate from arrival to arrival+2h10m
   if (flight?.arrival?.time) {
     try {
@@ -1104,11 +1556,16 @@ const getInboundTravelTime = () => {
       const hours = Math.floor(diffMinutes / 60)
       const minutes = diffMinutes % 60
       
-      return `${hours}ч ${minutes}м`
+      const result = `${hours}ч ${minutes}м`
+      logger.debug('getInboundTravelTime - using arrival (calculated):', result)
+      return result
     } catch {
+      logger.debug('getInboundTravelTime - error calculating arrival time')
       return 'N/A'
     }
   }
+  
+  logger.debug('getInboundTravelTime - no data found, returning N/A')
   return 'N/A'
 }
 
@@ -1127,6 +1584,7 @@ const getSelectedFlight = () => {
     hasSelectedFlight: !!customerData?.selected_flight,
     hasTourDetails: !!tourDetails,
     hasFlightInfo: !!tourDetails?.flight_info,
+    hasFlights: !!tourDetails?.flights,
     isAdminMode: props.isAdminMode,
     customerDataKeys: customerData ? Object.keys(customerData) : [],
     tourDetailsKeys: tourDetails ? Object.keys(tourDetails) : []
@@ -1136,6 +1594,60 @@ const getSelectedFlight = () => {
   if (customerData?.selected_flight) {
     logger.debug('getSelectedFlight - found in customer_data.selected_flight:', customerData.selected_flight)
     return customerData.selected_flight
+  }
+  
+  // Try tour_details.flights (for OBS API data)
+  if (tourDetails?.flights) {
+    logger.debug('getSelectedFlight - found in tour_details.flights:', tourDetails.flights)
+    // Convert OBS flights format to expected format
+    return {
+      outbound: {
+        name: tourDetails.flights.there?.flight_number?.number || '',
+        airline: {
+          iata_code: tourDetails.flights.there?.flight_number?.prefix || '',
+          airline: tourDetails.flights.there?.airline?.name || ''
+        },
+        departure: {
+          date: tourDetails.flights.there?.date || '',
+          time: tourDetails.flights.there?.departure?.time || ''
+        },
+        arrival: {
+          date: tourDetails.flights.there?.date || '',
+          time: tourDetails.flights.there?.arrival?.time || ''
+        },
+        airports: {
+          from: {
+            name: tourDetails.flights.there?.departure?.airport?.name || ''
+          },
+          to: {
+            name: tourDetails.flights.there?.arrival?.airport?.name || ''
+          }
+        }
+      },
+      inbound: {
+        name: tourDetails.flights.back?.flight_number?.number || '',
+        airline: {
+          iata_code: tourDetails.flights.back?.flight_number?.prefix || '',
+          airline: tourDetails.flights.back?.airline?.name || ''
+        },
+        departure: {
+          date: tourDetails.flights.back?.date || '',
+          time: tourDetails.flights.back?.departure?.time || ''
+        },
+        arrival: {
+          date: tourDetails.flights.back?.date || '',
+          time: tourDetails.flights.back?.arrival?.time || ''
+        },
+        airports: {
+          from: {
+            name: tourDetails.flights.back?.departure?.airport?.name || ''
+          },
+          to: {
+            name: tourDetails.flights.back?.arrival?.airport?.name || ''
+          }
+        }
+      }
+    }
   }
   
   // Fallback to tour_details.flight_info (for existing bookings)

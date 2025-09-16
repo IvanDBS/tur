@@ -86,6 +86,9 @@ router.beforeEach(async (to, from, next) => {
   
   // Проверяем, требует ли маршрут админских прав
   if (to.meta.requiresAdmin) {
+    // Сначала пытаемся восстановить состояние аутентификации из localStorage
+    await authStore.initializeAuth()
+    
     // Проверяем, авторизован ли пользователь
     if (!authStore.isAuthenticated) {
       next('/auth-test') // Перенаправляем на страницу входа

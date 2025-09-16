@@ -1,6 +1,28 @@
 <template>
   <div class="admin-bookings">
 
+    <!-- Sync Controls -->
+    <div class="sync-controls">
+      <button 
+        @click="syncAllBookings" 
+        :disabled="syncing"
+        class="btn btn-primary"
+        title="Синхронизировать все"
+      >
+        <span v-if="syncing">Синхронизация...</span>
+        <span v-else class="sync-button-content">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Синхронизировать
+        </span>
+      </button>
+      <span class="sync-info">
+        Последняя синхронизация: {{ lastSyncTime || 'Никогда' }}
+      </span>
+    </div>
+
     <!-- Bookings Table -->
     <div class="bookings-table-container">
       <div v-if="loading" class="loading-state">
@@ -249,24 +271,24 @@
               <td class="hotel-info">
                 <div class="hotel-name">{{ getHotelName(booking) }}</div>
               </td>
-              <td class="check-in">{{ formatDateDDMMYYYY(getCheckInDate(booking)) }}</td>
-              <td class="check-out">{{ formatDateDDMMYYYY(getCheckOutDate(booking)) }}</td>
+              <td class="check-in">{{ getCheckInDate(booking) }}</td>
+              <td class="check-out">{{ getCheckOutDate(booking) }}</td>
               <td class="tourists">
                 <div class="tourists-list">{{ getTouristsNames(booking) }}</div>
               </td>
               <td class="departure-flight">
-                <div v-if="booking.tour_details.flight_info?.departure">
-                  <div class="flight-date">{{ formatDateDDMMYYYY(booking.tour_details.flight_info.departure.date) }}</div>
-                  <div class="flight-number">{{ getFlightNumber(booking.tour_details.flight_info.departure) }}</div>
+                <div v-if="getDepartureFlight(booking)">
+                  <div class="flight-date">{{ normalizeDate(getDepartureFlight(booking).date) || 'N/A' }}</div>
+                  <div class="flight-number">{{ getFlightNumber(getDepartureFlight(booking)) }}</div>
                 </div>
-                <span v-else>N/A</span>
+                <span v-else>N/A - DEBUG: {{ getFlightDebugInfo(booking, 'departure') }}</span>
               </td>
               <td class="arrival-flight">
-                <div v-if="booking.tour_details.flight_info?.arrival">
-                  <div class="flight-date">{{ formatDateDDMMYYYY(booking.tour_details.flight_info.arrival.date) }}</div>
-                  <div class="flight-number">{{ getFlightNumber(booking.tour_details.flight_info.arrival) }}</div>
+                <div v-if="getArrivalFlight(booking)">
+                  <div class="flight-date">{{ normalizeDate(getArrivalFlight(booking).date) || 'N/A' }}</div>
+                  <div class="flight-number">{{ getFlightNumber(getArrivalFlight(booking)) }}</div>
                 </div>
-                <span v-else>N/A</span>
+                <span v-else>N/A - DEBUG: {{ getFlightDebugInfo(booking, 'arrival') }}</span>
               </td>
               <td class="amount">{{ booking.total_amount }} €</td>
               <td class="owner">
@@ -280,6 +302,17 @@
                 <StatusBadge :status="booking.operator_status || 'N/A'" />
               </td>
               <td class="actions">
+                <button 
+                  class="action-btn sync-btn" 
+                  @click="syncBooking(booking)"
+                  :disabled="syncing"
+                  title="Синхронизировать статус"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                </button>
                 <button 
                   class="action-btn edit-btn" 
                   @click="viewDetails(booking)"
@@ -332,12 +365,14 @@ import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaul
 import type { AdminBooking } from '../../types/admin'
 
 // Admin API
-const { loading, getBookings, updateBookingStatus } = useAdminApi()
+const { loading, getBookings, updateBookingStatus, syncAllBookings: apiSyncAllBookings, syncBooking: apiSyncBooking } = useAdminApi()
 
 // State
 const allBookings = ref<AdminBooking[]>([])
 const selectedBooking = ref<AdminBooking | null>(null)
 const currentPage = ref(1)
+const syncing = ref(false)
+const lastSyncTime = ref<string | null>(null)
 const totalPages = ref(1)
 const totalCount = ref(0)
 
@@ -402,7 +437,7 @@ const bookings = computed(() => {
   if (searchFilters.value.departure_flight && searchFilters.value.departure_flight.trim()) {
     const searchFlight = searchFilters.value.departure_flight.trim().toLowerCase()
     filtered = filtered.filter(booking => {
-      const departure = booking.tour_details.flight_info?.departure
+      const departure = getDepartureFlight(booking)
       if (!departure) return false
       
       const flightNumber = getFlightNumber(departure).toLowerCase()
@@ -416,7 +451,7 @@ const bookings = computed(() => {
   if (searchFilters.value.arrival_flight && searchFilters.value.arrival_flight.trim()) {
     const searchFlight = searchFilters.value.arrival_flight.trim().toLowerCase()
     filtered = filtered.filter(booking => {
-      const arrival = booking.tour_details.flight_info?.arrival
+      const arrival = getArrivalFlight(booking)
       if (!arrival) return false
       
       const flightNumber = getFlightNumber(arrival).toLowerCase()
@@ -594,39 +629,15 @@ const loadBookings = async () => {
         user: booking.user,
         status: booking.status,
         total_amount: booking.total_amount,
-        tour_details: {
-          hotel_name: tourDetails?.hotel_name || tourDetails?.hotel?.name || 'N/A',
-          hotel_category: tourDetails?.hotel_category || tourDetails?.hotel?.category || 'N/A',
-          city: tourDetails?.city || tourDetails?.hotel?.city || 'N/A',
-          room_type: tourDetails?.room_type || tourDetails?.accommodation?.room?.name || 'N/A',
-          meal_plan: tourDetails?.meal_plan || tourDetails?.accommodation?.meal?.full_name || 'N/A',
-          check_in: tourDetails?.check_in || tourDetails?.dates?.check_in || 'N/A',
-          check_out: tourDetails?.check_out || tourDetails?.dates?.check_out || 'N/A',
-          nights: tourDetails?.nights || tourDetails?.nights?.total || 0,
-          currency: tourDetails?.currency || 'EUR',
-          tourists: tourDetails?.tourists || customerData?.tourists || [],
-          flight_info: tourDetails?.flight_info || {
-            departure: {
-              date: 'N/A',
-              time: 'N/A',
-              airport: 'N/A',
-              city: 'N/A'
-            },
-            arrival: {
-              date: 'N/A',
-              time: 'N/A',
-              airport: 'N/A',
-              city: 'N/A'
-            }
-          }
-        },
+        tour_details: tourDetails, // Keep original OBS structure
         customer_data: customerData,
         created_at: booking.created_at,
         confirmed_at: booking.confirmed_at,
         cancelled_at: booking.cancelled_at,
         obs_booking_hash: booking.obs_booking_hash,
         obs_order_id: booking.obs_order_id,
-        search_query: booking.search_query
+        search_query: booking.search_query,
+        can_be_cancelled: false
       }
     })
     
@@ -715,6 +726,42 @@ const handleStatusChanged = () => {
   loadBookings()
 }
 
+// Sync functions
+const syncAllBookings = async () => {
+  try {
+    syncing.value = true
+    const response = await apiSyncAllBookings()
+    
+    // Update last sync time
+    lastSyncTime.value = new Date().toLocaleString('ru-RU')
+    
+    // Reload bookings to show updated statuses
+    await loadBookings()
+    
+    console.log('Sync initiated successfully:', response)
+  } catch (error) {
+    console.error('Failed to sync all bookings:', error)
+  } finally {
+    syncing.value = false
+  }
+}
+
+const syncBooking = async (booking: AdminBooking) => {
+  try {
+    syncing.value = true
+    const response = await apiSyncBooking(booking.id)
+    
+    // Update the specific booking status
+    await loadBookings()
+    
+    console.log('Booking sync initiated successfully:', response)
+  } catch (error) {
+    console.error('Failed to sync booking:', error)
+  } finally {
+    syncing.value = false
+  }
+}
+
 // Sorting methods
 const sortBy = (field: string) => {
   if (sortField.value === field) {
@@ -749,8 +796,8 @@ const sortBookings = () => {
         bValue = new Date(b.created_at)
         break
       case 'country':
-        aValue = getCountryFromCity(a.tour_details.city)
-        bValue = getCountryFromCity(b.tour_details.city)
+        aValue = getCountryFromCity(a.tour_details.city || '')
+        bValue = getCountryFromCity(b.tour_details.city || '')
         break
       case 'hotel_name':
         aValue = getHotelName(a)
@@ -769,12 +816,12 @@ const sortBookings = () => {
         bValue = getTouristsCount(b)
         break
       case 'departure_flight':
-        aValue = a.tour_details.flight_info?.departure?.date || ''
-        bValue = b.tour_details.flight_info?.departure?.date || ''
+        aValue = getDepartureFlight(a)?.date || ''
+        bValue = getDepartureFlight(b)?.date || ''
         break
       case 'arrival_flight':
-        aValue = a.tour_details.flight_info?.arrival?.date || ''
-        bValue = b.tour_details.flight_info?.arrival?.date || ''
+        aValue = getArrivalFlight(a)?.date || ''
+        bValue = getArrivalFlight(b)?.date || ''
         break
       case 'total_amount':
         aValue = a.total_amount
@@ -842,10 +889,17 @@ const getCountryFromCity = (city: string): string => {
 // Helper functions for booking data extraction
 const getHotelName = (booking: AdminBooking) => {
   const tourDetails = booking.tour_details as any
+  // Try OBS structure first
+  if (tourDetails?.hotel?.hotel) {
+    return tourDetails.hotel.hotel
+  }
   if (tourDetails?.hotel?.name) {
     return tourDetails.hotel.name
   }
-  return tourDetails?.hotel_name || 'N/A'
+  if (tourDetails?.hotel_name) {
+    return tourDetails.hotel_name
+  }
+  return 'Отель не указан'
 }
 
 const getHotelCity = (booking: AdminBooking) => {
@@ -858,16 +912,14 @@ const getHotelCity = (booking: AdminBooking) => {
 
 const getCheckInDate = (booking: AdminBooking) => {
   const tourDetails = booking.tour_details as any
-  const checkIn = tourDetails?.check_in || 
+  // Try OBS structure first
+  const checkIn = tourDetails?.hotel?.check_in ||
+                  tourDetails?.check_in || 
                   tourDetails?.accommodation?.check_in ||
                   tourDetails?.selected_room?.check_in ||
                   tourDetails?.search_result?.check_in
   if (checkIn && checkIn !== 'N/A') {
-    try {
-      return formatDate(checkIn)
-    } catch {
-      return 'N/A'
-    }
+    return normalizeDate(checkIn)
   }
   // Try to get from customer_data
   const customerData = booking.customer_data as any
@@ -875,27 +927,21 @@ const getCheckInDate = (booking: AdminBooking) => {
                          customerData?.search_result?.check_in ||
                          customerData?.searchResult?.check_in
   if (customerCheckIn && customerCheckIn !== 'N/A') {
-    try {
-      return formatDate(customerCheckIn)
-    } catch {
-      return 'N/A'
-    }
+    return normalizeDate(customerCheckIn)
   }
   return 'N/A'
 }
 
 const getCheckOutDate = (booking: AdminBooking) => {
   const tourDetails = booking.tour_details as any
-  const checkOut = tourDetails?.check_out || 
+  // Try OBS structure first
+  const checkOut = tourDetails?.hotel?.check_out ||
+                   tourDetails?.check_out || 
                    tourDetails?.accommodation?.check_out ||
                    tourDetails?.selected_room?.check_out ||
                    tourDetails?.search_result?.check_out
   if (checkOut && checkOut !== 'N/A') {
-    try {
-      return formatDate(checkOut)
-    } catch {
-      return 'N/A'
-    }
+    return normalizeDate(checkOut)
   }
   // Try to get from customer_data
   const customerData = booking.customer_data as any
@@ -903,11 +949,7 @@ const getCheckOutDate = (booking: AdminBooking) => {
                           customerData?.search_result?.check_out ||
                           customerData?.searchResult?.check_out
   if (customerCheckOut && customerCheckOut !== 'N/A') {
-    try {
-      return formatDate(customerCheckOut)
-    } catch {
-      return 'N/A'
-    }
+    return normalizeDate(customerCheckOut)
   }
   return 'N/A'
 }
@@ -933,12 +975,10 @@ const getOperator = (booking: AdminBooking) => {
 }
 
 const getTouristsNames = (booking: AdminBooking) => {
-  const tourDetails = booking.tour_details as any
-  const tourists = tourDetails?.tourists || []
-  
-  if (Array.isArray(tourists) && tourists.length > 0) {
-    // Get first two tourists, each on separate line
-    const firstTwo = tourists.slice(0, 2)
+  // Try customer_data first (this is where the actual tourist data is)
+  const customerData = booking.customer_data as any
+  if (customerData && Array.isArray(customerData.tourists)) {
+    const firstTwo = customerData.tourists.slice(0, 2)
     return firstTwo.map((tourist: any) => {
       const firstName = tourist.first_name || tourist.firstName || ''
       const lastName = tourist.last_name || tourist.lastName || ''
@@ -946,10 +986,13 @@ const getTouristsNames = (booking: AdminBooking) => {
     }).join('\n')
   }
   
-  // Try to get from customer_data
-  const customerData = booking.customer_data as any
-  if (customerData && Array.isArray(customerData.tourists)) {
-    const firstTwo = customerData.tourists.slice(0, 2)
+  // Fallback to tour_details
+  const tourDetails = booking.tour_details as any
+  const tourists = tourDetails?.tourists || []
+  
+  if (Array.isArray(tourists) && tourists.length > 0) {
+    // Get first two tourists, each on separate line
+    const firstTwo = tourists.slice(0, 2)
     return firstTwo.map((tourist: any) => {
       const firstName = tourist.first_name || tourist.firstName || ''
       const lastName = tourist.last_name || tourist.lastName || ''
@@ -974,15 +1017,85 @@ const formatDateDDMMYYYY = (dateString: string) => {
   }
 }
 
+const normalizeDate = (dateString: string) => {
+  if (!dateString || dateString === 'N/A') return 'N/A'
+  
+  // If already in DD.MM.YYYY format, return as is
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
+    return dateString
+  }
+  
+  // If in YYYY-MM-DD format, convert to DD.MM.YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-')
+    return `${day}.${month}.${year}`
+  }
+  
+  // Try to parse as Date and format
+  try {
+    const date = new Date(dateString)
+    if (!isNaN(date.getTime())) {
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}.${month}.${year}`
+    }
+  } catch {
+    // If all else fails, return original string
+  }
+  
+  return dateString
+}
+
+const getDepartureFlight = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  // Try OBS flights structure first
+  if (tourDetails?.flights?.there) {
+    return tourDetails.flights.there
+  }
+  return null
+}
+
+const getArrivalFlight = (booking: AdminBooking) => {
+  const tourDetails = booking.tour_details as any
+  // Try OBS flights structure first
+  if (tourDetails?.flights?.back) {
+    return tourDetails.flights.back
+  }
+  return null
+}
+
+const getFlightDebugInfo = (booking: AdminBooking, direction: string) => {
+  const tourDetails = booking.tour_details as any
+  if (!tourDetails) return 'no tour_details'
+  if (!tourDetails.flights) return 'no flights'
+  if (direction === 'departure' && !tourDetails.flights.there) return 'flights exists but no there'
+  if (direction === 'arrival' && !tourDetails.flights.back) return 'flights exists but no back'
+  return 'unknown issue'
+}
+
 const getFlightNumber = (flightInfo: any) => {
   if (!flightInfo) return 'N/A'
   
-  // Try different possible field names for flight number
-  return flightInfo.flight_number || 
-         flightInfo.flightNumber || 
-         flightInfo.number || 
-         flightInfo.code || 
-         'N/A'
+  // Try OBS flight structure first
+  if (flightInfo.flight_number?.number) {
+    const prefix = flightInfo.flight_number.prefix || ''
+    const number = flightInfo.flight_number.number || ''
+    return `${prefix}${number}`.trim()
+  }
+  if (flightInfo.flight_number) {
+    return flightInfo.flight_number
+  }
+  if (flightInfo.flightNumber) {
+    return flightInfo.flightNumber
+  }
+  if (flightInfo.number) {
+    return flightInfo.number
+  }
+  if (flightInfo.code) {
+    return flightInfo.code
+  }
+  return 'N/A'
 }
 
 // Lifecycle
@@ -1003,6 +1116,12 @@ onMounted(() => {
 <style scoped>
 .admin-bookings {
   width: 100%;
+}
+
+.sync-button-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 
@@ -1074,12 +1193,23 @@ onMounted(() => {
   text-align: center;
 }
 
-.table th:nth-child(4),
+.table th:nth-child(4) {
+  width: 70px;
+  max-width: 70px;
+  min-width: 70px;
+}
+
 .table th:nth-child(7),
 .table th:nth-child(8) {
-  width: 100px;
-  max-width: 100px;
-  min-width: 100px;
+  width: 70px;
+  max-width: 70px;
+  min-width: 70px;
+}
+
+.table th:nth-child(12) {
+  width: 80px;
+  max-width: 80px;
+  min-width: 80px;
 }
 
 .sortable {
@@ -1151,16 +1281,23 @@ onMounted(() => {
 
 .check-in,
 .check-out {
-  width: 100px;
-  max-width: 100px;
-  min-width: 100px;
+  width: 70px;
+  max-width: 70px;
+  min-width: 70px;
 }
 
 
 .booking-date {
-  width: 100px;
-  max-width: 100px;
-  min-width: 100px;
+  width: 70px;
+  max-width: 70px;
+  min-width: 70px;
+}
+
+.amount {
+  width: 80px;
+  max-width: 80px;
+  min-width: 80px;
+  text-align: right;
 }
 
 

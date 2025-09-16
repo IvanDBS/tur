@@ -14,7 +14,28 @@ export const BOOKING_CONFIG = {
   
   // Data extraction priority order
   EXTRACTION_PRIORITY: {
+    HOTEL_NAME: [
+      'tour_details.hotel.hotel',
+      'tour_details.hotel.name',
+      'tour_details.hotel_name',
+      'tour_details.accommodation.hotel.name',
+      'customer_data.selected_room.hotel.name'
+    ],
+    HOTEL_CATEGORY: [
+      'tour_details.hotel.hotel_category',
+      'tour_details.hotel.category',
+      'tour_details.hotel_category',
+      'tour_details.accommodation.hotel.category',
+      'customer_data.selected_room.hotel.category'
+    ],
+    CITY: [
+      'tour_details.hotel.city',
+      'tour_details.city',
+      'tour_details.accommodation.hotel.city',
+      'customer_data.selected_room.hotel.city'
+    ],
     ROOM_TYPE: [
+      'tour_details.hotel.room',
       'tour_details.room_type',
       'tour_details.accommodation.room.name',
       'tour_details.selected_room.room.name',
@@ -23,6 +44,7 @@ export const BOOKING_CONFIG = {
       'customer_data.selected_room.name'
     ],
     MEAL_PLAN: [
+      'tour_details.hotel.meal',
       'tour_details.meal_plan',
       'tour_details.accommodation.meal.name',
       'tour_details.selected_room.meal.name',
@@ -31,6 +53,7 @@ export const BOOKING_CONFIG = {
       'customer_data.selected_room.meal_plan'
     ],
     CHECK_IN: [
+      'tour_details.hotel.check_in',
       'tour_details.check_in',
       'tour_details.accommodation.check_in',
       'tour_details.selected_room.check_in',
@@ -40,6 +63,7 @@ export const BOOKING_CONFIG = {
       'customer_data.searchResult.check_in'
     ],
     CHECK_OUT: [
+      'tour_details.hotel.check_out',
       'tour_details.check_out',
       'tour_details.accommodation.check_out',
       'tour_details.selected_room.check_out',

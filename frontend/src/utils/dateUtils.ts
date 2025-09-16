@@ -177,6 +177,44 @@ export const formatDateFull = (dateString: string): string => {
 }
 
 /**
+ * Форматирует дату из формата DD.MM.YYYY в полный формат DD.MM.YYYY
+ * @param dateString - строка даты в формате DD.MM.YYYY
+ * @returns отформатированная дата
+ */
+export const formatDateFromDDMMYYYY = (dateString: string): string => {
+  if (!dateString) return ''
+  
+  try {
+    // If it's already in DD.MM.YYYY format, return as is
+    if (typeof dateString === 'string' && dateString.includes('.')) {
+      const parts = dateString.split('.')
+      if (parts.length === 3) {
+        const [day, month, year] = parts
+        // Validate the date
+        const date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`)
+        if (!isNaN(date.getTime())) {
+          return dateString // Return original if valid
+        }
+      }
+    }
+    
+    // Try to parse as regular date
+    const date = new Date(dateString)
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+    
+    return dateString
+  } catch {
+    return dateString
+  }
+}
+
+/**
  * Рассчитывает длительность между временем отправления и прибытия
  * @param departure - объект с временем отправления
  * @param arrival - объект с временем прибытия

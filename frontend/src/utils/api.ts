@@ -36,9 +36,7 @@ class ApiClient {
     }
 
     try {
-      logger.debug('API Request:', { url, config })
       const response = await fetch(url, config)
-      logger.debug('API Response:', { status: response.status, statusText: response.statusText })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -49,11 +47,9 @@ class ApiClient {
       }
 
       const data = await response.json()
-      logger.debug('API Success:', data)
       return data
     } catch (error) {
       logger.error('API Request failed:', error)
-      // API request failed
       throw error
     }
   }

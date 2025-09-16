@@ -296,6 +296,9 @@ export interface GroupedSearchResult {
   gala_dinner: unknown[]
   aquapark_services: unknown[]
   tourists: SearchResultTourists
+  // OBS API поля для бронирования
+  rid: string
+  unique_key: string
   // Массив вариантов комнат для этого отеля
   roomOptions: RoomOption[]
   // Минимальная цена среди всех вариантов

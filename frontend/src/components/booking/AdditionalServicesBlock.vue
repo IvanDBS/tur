@@ -228,14 +228,14 @@ const transferOptions = computed(() => [
 
 // Booking notes
 const bookingNotes = [
-  { key: 'honeymooners', label: 'Honeymooners' },
-  { key: 'regularGuest', label: "Hotel's regular guest(s)" },
-  { key: 'twinBeds', label: 'Twin beds (according possibility)' },
-  { key: 'groundFloor', label: 'Ground floor' },
-  { key: 'notGroundFloor', label: 'NOT ground floor' },
-  { key: 'babyCot', label: 'Baby cot' },
-  { key: 'handicapAccessible', label: 'Handicap accessible room (according possibility)' },
-  { key: 'doubleBed', label: 'Double bed/King size (according possibility)' }
+  { key: 'honeymooners', label: $t('additionalServices.honeymooners') },
+  { key: 'regularGuest', label: $t('additionalServices.regularGuest') },
+  { key: 'twinBeds', label: $t('additionalServices.twinBeds') },
+  { key: 'groundFloor', label: $t('additionalServices.groundFloor') },
+  { key: 'notGroundFloor', label: $t('additionalServices.notGroundFloor') },
+  { key: 'babyCot', label: $t('additionalServices.babyCot') },
+  { key: 'handicapAccessible', label: $t('additionalServices.handicapAccessible') },
+  { key: 'doubleBed', label: $t('additionalServices.doubleBed') }
 ]
 
 // Methods

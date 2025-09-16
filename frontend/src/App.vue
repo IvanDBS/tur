@@ -20,12 +20,16 @@
   import AuthModal from '@/components/auth/AuthModal.vue'
   import { useAuthModal } from '@/composables/useAuthModal'
   import { useI18n } from '@/composables/useI18n'
+  import { useAuthStore } from '@/stores/auth'
 
   const { isAuthModalOpen, closeAuthModal } = useAuthModal()
   const { initializeLocale } = useI18n()
+  const authStore = useAuthStore()
 
-  onMounted(() => {
+  onMounted(async () => {
     initializeLocale()
+    // Восстанавливаем состояние аутентификации при загрузке приложения
+    await authStore.initializeAuth()
   })
 </script>
 

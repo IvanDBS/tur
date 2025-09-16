@@ -292,7 +292,7 @@ export const useSearchForm = () => {
     if (calendarHints.availableNights.value.length > 0) {
       const availableNightsOptions = calendarHints.availableNights.value.map(nights => ({
         value: nights,
-        label: `${nights} ${nights === 1 ? 'ночь' : nights < 5 ? 'ночи' : 'ночей'}`
+        label: `${nights}`
       }))
       
       logger.info('Using available nights from API:', availableNightsOptions)
@@ -548,7 +548,10 @@ export const useSearchForm = () => {
     })
     
     // Добавляем выбранные отели в форму поиска (используем правильную логику)
-    const selectedHotels = getSelectedHotelsForSearch(searchData)
+    const selectedHotels = getSelectedHotelsForSearch({
+      hotels: searchData.hotels,
+      regions: searchData.regions
+    })
     logger.info('🏨 getSelectedHotelsForSearch result:', selectedHotels.length, 'hotels')
     searchForm.value.selectedHotels = selectedHotels
 

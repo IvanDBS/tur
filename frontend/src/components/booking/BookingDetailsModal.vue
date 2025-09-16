@@ -6,9 +6,11 @@
         <div class="booking-header">
           <div class="booking-title">
             <h2>{{ isAdminMode ? 'Детали пакета' : 'Детали бронирования' }}</h2>
-            <div class="booking-ref">{{ getBookingRef() }}</div>
-            <div class="booking-date">от {{ formatDate(booking.created_at) }} {{ formatTime(booking.created_at) }}</div>
-            <div class="booking-id">ID: {{ booking.id }}</div>
+            <div class="booking-info">
+              <div class="booking-id">ID: {{ booking.id }}</div>
+              <div class="booking-date">Создано: {{ formatDate(booking.created_at) }} {{ formatTime(booking.created_at) }}</div>
+              <div class="booking-status">Статус: {{ getStatusLabel(booking.status) }}</div>
+            </div>
           </div>
           <button class="modal-close" @click="closeModal">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -17,12 +19,6 @@
           </button>
         </div>
         
-        <!-- Status info -->
-        <div class="status-info" v-if="!isAdminMode">
-          <div class="status-badge" :class="`status-${booking.status}`">
-            {{ getStatusLabel(booking.status) }}
-          </div>
-        </div>
 
         <!-- Admin info -->
         <div class="admin-info" v-if="isAdminMode">
@@ -210,6 +206,104 @@
           </div>
         </div>
 
+        <!-- Additional Services Information -->
+        <div class="section" v-if="hasAdditionalServices()">
+          <div class="section-header">
+            <div class="section-icon">🚌</div>
+            <h3 class="section-title">Дополнительные услуги</h3>
+          </div>
+          <div class="services-info">
+            <div class="service-item">
+              <div class="service-header">
+                <div class="service-icon">🛡️</div>
+                <div class="service-title">Страхование</div>
+              </div>
+              <div class="service-details">
+                <div class="service-name">{{ getInsuranceName() }}</div>
+                <div class="service-description">{{ getInsuranceDescription() }}</div>
+                <div class="service-price" v-if="!getInsuranceIncluded()">
+                  + {{ getInsurancePrice() }} EUR
+                </div>
+                <div class="service-price included" v-else>
+                  Включено
+                </div>
+              </div>
+            </div>
+            
+            <div class="service-item">
+              <div class="service-header">
+                <div class="service-icon">🚐</div>
+                <div class="service-title">Трансфер</div>
+              </div>
+              <div class="service-details">
+                <div class="service-name">{{ getTransferName() }}</div>
+                <div class="service-description">{{ getTransferDescription() }}</div>
+                <div class="service-price" v-if="!getTransferIncluded()">
+                  + {{ getTransferPrice() }} EUR
+                </div>
+                <div class="service-price included" v-else>
+                  Включено
+                </div>
+              </div>
+            </div>
+
+            <div class="service-item" v-if="getCovidInsuranceType() === 'COVID_19'">
+              <div class="service-header">
+                <div class="service-icon">🦠</div>
+                <div class="service-title">COVID-19 страхование</div>
+              </div>
+              <div class="service-details">
+                <div class="service-name">COVID-19</div>
+                <div class="service-description">Дополнительная страховка от COVID-19</div>
+                <div class="service-price">+ {{ getCovidInsurancePrice() }} EUR</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Information (Admin Mode Only) -->
+        <div class="section" v-if="isAdminMode">
+          <div class="section-header">
+            <div class="section-icon">💰</div>
+            <h3 class="section-title">Информация о ценах</h3>
+          </div>
+          
+          <div v-if="obsOrderLoading" class="loading-pricing">
+            <div class="spinner"></div>
+            <p>Загрузка информации о ценах...</p>
+          </div>
+          
+          <div v-else-if="obsOrderDetails" class="pricing-breakdown">
+            <div class="pricing-grid">
+              <!-- Net Total -->
+              <div class="pricing-item">
+                <div class="pricing-label">Нетто</div>
+                <div class="pricing-value">{{ formatPrice(obsOrderDetails.price?.order_sum || 0) }} {{ getCurrency() }}</div>
+              </div>
+              
+              <!-- Commission -->
+              <div class="pricing-item">
+                <div class="pricing-label">Комиссия</div>
+                <div class="pricing-value">+ {{ formatPrice(obsOrderDetails.price?.commission_sum || 0) }} {{ getCurrency() }}</div>
+              </div>
+              
+              <!-- Grand Total -->
+              <div class="pricing-item">
+                <div class="pricing-label">ВСЕГО</div>
+                <div class="pricing-value">{{ formatPrice(obsOrderDetails.price?.total_sum || 0) }} {{ getCurrency() }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="pricing-error">
+            <div class="error-message">
+              <p><strong>Информация о ценах недоступна</strong></p>
+              <p v-if="isAdminMode">Booking Hash: {{ booking.obs_booking_hash || 'Не указан' }}</p>
+              <p>Попробуйте обновить страницу или обратитесь к администратору.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Booking Notes and Comments -->
         <div class="section" v-if="hasBookingNotes()">
           <div class="section-header">
@@ -339,6 +433,7 @@ import { formatDate, formatDateWithYear, formatDateTime } from '../../utils/date
 import { logger } from '../../utils/logger'
 import { BOOKING_DEFAULTS, getDefaultValue, extractDataByPriority } from '../../constants/bookingDefaults'
 import { useI18n } from '../../composables/useI18n'
+import { useAdminApi } from '../../composables/useAdminApi'
 
 // Props
 interface Props {
@@ -376,18 +471,59 @@ const emit = defineEmits<{
 // I18n
 const { t: $t } = useI18n()
 
+// Admin API
+const { getObsBookingDetails } = useAdminApi()
+
 // State
 const actionLoading = ref(false)
+const obsOrderDetails = ref<any>(null)
+const obsOrderLoading = ref(false)
 
 // Methods
 const closeModal = () => {
   emit('close')
 }
 
+// Load OBS order details for pricing information
+const loadObsOrderDetails = async () => {
+  logger.info('loadObsOrderDetails called:', {
+    isAdminMode: props.isAdminMode,
+    obsOrderId: props.booking.obs_order_id,
+    bookingId: props.booking.id
+  })
+  
+  if (!props.isAdminMode) {
+    logger.info('Not in admin mode, skipping OBS order details load')
+    return
+  }
+  
+  if (!props.booking.obs_booking_hash) {
+    logger.warn('No OBS booking hash found for booking:', props.booking.id)
+    return
+  }
+
+  try {
+    obsOrderLoading.value = true
+    logger.info('Loading OBS order details for booking hash:', props.booking.obs_booking_hash)
+    
+    const response = await getObsBookingDetails(props.booking.obs_booking_hash)
+    obsOrderDetails.value = (response as any)?.data || response
+    
+    logger.info('OBS order details loaded successfully:', obsOrderDetails.value)
+  } catch (error) {
+    logger.error('Failed to load OBS order details:', error)
+  } finally {
+    obsOrderLoading.value = false
+  }
+}
+
 // Lifecycle hooks для управления прокруткой body
 onMounted(() => {
   // Блокируем прокрутку фона когда модалка открыта
   document.body.classList.add('modal-open')
+  
+  // Load OBS order details if in admin mode
+  loadObsOrderDetails()
 })
 
 onUnmounted(() => {
@@ -492,7 +628,8 @@ const getBookingRef = () => {
   if (props.isAdminMode) {
     return props.booking.obs_order_id || props.booking.obs_booking_hash || `#${props.booking.id}`
   }
-  return props.booking.obs_booking_hash || `#${props.booking.id}`
+  // For regular users, show only the booking ID
+  return `#${props.booking.id}`
 }
 
 // Helper functions to extract data from booking structure
@@ -1714,22 +1851,22 @@ const generateAirline = () => {
 
 // Booking notes and comments methods
 const hasBookingNotes = () => {
-  const customerData = props.booking.customer_data || {}
+  const customerData = props.booking.customer_data as any || {}
   const notes = customerData.notes || {}
   
   // Check if there are any selected notes
   const hasSelectedNotes = Object.keys(notes).some(key => 
-    key !== 'comment' && notes[key] === true
+    key !== 'comment' && (notes as any)[key] === true
   )
   
   // Check if there's a comment
-  const hasComment = notes.comment && notes.comment.trim().length > 0
+  const hasComment = (notes as any).comment && (notes as any).comment.trim().length > 0
   
   return hasSelectedNotes || hasComment
 }
 
 const getSelectedNotes = (): string[] => {
-  const customerData = props.booking.customer_data || {}
+  const customerData = props.booking.customer_data as any || {}
   const notes = customerData.notes || {}
   const selectedNotes: string[] = []
   
@@ -1747,7 +1884,7 @@ const getSelectedNotes = (): string[] => {
   
   // Check each note and add to selectedNotes if true
   Object.keys(noteLabels).forEach(key => {
-    if (notes[key] === true) {
+    if ((notes as any)[key] === true) {
       selectedNotes.push(noteLabels[key])
     }
   })
@@ -1756,10 +1893,169 @@ const getSelectedNotes = (): string[] => {
 }
 
 const getBookingComment = (): string => {
-  const customerData = props.booking.customer_data || {}
+  const customerData = props.booking.customer_data as any || {}
   const notes = customerData.notes || {}
   
-  return notes.comment || ''
+  return (notes as any).comment || ''
+}
+
+// Additional services methods
+const hasAdditionalServices = (): boolean => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  
+  return !!(additionalServices.insurance || additionalServices.transfer || additionalServices.covidInsurance)
+}
+
+const getInsuranceName = (): string => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const insurance = additionalServices.insurance || {}
+  
+  switch (insurance.type) {
+    case 'STANDARD':
+      return 'STANDARD 10000 EUR'
+    case 'STANDARD_PLUS':
+      return 'STANDARD PLUS TR 30 000 EUR'
+    case 'NONE':
+      return 'Без страхования'
+    default:
+      return insurance.type || 'N/A'
+  }
+}
+
+const getInsuranceDescription = (): string => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const insurance = additionalServices.insurance || {}
+  
+  switch (insurance.type) {
+    case 'STANDARD':
+      return 'Стандартная страховка на 10000 EUR'
+    case 'STANDARD_PLUS':
+      return 'Расширенная страховка на 30000 EUR'
+    case 'NONE':
+      return 'Страхование отключено'
+    default:
+      return insurance.coverage || ''
+  }
+}
+
+const getInsuranceIncluded = (): boolean => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const insurance = additionalServices.insurance || {}
+  
+  return insurance.included === true
+}
+
+const getInsurancePrice = (): number => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const insurance = additionalServices.insurance || {}
+  
+  return insurance.price || 0
+}
+
+const getTransferName = (): string => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const transfer = additionalServices.transfer || {}
+  
+  switch (transfer.type) {
+    case 'GROUP':
+      return 'GROUP (BUS)'
+    case 'INDIVIDUAL':
+      return 'INDIVIDUAL TRANSFER'
+    case 'VIP':
+      return 'VIP IND TRANSFER'
+    default:
+      return transfer.type || 'N/A'
+  }
+}
+
+const getTransferDescription = (): string => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const transfer = additionalServices.transfer || {}
+  
+  switch (transfer.type) {
+    case 'GROUP':
+      return 'Групповой трансфер на автобусе'
+    case 'INDIVIDUAL':
+      return 'Индивидуальный трансфер'
+    case 'VIP':
+      return 'VIP индивидуальный трансфер'
+    default:
+      return ''
+  }
+}
+
+const getTransferIncluded = (): boolean => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const transfer = additionalServices.transfer || {}
+  
+  return transfer.included === true
+}
+
+const getTransferPrice = (): number => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const transfer = additionalServices.transfer || {}
+  
+  return transfer.price || 0
+}
+
+const getCovidInsuranceType = (): string => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const covidInsurance = additionalServices.covidInsurance || {}
+  
+  return covidInsurance.type || 'INCLUDED'
+}
+
+const getCovidInsurancePrice = (): number => {
+  const customerData = props.booking.customer_data as any || {}
+  const additionalServices = customerData.additional_services || {}
+  const covidInsurance = additionalServices.covidInsurance || {}
+  
+  return covidInsurance.price || 0
+}
+
+// Format price for display
+const formatPrice = (price: number): string => {
+  if (typeof price !== 'number' || isNaN(price)) {
+    return '0'
+  }
+  return price.toFixed(2)
+}
+
+// Helper functions for OBS pricing information
+const getCurrency = () => {
+  return obsOrderDetails.value?.price?.currency || 'EUR'
+}
+
+const getHotelPrice = () => {
+  // Hotel price is typically included in the total, so we'll show it as part of the package
+  // For now, we'll show a placeholder since the API doesn't break down hotel price separately
+  return 'Включено'
+}
+
+const getObsTransferPrice = () => {
+  const transfer = obsOrderDetails.value?.services?.transfers?.[0]
+  if (transfer && transfer.extra_charge > 0) {
+    return `+ ${formatPrice(transfer.extra_charge)}`
+  }
+  return 'Включено'
+}
+
+const getObsInsurancePrice = () => {
+  const insurance = obsOrderDetails.value?.services?.insurances?.[0]
+  if (insurance && insurance.extra_charge > 0) {
+    return `+ ${formatPrice(insurance.extra_charge)}`
+  }
+  return 'Включено'
 }
 </script>
 
@@ -1803,7 +2099,7 @@ export default {
 }
 
 .modal-header {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-xl) var(--spacing-xl) 0 var(--spacing-xl);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-background-soft);
 }
@@ -1822,20 +2118,15 @@ export default {
   color: var(--color-text);
 }
 
-.booking-ref {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-xs);
+.booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
-.booking-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-  margin-bottom: var(--spacing-xs);
-}
-
-.booking-id {
+.booking-id,
+.booking-date,
+.booking-status {
   font-size: var(--font-size-sm);
   color: var(--color-text-soft);
 }
@@ -2045,6 +2336,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  align-items: flex-start;
 }
 
 .detail-item label {
@@ -2062,9 +2354,10 @@ export default {
 }
 
 .tourist-name {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
+  line-height: 1.4;
 }
 
 .flight-table {
@@ -2373,7 +2666,10 @@ export default {
     max-height: calc(100vh - 80px); /* Учитываем отступ на мобильных */
   }
   
-  .modal-header,
+  .modal-header {
+    padding: var(--spacing-lg) var(--spacing-lg) 0 var(--spacing-lg);
+  }
+  
   .modal-body,
   .modal-footer {
     padding: var(--spacing-lg);
@@ -2392,6 +2688,16 @@ export default {
   .tourist-row,
   .flight-row {
     flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .tourist-number {
+    min-width: auto;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .tourist-details-grid {
+    grid-template-columns: 1fr;
     gap: var(--spacing-md);
   }
   
@@ -2503,6 +2809,148 @@ export default {
   word-break: break-word;
 }
 
+/* Additional Services Information Styles */
+.services-info {
+  padding: var(--spacing-lg);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border-light);
+  margin-bottom: var(--spacing-md);
+}
+
+.service-item:last-child {
+  margin-bottom: 0;
+}
+
+.service-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.service-icon {
+  font-size: var(--font-size-lg);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.service-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.service-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-secondary);
+}
+
+.service-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.service-price {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  text-align: right;
+}
+
+.service-price.included {
+  color: var(--color-success);
+}
+
+/* Pricing Information Styles */
+.loading-pricing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.loading-pricing .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-md);
+}
+
+.pricing-breakdown {
+  padding: 4px;
+}
+
+.pricing-grid {
+  display: grid;
+  gap: 2px;
+}
+
+.pricing-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+
+.pricing-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.pricing-value {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.pricing-error {
+  padding: var(--spacing-lg);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.error-message {
+  color: var(--color-text-muted);
+}
+
+.error-message p {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.error-message p:last-child {
+  margin-bottom: 0;
+}
+
 /* Mobile responsive for booking notes */
 @media (max-width: 768px) {
   .booking-notes-info {
@@ -2515,6 +2963,48 @@ export default {
   }
   
   .notes-subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .services-info {
+    padding: var(--spacing-md);
+  }
+
+  .service-item {
+    padding: var(--spacing-sm);
+  }
+
+  .service-header {
+    gap: var(--spacing-xs);
+  }
+
+  .service-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .service-name,
+  .service-description {
+    font-size: var(--font-size-xs);
+  }
+
+  .service-price {
+    font-size: var(--font-size-xs);
+  }
+
+  .pricing-breakdown {
+    padding: var(--spacing-md);
+  }
+
+  .pricing-item {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .pricing-label,
+  .pricing-value {
+    font-size: var(--font-size-xs);
+  }
+
+  .pricing-item.total .pricing-value {
     font-size: var(--font-size-sm);
   }
 }

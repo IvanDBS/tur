@@ -66,6 +66,7 @@ Rails.application.routes.draw do
       patch 'admin/bookings/:id/status', to: 'admin#update_booking_status'
       post 'admin/bookings/:id/sync', to: 'admin#sync_booking_status'
       post 'admin/bookings/sync_all', to: 'admin#sync_all_bookings'
+      get 'admin/bookings/:id/obs-details', to: 'admin#obs_booking_details'
       
       # Admin users routes
       namespace :admin do

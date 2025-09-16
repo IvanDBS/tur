@@ -79,6 +79,11 @@ class ObsApiService < BaseApiService
     make_request(:post, "/api/v2/orders/book/#{hash}", booking_params)
   end
 
+  # Get order details with pricing information
+  def get_order_details(order_id)
+    make_request(:get, "/api/orders/#{order_id}")
+  end
+
   # Custom error classes (наследуются от ApiError)
   class Error < ApiError::Error; end
   class UnauthorizedError < ApiError::UnauthorizedError; end

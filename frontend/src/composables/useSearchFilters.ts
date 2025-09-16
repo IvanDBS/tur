@@ -7,27 +7,74 @@ export const useSearchFilters = () => {
   const { selectedFilters, resetFilters: globalResetFilters } = useGlobalFilters()
 
   // Helper function to get hotels for search
-  const getSelectedHotelsForSearch = (searchData: { hotels: { value: Array<{ id: number }> } }) => {
+  const getSelectedHotelsForSearch = (searchData: { 
+    hotels: { value: Array<{ id: number, city_id?: number }> },
+    regions: { value: Array<{ id: number, cities?: Array<{ id: number }> }> }
+  }) => {
     logger.debug(`🏨 getSelectedHotelsForSearch called. Available hotels: ${searchData.hotels.value.length}`)
     logger.debug(`🏨 Selected hotel filters: ${selectedFilters.value.hotels.length}`)
+    logger.debug(`🏨 Selected region filters: ${selectedFilters.value.regions.length}`)
     
-    // Если пользователь выбрал отели вручную, используем их
-    if (selectedFilters.value.hotels.length > 0) {
-      // Если выбран ID=1 (все отели), возвращаем все доступные отели
-      if (selectedFilters.value.hotels.includes(1)) {
-        const allHotels = searchData.hotels.value.map((hotel) => Number(hotel.id))
-        logger.debug(`🏨 "Any hotel" selected, returning all available hotels: ${allHotels.length} hotels`)
-        return allHotels
+    let hotelsToReturn = searchData.hotels.value
+    
+    // Сначала фильтруем по регионам
+    if (selectedFilters.value.regions.length > 0) {
+      // Если выбран "Все регионы" (ID=1), не фильтруем по регионам
+      if (!selectedFilters.value.regions.includes(1)) {
+        // Создаем маппинг регионов к городам
+        const regionCitiesMap = new Map<number, number[]>()
+        searchData.regions.value.forEach(region => {
+          if (region.cities && Array.isArray(region.cities)) {
+            const cityIds = region.cities.map(city => city.id)
+            regionCitiesMap.set(region.id, cityIds)
+          }
+        })
+        
+        // Получаем все города для выбранных регионов
+        const selectedCities = new Set<number>()
+        selectedFilters.value.regions.forEach(regionId => {
+          const cities = regionCitiesMap.get(regionId)
+          if (cities) {
+            cities.forEach(cityId => selectedCities.add(cityId))
+          }
+        })
+        
+        // Фильтруем отели по выбранным городам
+        hotelsToReturn = hotelsToReturn.filter(hotel => {
+          if (hotel.city_id) {
+            return selectedCities.has(hotel.city_id)
+          }
+          return false // Исключаем отели без city_id
+        })
+        
+        logger.debug(`🏨 After region filtering: ${hotelsToReturn.length} hotels`)
       }
-      // Иначе возвращаем выбранные отели (исключая ID=1)
-      return selectedFilters.value.hotels
-        .filter(id => id !== 1)
-        .map(id => Number(id))
+    } else {
+      // Если не выбрано ни одного региона, возвращаем пустой список
+      logger.debug(`🏨 No regions selected, returning empty hotel list`)
+      return []
     }
     
-    // Если ничего не выбрано, возвращаем все доступные отели
-    const allHotels = searchData.hotels.value.map((hotel) => Number(hotel.id))
-    logger.debug(`🏨 No hotels selected, returning all available hotels: ${allHotels.length} hotels`)
+    // Затем применяем фильтр по конкретным отелям, если они выбраны
+    if (selectedFilters.value.hotels.length > 0) {
+      // Если выбран ID=1 (все отели), используем все отели после фильтрации по регионам
+      if (selectedFilters.value.hotels.includes(1)) {
+        const allHotels = hotelsToReturn.map((hotel) => Number(hotel.id))
+        logger.debug(`🏨 "Any hotel" selected, returning ${allHotels.length} hotels after region filtering`)
+        return allHotels
+      }
+      // Иначе возвращаем пересечение выбранных отелей и отелей после фильтрации по регионам
+      const selectedHotelIds = selectedFilters.value.hotels.filter(id => id !== 1).map(id => Number(id))
+      const filteredHotelIds = hotelsToReturn.map(hotel => Number(hotel.id))
+      const intersection = selectedHotelIds.filter(id => filteredHotelIds.includes(id))
+      
+      logger.debug(`🏨 Selected hotels intersection with region-filtered hotels: ${intersection.length} hotels`)
+      return intersection
+    }
+    
+    // Если ничего не выбрано, возвращаем все отели после фильтрации по регионам
+    const allHotels = hotelsToReturn.map((hotel) => Number(hotel.id))
+    logger.debug(`🏨 No hotels selected, returning ${allHotels.length} hotels after region filtering`)
     return allHotels
   }
 

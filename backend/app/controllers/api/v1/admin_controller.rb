@@ -185,7 +185,32 @@ module Api
         end
       end
 
-      private
+      # GET /api/v1/admin/bookings/:id/obs-details
+      def obs_booking_details
+        booking_hash = params[:id]
+        
+        begin
+          # Get OBS booking details from OBS API using site authentication
+          site_auth = ObsSiteAuthService.instance
+          obs_service = ObsApiService.new(
+            base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
+            access_token: site_auth.access_token
+          )
+          
+          booking_details = obs_service.get_booking(booking_hash)
+          
+          if booking_details
+            render_success(booking_details)
+          else
+            render_error('Booking details not found', :not_found)
+          end
+        rescue StandardError => e
+          Rails.logger.error "Failed to fetch OBS booking details: #{e.message}"
+          render_error("Failed to fetch booking details: #{e.message}", :internal_server_error)
+        end
+      end
+
+    private
 
       def ensure_admin!
         # TODO: Implement proper admin role checking

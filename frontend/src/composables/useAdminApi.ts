@@ -63,9 +63,29 @@ export const useAdminApi = () => {
       const response = await apiClient.get(`/admin/bookings/${bookingId}`)
       
       logger.info('Booking details loaded successfully:', response)
-      return response
+      return response as any
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load booking details'
+      setError(message)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Get OBS booking details with pricing information
+  const getObsBookingDetails = async (bookingHash: string) => {
+    try {
+      loading.value = true
+      clearError()
+
+      logger.apiCall('GET', `/admin/bookings/${bookingHash}/obs-details`)
+      const response = await apiClient.get(`/admin/bookings/${bookingHash}/obs-details`)
+      
+      logger.info('OBS booking details loaded successfully:', response)
+      return response as any
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load OBS booking details'
       setError(message)
       throw err
     } finally {
@@ -85,7 +105,7 @@ export const useAdminApi = () => {
       const response = await apiClient.patch(`/admin/bookings/${bookingId}/status`, requestData)
       
       logger.info('Booking status updated successfully:', response)
-      return response
+      return response as any
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update booking status'
       setError(message)
@@ -220,6 +240,7 @@ export const useAdminApi = () => {
     clearError,
     getBookings,
     getBookingDetails,
+    getObsBookingDetails,
     updateBookingStatus,
     getStats,
     getUsers,

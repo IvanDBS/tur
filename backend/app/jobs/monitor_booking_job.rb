@@ -9,18 +9,29 @@ class MonitorBookingJob < ApplicationJob
   BOOKING_HOLD_TIME = 15.minutes
   BOOKING_EXPIRY_TIME = 24.hours
 
-  def perform(booking_id = nil)
-    Rails.logger.info "Starting booking monitoring for booking: #{booking_id || 'all pending'}"
-
-    bookings = booking_id ? [Booking.find(booking_id)] : Booking.pending
-
+  def perform(booking_id = nil, force_sync = false)
+    Rails.logger.info "Starting booking monitoring for booking: #{booking_id || 'all pending'}, force_sync: #{force_sync}"
+    
+    if booking_id
+      bookings = [Booking.find(booking_id)]
+    elsif force_sync
+      # Force sync all bookings that need monitoring
+      bookings = Booking.where(status: ['pending', 'processing', 'confirmed', 'changed'])
+                        .where('last_synced_at IS NULL OR last_synced_at < ?', 1.hour.ago)
+    else
+      # Regular monitoring - only pending bookings
+      bookings = Booking.pending
+    end
+    
+    Rails.logger.info "Processing #{bookings.count} bookings"
+    
     bookings.each do |booking|
       process_booking(booking)
     rescue StandardError => e
       Rails.logger.error "Failed to process booking #{booking.id}: #{e.message}"
       # Continue with other bookings
     end
-
+    
     Rails.logger.info 'Completed booking monitoring'
   end
 
@@ -182,6 +193,15 @@ class MonitorBookingJob < ApplicationJob
       updates[:obs_order_id] = obs_data['info']['order']
     end
 
+    # Check for tour details changes (including flights)
+    if obs_data['tour_details'] && obs_data['tour_details'] != booking.tour_details
+      old_tour_details = booking.tour_details
+      updates[:tour_details] = obs_data['tour_details']
+      
+      # Log flight changes specifically
+      log_flight_changes(booking, old_tour_details, obs_data['tour_details'])
+    end
+
     # Update booking if there are changes
     if updates.any?
       booking.update!(updates)
@@ -198,5 +218,120 @@ class MonitorBookingJob < ApplicationJob
     obs_data['status'] ||
     obs_data[:status] ||
     'unknown'
+  end
+
+  def log_flight_changes(booking, old_tour_details, new_tour_details)
+    return unless old_tour_details.is_a?(Hash) && new_tour_details.is_a?(Hash)
+
+    old_flights = old_tour_details['flights'] || {}
+    new_flights = new_tour_details['flights'] || {}
+
+    # Check departure flight changes
+    if old_flights['there'] != new_flights['there']
+      log_flight_change(booking, 'departure', old_flights['there'], new_flights['there'])
+    end
+
+    # Check arrival flight changes
+    if old_flights['back'] != new_flights['back']
+      log_flight_change(booking, 'arrival', old_flights['back'], new_flights['back'])
+    end
+
+    # Check hotel changes
+    if old_tour_details['hotel'] != new_tour_details['hotel']
+      log_hotel_change(booking, old_tour_details['hotel'], new_tour_details['hotel'])
+    end
+  end
+
+  def log_flight_change(booking, direction, old_flight, new_flight)
+    return unless old_flight.is_a?(Hash) && new_flight.is_a?(Hash)
+
+    changes = []
+    
+    # Check date changes
+    if old_flight['date'] != new_flight['date']
+      changes << "date: #{old_flight['date']} → #{new_flight['date']}"
+    end
+
+    # Check departure time changes
+    if old_flight.dig('departure', 'time') != new_flight.dig('departure', 'time')
+      old_time = old_flight.dig('departure', 'time')
+      new_time = new_flight.dig('departure', 'time')
+      changes << "departure time: #{old_time} → #{new_time}"
+    end
+
+    # Check arrival time changes
+    if old_flight.dig('arrival', 'time') != new_flight.dig('arrival', 'time')
+      old_time = old_flight.dig('arrival', 'time')
+      new_time = new_flight.dig('arrival', 'time')
+      changes << "arrival time: #{old_time} → #{new_time}"
+    end
+
+    # Check flight number changes
+    if old_flight.dig('flight_number', 'number') != new_flight.dig('flight_number', 'number')
+      old_number = old_flight.dig('flight_number', 'number')
+      new_number = new_flight.dig('flight_number', 'number')
+      changes << "flight number: #{old_number} → #{new_number}"
+    end
+
+    # Check airline changes
+    if old_flight.dig('airline', 'name') != new_flight.dig('airline', 'name')
+      old_airline = old_flight.dig('airline', 'name')
+      new_airline = new_flight.dig('airline', 'name')
+      changes << "airline: #{old_airline} → #{new_airline}"
+    end
+
+    if changes.any?
+      Rails.logger.warn "FLIGHT CHANGE DETECTED - Booking #{booking.id} (#{direction}): #{changes.join(', ')}"
+      
+      # Store change in comments_data for tracking
+      comments = booking.comments_data || {}
+      flight_changes = comments['flight_changes'] || []
+      flight_changes << {
+        direction: direction,
+        changes: changes,
+        timestamp: Time.current.iso8601,
+        old_flight: old_flight,
+        new_flight: new_flight
+      }
+      comments['flight_changes'] = flight_changes
+      booking.update!(comments_data: comments)
+    end
+  end
+
+  def log_hotel_change(booking, old_hotel, new_hotel)
+    return unless old_hotel.is_a?(Hash) && new_hotel.is_a?(Hash)
+
+    changes = []
+    
+    # Check hotel name changes
+    if old_hotel['hotel'] != new_hotel['hotel']
+      changes << "hotel: #{old_hotel['hotel']} → #{new_hotel['hotel']}"
+    end
+
+    # Check check-in date changes
+    if old_hotel['check_in'] != new_hotel['check_in']
+      changes << "check-in: #{old_hotel['check_in']} → #{new_hotel['check_in']}"
+    end
+
+    # Check check-out date changes
+    if old_hotel['check_out'] != new_hotel['check_out']
+      changes << "check-out: #{old_hotel['check_out']} → #{new_hotel['check_out']}"
+    end
+
+    if changes.any?
+      Rails.logger.warn "HOTEL CHANGE DETECTED - Booking #{booking.id}: #{changes.join(', ')}"
+      
+      # Store change in comments_data for tracking
+      comments = booking.comments_data || {}
+      hotel_changes = comments['hotel_changes'] || []
+      hotel_changes << {
+        changes: changes,
+        timestamp: Time.current.iso8601,
+        old_hotel: old_hotel,
+        new_hotel: new_hotel
+      }
+      comments['hotel_changes'] = hotel_changes
+      booking.update!(comments_data: comments)
+    end
   end
 end

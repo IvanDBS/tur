@@ -88,13 +88,92 @@ class SyncObsOrdersJob < ApplicationJob
                     order_status
                   end
     
-    # Update booking with OBS data
-    booking.update!(
+    # Prepare updates
+    updates = {
       operator_status: status_name,
       last_synced_at: Time.current
-    )
+    }
+
+    # Check for tour details changes (including flights)
+    if order_data['tour_details'] && order_data['tour_details'] != booking.tour_details
+      old_tour_details = booking.tour_details
+      updates[:tour_details] = order_data['tour_details']
+      
+      # Log flight changes specifically
+      log_flight_changes_from_sync(booking, old_tour_details, order_data['tour_details'])
+    end
+    
+    # Update booking with OBS data
+    booking.update!(updates)
     
     Rails.logger.debug "Updated booking #{booking.id} status to: #{booking.operator_status}"
+  end
+
+  def log_flight_changes_from_sync(booking, old_tour_details, new_tour_details)
+    return unless old_tour_details.is_a?(Hash) && new_tour_details.is_a?(Hash)
+
+    old_flights = old_tour_details['flights'] || {}
+    new_flights = new_tour_details['flights'] || {}
+
+    # Check departure flight changes
+    if old_flights['there'] != new_flights['there']
+      log_flight_change_from_sync(booking, 'departure', old_flights['there'], new_flights['there'])
+    end
+
+    # Check arrival flight changes
+    if old_flights['back'] != new_flights['back']
+      log_flight_change_from_sync(booking, 'arrival', old_flights['back'], new_flights['back'])
+    end
+  end
+
+  def log_flight_change_from_sync(booking, direction, old_flight, new_flight)
+    return unless old_flight.is_a?(Hash) && new_flight.is_a?(Hash)
+
+    changes = []
+    
+    # Check date changes
+    if old_flight['date'] != new_flight['date']
+      changes << "date: #{old_flight['date']} → #{new_flight['date']}"
+    end
+
+    # Check departure time changes
+    if old_flight.dig('departure', 'time') != new_flight.dig('departure', 'time')
+      old_time = old_flight.dig('departure', 'time')
+      new_time = new_flight.dig('departure', 'time')
+      changes << "departure time: #{old_time} → #{new_time}"
+    end
+
+    # Check arrival time changes
+    if old_flight.dig('arrival', 'time') != new_flight.dig('arrival', 'time')
+      old_time = old_flight.dig('arrival', 'time')
+      new_time = new_flight.dig('arrival', 'time')
+      changes << "arrival time: #{old_time} → #{new_time}"
+    end
+
+    # Check flight number changes
+    if old_flight.dig('flight_number', 'number') != new_flight.dig('flight_number', 'number')
+      old_number = old_flight.dig('flight_number', 'number')
+      new_number = new_flight.dig('flight_number', 'number')
+      changes << "flight number: #{old_number} → #{new_number}"
+    end
+
+    if changes.any?
+      Rails.logger.warn "FLIGHT CHANGE FROM SYNC - Booking #{booking.id} (#{direction}): #{changes.join(', ')}"
+      
+      # Store change in comments_data for tracking
+      comments = booking.comments_data || {}
+      sync_changes = comments['sync_flight_changes'] || []
+      sync_changes << {
+        direction: direction,
+        changes: changes,
+        timestamp: Time.current.iso8601,
+        source: 'sync',
+        old_flight: old_flight,
+        new_flight: new_flight
+      }
+      comments['sync_flight_changes'] = sync_changes
+      booking.update!(comments_data: comments)
+    end
   end
 
   def import_new_order_from_obs(order_data)
@@ -138,15 +217,11 @@ class SyncObsOrdersJob < ApplicationJob
       'pending'
     when 'подтверждено', 'confirmed'
       'confirmed'
-    when 'отменено', 'cancelled', 'canceled', 'se anulează'
-      'cancelled'
-    when 'отменяется', 'canceling'
+    when 'отменено', 'cancelled', 'canceled', 'se anulează', 'отменяется', 'canceling'
       'cancelled'
     when 'изменено', 'changed'
       'confirmed'
-    when 'не подтверждено', 'not_confirmed'
-      'failed'
-    when 'штраф', 'penalty'
+    when 'не подтверждено', 'not_confirmed', 'штраф', 'penalty'
       'failed'
     else
       'pending'

@@ -142,6 +142,49 @@ module Api
         })
       end
 
+      # POST /api/v1/admin/bookings/:id/sync
+      def sync_booking_status
+        booking = Booking.find(params[:id])
+        
+        begin
+          # Trigger immediate status sync for this booking
+          MonitorBookingJob.perform_later(booking.id)
+          
+          render_success({
+            message: "Booking status sync initiated",
+            booking_id: booking.id,
+            current_status: booking.status,
+            last_synced_at: booking.last_synced_at
+          })
+        rescue StandardError => e
+          Rails.logger.error "Failed to initiate booking sync for #{booking.id}: #{e.message}"
+          render_error("Failed to sync booking status: #{e.message}", :internal_server_error)
+        end
+      rescue ActiveRecord::RecordNotFound
+        render_error('Booking not found', :not_found)
+      end
+
+      # POST /api/v1/admin/bookings/sync_all
+      def sync_all_bookings
+        begin
+          # Trigger sync for all active bookings
+          SyncBookingStatusesJob.perform_later
+          
+          # Count bookings that will be synced
+          active_bookings_count = Booking.where(status: ['pending', 'processing', 'confirmed', 'changed'])
+                                         .where('last_synced_at IS NULL OR last_synced_at < ?', 2.hours.ago)
+                                         .count
+          
+          render_success({
+            message: "Bulk booking status sync initiated",
+            bookings_to_sync: active_bookings_count
+          })
+        rescue StandardError => e
+          Rails.logger.error "Failed to initiate bulk booking sync: #{e.message}"
+          render_error("Failed to sync all bookings: #{e.message}", :internal_server_error)
+        end
+      end
+
       private
 
       def ensure_admin!

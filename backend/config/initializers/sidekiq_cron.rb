@@ -19,11 +19,25 @@ if Rails.env.production? || Rails.env.development?
       'description' => 'Refresh package availability from OBS API every 30 minutes'
     },
     
-    # Monitor bookings every 5 minutes
-    'monitor_bookings' => {
-      'cron' => '*/5 * * * *',
+    # Monitor pending bookings every 3 minutes (more frequent for urgent bookings)
+    'monitor_pending_bookings' => {
+      'cron' => '*/3 * * * *',
       'class' => 'MonitorBookingJob',
       'description' => 'Monitor pending bookings and handle expiry/confirmation'
+    },
+    
+    # Sync all active booking statuses every 30 minutes
+    'sync_booking_statuses' => {
+      'cron' => '*/30 * * * *',
+      'class' => 'SyncBookingStatusesJob',
+      'description' => 'Periodic synchronization of all active booking statuses'
+    },
+    
+    # Import orders from OBS server every hour
+    'sync_obs_orders' => {
+      'cron' => '0 * * * *',
+      'class' => 'SyncObsOrdersJob',
+      'description' => 'Import orders from OBS server every hour'
     },
     
     # Sync reference data daily at 2 AM

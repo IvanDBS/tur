@@ -50,11 +50,16 @@ Rails.application.routes.draw do
       get 'admin/bookings', to: 'admin#bookings'
       get 'admin/bookings/:id', to: 'admin#booking_details'
       patch 'admin/bookings/:id/status', to: 'admin#update_booking_status'
+      post 'admin/bookings/:id/sync', to: 'admin#sync_booking_status'
+      post 'admin/bookings/sync_all', to: 'admin#sync_all_bookings'
       
       # Admin users routes
       namespace :admin do
         resources :users, only: [:index, :show, :update, :destroy]
       end
+      
+      # Webhook routes (no authentication required)
+      post 'webhook/obs', to: 'webhook#obs_webhook'
     end
   end
   

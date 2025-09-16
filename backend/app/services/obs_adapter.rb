@@ -23,12 +23,25 @@ class ObsAdapter < BaseApiService
     make_request(:get, "/api/v2/search/package_templates/#{package_template_id}/hotels", filters)
   end
 
+  def package_templates(country_id, airport_city_from = nil)
+    params = airport_city_from.present? ? { airport_city_from: airport_city_from } : {}
+    make_request(:get, "/api/v2/search/countries/#{country_id}/package_templates", params)
+  end
+
   def search_packages(params)
     make_request(:post, '/api/v2/search', params)
   end
 
   # Booking endpoints
-  def book(hash, booking_data)
+  def get_booking_data(hash)
+    make_request(:get, "/api/v2/orders/book/#{hash}")
+  end
+
+  def calculate_booking(hash, booking_data)
+    make_request(:post, "/api/v2/orders/calculate/#{hash}", booking_data)
+  end
+
+  def create_booking(hash, booking_data)
     make_request(:post, "/api/v2/orders/book/#{hash}", booking_data)
   end
 
@@ -38,6 +51,10 @@ class ObsAdapter < BaseApiService
 
   def booking_status(hash)
     make_request(:get, "/api/v2/orders/book/#{hash}")
+  end
+
+  def get_orders_list
+    make_request(:get, "/api/orders")
   end
 
   private

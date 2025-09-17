@@ -86,6 +86,16 @@ Rails.application.routes.draw do
         end
       end
       
+      # GDPR routes
+      namespace :gdpr do
+        get 'consents', to: 'gdpr#consents'
+        post 'consents', to: 'gdpr#update_consent'
+        post 'revoke-consents', to: 'gdpr#revoke_consents'
+        get 'export-data', to: 'gdpr#export_data'
+        delete 'delete-data', to: 'gdpr#delete_data'
+        get 'data-usage', to: 'gdpr#data_usage'
+      end
+      
       # Webhook routes (no authentication required)
       post 'webhook/obs', to: 'webhook#obs_webhook'
     end

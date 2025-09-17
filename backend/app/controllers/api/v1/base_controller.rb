@@ -127,14 +127,19 @@ module Api
 
       def log_api_request(duration)
         begin
+          # Anonymize sensitive data before logging
+          anonymized_user_id = current_user ? DataAnonymizationService.anonymize_user_id(current_user.id) : nil
+          anonymized_ip = DataAnonymizationService.anonymize_string(request.remote_ip)
+          anonymized_user_agent = DataAnonymizationService.anonymize_string(request.user_agent)
+          
           ApiLog.create!(
             method: request.method,
             path: request.path,
             status: response.status,
             duration_ms: duration,
-            user_id: current_user&.id,
-            ip_address: request.remote_ip,
-            user_agent: request.user_agent,
+            user_id: anonymized_user_id,
+            ip_address: anonymized_ip,
+            user_agent: anonymized_user_agent,
             request_id: @request_id
           )
         rescue StandardError => e

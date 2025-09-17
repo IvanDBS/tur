@@ -67,7 +67,9 @@ module Api
           obs_adapter = ObsAdapter.new(user_id: current_user.id)
           Rails.logger.info "Getting booking data for hash: #{booking_hash}"
           booking_data = obs_adapter.get_booking_data(booking_hash)
-          Rails.logger.info "Received booking data: #{booking_data.inspect}"
+          # Anonymize booking data before logging
+          anonymized_booking_data = DataAnonymizationService.anonymize_data(booking_data)
+          Rails.logger.info "Received booking data: #{anonymized_booking_data.inspect}"
 
           # Create booking record with OBS data
           # Filter only relevant tour details, exclude reference data
@@ -96,10 +98,14 @@ module Api
             begin
               # Prepare data in OBS API format
               obs_booking_data = prepare_booking_data_for_obs(booking)
-              Rails.logger.info "OBS booking data: #{obs_booking_data.inspect}"
+              # Anonymize OBS booking data before logging
+              anonymized_obs_data = DataAnonymizationService.anonymize_data(obs_booking_data)
+              Rails.logger.info "OBS booking data: #{anonymized_obs_data.inspect}"
               
               obs_response = obs_adapter.create_booking(booking_hash, obs_booking_data)
-              Rails.logger.info "OBS booking created successfully: #{obs_response.inspect}"
+              # Anonymize OBS response before logging
+              anonymized_response = DataAnonymizationService.anonymize_data(obs_response)
+              Rails.logger.info "OBS booking created successfully: #{anonymized_response.inspect}"
               
               # Update booking with OBS response data
               if obs_response.present?

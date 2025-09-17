@@ -35,6 +35,11 @@ module Backend
     # Security middleware
     # config.middleware.use BruteForceProtection  # Temporarily disabled
     
+    # GDPR compliance - anonymize logs in production
+    if Rails.env.production?
+      config.middleware.use LogAnonymizationMiddleware
+    end
+    
     # CORS configuration is handled in config/initializers/cors.rb
     
   end

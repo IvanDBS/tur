@@ -84,6 +84,15 @@ Rails.application.routes.draw do
           get 'statistics', to: 'ip_management#statistics'
           post 'cleanup', to: 'ip_management#cleanup_expired'
         end
+        
+        # Database Replication routes
+        namespace :database_replication do
+          get 'status', to: 'database_replication#status'
+          get 'health', to: 'database_replication#health'
+          post 'test-replica', to: 'database_replication#test_replica'
+          post 'force-primary', to: 'database_replication#force_primary'
+          get 'metrics', to: 'database_replication#metrics'
+        end
       end
       
       # GDPR routes

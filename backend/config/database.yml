@@ -112,3 +112,27 @@ production:
   prepared_statements: true
   # Connection validation
   verify_connection: true
+  
+  # Database replication configuration
+  replica:
+    <<: *default
+    database: backend_production
+    username: backend
+    password: <%= ENV["BACKEND_DATABASE_PASSWORD"] %>
+    # Read replica connection pool (smaller for read-only operations)
+    pool: <%= ENV.fetch("RAILS_REPLICA_POOL_SIZE") { 10 } %>
+    # Read replica specific settings
+    checkout_timeout: 5
+    reaping_frequency: 10
+    idle_timeout: 300
+    connect_timeout: 5
+    login_timeout: 5
+    statement_timeout: 30000
+    # Read replica URL (if different from primary)
+    url: <%= ENV["DATABASE_REPLICA_URL"] if ENV["DATABASE_REPLICA_URL"] %>
+    sslmode: <%= ENV["DATABASE_SSLMODE"] || "prefer" %>
+    pool_timeout: 5
+    prepared_statements: true
+    verify_connection: true
+    # Read-only mode for replicas
+    readonly: true

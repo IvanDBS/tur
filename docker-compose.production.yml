@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Primary Database
   postgres:
     image: postgres:17-alpine
     container_name: tur_postgres_prod
@@ -9,8 +9,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-backend_production}
       POSTGRES_USER: ${POSTGRES_USER:-backend}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Enable replication
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/primary/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/primary/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     networks:
       - app-network
     healthcheck:
@@ -19,6 +24,61 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c hba_file=/etc/postgresql/pg_hba.conf
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c hot_standby=on
+
+  # PostgreSQL Read Replica
+  postgres_replica:
+    image: postgres:17-alpine
+    container_name: tur_postgres_replica_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-backend_production}
+      POSTGRES_USER: ${POSTGRES_USER:-backend}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGUSER: ${POSTGRES_USER:-backend}
+      # Replication settings
+      POSTGRES_MASTER_HOST: postgres
+      POSTGRES_MASTER_PORT: 5432
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./postgres/replica/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/replica/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backend}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: >
+      bash -c "
+      # Wait for primary to be ready
+      until pg_isready -h postgres -p 5432 -U ${POSTGRES_USER:-backend}; do
+        echo 'Waiting for primary database...'
+        sleep 2
+      done
+      
+      # Initialize replica if not already done
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        echo 'Initializing replica...'
+        pg_basebackup -h postgres -D /var/lib/postgresql/data -U ${POSTGRES_REPLICATION_USER:-replicator} -v -P -W
+      fi
+      
+      # Start replica
+      postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+      "
 
   # Redis Cache
   redis:
@@ -129,6 +189,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_replica_data:
     driver: local
   redis_data:
     driver: local

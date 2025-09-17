@@ -40,6 +40,11 @@ module Backend
       config.middleware.use LogAnonymizationMiddleware
     end
     
+    # Database replication - route read operations to replica
+    if Rails.env.production?
+      config.middleware.use DatabaseReplicationMiddleware
+    end
+    
     # CORS configuration is handled in config/initializers/cors.rb
     
   end

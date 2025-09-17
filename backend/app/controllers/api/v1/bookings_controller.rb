@@ -7,6 +7,7 @@ module Api
 
       # GET /api/v1/bookings
       def index
+        # Use replica for read operations
         bookings = current_user.bookings.recent.includes(:search_query)
 
         render_success({

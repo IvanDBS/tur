@@ -175,7 +175,23 @@ export const useAuthStore = defineStore('auth', () => {
   const initializeAuth = async () => {
     const token = localStorage.getItem('accessToken')
     if (token && !user.value) {
-      await getCurrentUser()
+      try {
+        // Сначала пытаемся получить текущего пользователя
+        await getCurrentUser()
+      } catch (error) {
+        // Если токен истек, пытаемся обновить его через refresh token
+        try {
+          const refreshResponse = await AuthApi.refreshToken()
+          localStorage.setItem('accessToken', refreshResponse.tokens.accessToken)
+          // Повторно получаем пользователя с новым токеном
+          await getCurrentUser()
+        } catch (refreshError) {
+          // Если refresh тоже не сработал, очищаем состояние
+          logger.error('Failed to refresh token:', refreshError)
+          user.value = null
+          localStorage.removeItem('accessToken')
+        }
+      }
     }
   }
 

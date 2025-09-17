@@ -5,6 +5,7 @@ module Api
     class BaseController < ActionController::API
       include ActionController::Cookies
       include Pagy::Backend
+      include IdorProtection
       # Base controller for all API endpoints
       # Add common functionality here
 

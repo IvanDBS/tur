@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_17_063339) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_17_063927) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_17_063339) do
     t.index ["search_query_id"], name: "index_bookings_on_search_query_id"
     t.index ["status"], name: "index_bookings_on_status"
     t.index ["user_id", "obs_booking_hash"], name: "index_bookings_on_user_and_booking_hash", unique: true
+    t.index ["user_id", "status", "created_at"], name: "index_bookings_on_user_status_created"
     t.index ["user_id", "status"], name: "index_bookings_on_user_and_status"
     t.index ["user_id"], name: "index_bookings_on_user_id"
   end
@@ -132,6 +133,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_17_063339) do
     t.datetime "updated_at", null: false
     t.index ["expires_at"], name: "index_search_queries_on_expires_at"
     t.index ["obs_search_id"], name: "index_search_queries_on_obs_search_id", unique: true
+    t.index ["user_id", "id"], name: "index_search_queries_on_user_and_id"
+    t.index ["user_id", "obs_search_id"], name: "index_search_queries_on_user_and_obs_search_id"
     t.index ["user_id"], name: "index_search_queries_on_user_id"
   end
 

@@ -52,14 +52,22 @@ module Api
         search_id = booking_params[:search_id]
         booking_hash = booking_params[:booking_hash]
 
+        # Validate secure parameters
+        unless validate_secure_params!(booking_params, ['booking_hash'])
+          return
+        end
+
         return render_error('Booking hash is required', :bad_request) if booking_hash.blank?
 
         # Find search query if provided (optional)
         search_query = nil
         if search_id.present?
-          search_query = current_user.search_queries.find_by(obs_search_id: search_id)
-          # Don't fail if search_query is not found - it's optional for booking creation
-          Rails.logger.info "Search query not found for search_id: #{search_id}, continuing without it"
+          # Validate search query access if provided
+          search_query = validate_resource_access!('search_query', search_id, 'read')
+          if search_query.nil?
+            Rails.logger.info "Search query access denied for search_id: #{search_id}, continuing without it"
+            search_query = nil
+          end
         end
 
         begin
@@ -236,7 +244,17 @@ module Api
 
       # PATCH /api/v1/bookings/:id
       def update
+        # Validate update permissions
+        unless validate_resource_access!('booking', params[:id], 'update')
+          return
+        end
+        
         update_params = params[:booking] || {}
+        
+        # Validate secure parameters
+        unless validate_secure_params!(update_params)
+          return
+        end
 
         if @booking.update(update_params)
           render_success({
@@ -255,6 +273,11 @@ module Api
 
       # DELETE /api/v1/bookings/:id
       def destroy
+        # Validate delete permissions
+        unless validate_resource_access!('booking', params[:id], 'delete')
+          return
+        end
+        
         if @booking.confirmed? && !@booking.can_be_cancelled?
           return render_error('Cannot cancel confirmed booking after 24 hours', :unprocessable_entity)
         end
@@ -283,9 +306,8 @@ module Api
       private
 
       def set_booking
-        @booking = current_user.bookings.find(params[:id])
-      rescue ActiveRecord::RecordNotFound
-        render_error('Booking not found', :not_found)
+        @booking = validate_resource_access!('booking', params[:id], 'read')
+        return unless @booking
       end
 
       def prepare_booking_data_for_obs(booking = @booking)

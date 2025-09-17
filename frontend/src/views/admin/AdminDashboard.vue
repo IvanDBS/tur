@@ -28,6 +28,17 @@
               </svg>
               Пользователи
             </router-link>
+            
+            <router-link 
+              to="/admin/security" 
+              class="nav-item"
+              :class="{ 'nav-item--active': $route.name === 'admin-security' }"
+            >
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Безопасность
+            </router-link>
           </div>
           
           <div class="header-spacer"></div>
@@ -53,6 +64,8 @@ const pageTitle = computed(() => {
       return 'Управление бронированиями'
     case 'admin-users':
       return 'Управление пользователями'
+    case 'admin-security':
+      return 'Управление безопасностью'
     default:
       return 'Админ-панель'
   }

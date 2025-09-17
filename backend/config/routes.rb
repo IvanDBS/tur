@@ -71,6 +71,18 @@ Rails.application.routes.draw do
       # Admin users routes
       namespace :admin do
         resources :users, only: [:index, :show, :update, :destroy]
+        
+        # IP Management routes
+        namespace :ip_management do
+          get 'blocked', to: 'ip_management#blocked_ips'
+          get 'whitelisted', to: 'ip_management#whitelisted_ips'
+          post 'block', to: 'ip_management#block_ip'
+          delete 'unblock/:ip', to: 'ip_management#unblock_ip'
+          post 'whitelist', to: 'ip_management#whitelist_ip'
+          delete 'remove-whitelist/:ip', to: 'ip_management#remove_whitelist'
+          get 'statistics', to: 'ip_management#statistics'
+          post 'cleanup', to: 'ip_management#cleanup_expired'
+        end
       end
       
       # Webhook routes (no authentication required)

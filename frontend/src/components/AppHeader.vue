@@ -122,12 +122,6 @@
           @click="closeMobileMenu"
           >Тест авторизации</router-link
         >
-        <router-link
-          to="/i18n-test"
-          class="mobile-link"
-          @click="closeMobileMenu"
-          >Тест переводов</router-link
-        >
         <router-link 
           v-if="authStore.isAuthenticated && authStore.currentUser?.admin"
           to="/admin" 

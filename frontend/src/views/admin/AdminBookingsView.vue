@@ -365,7 +365,8 @@ import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaul
 import type { AdminBooking } from '../../types/admin'
 
 // Admin API
-const { loading, getBookings, updateBookingStatus, syncAllBookings: apiSyncAllBookings, syncBooking: apiSyncBooking } = useAdminApi()
+const { getAdminBookings, updateBookingStatus, syncAllBookings: apiSyncAllBookings, syncBookingStatus: apiSyncBooking } = useAdminApi()
+const loading = ref(false)
 
 // State
 const allBookings = ref<AdminBooking[]>([])
@@ -548,6 +549,7 @@ const debouncedSearch = debounce(() => {
 
 // Methods
 const loadBookings = async () => {
+  loading.value = true
   try {
     // Combine all search filters into a single search string
     const searchTerms = []
@@ -578,7 +580,7 @@ const loadBookings = async () => {
       sort_direction: sortDirection.value || undefined
     })
     
-    const response = await getBookings({
+    const response = await getAdminBookings({
       page: currentPage.value,
       per_page: 20,
       status: filters.value.status || searchFilters.value.status || undefined,
@@ -652,6 +654,8 @@ const loadBookings = async () => {
     allBookings.value = []
     totalPages.value = 1
     totalCount.value = 0
+  } finally {
+    loading.value = false
   }
 }
 

@@ -67,6 +67,13 @@ if Rails.env.production? || Rails.env.development?
       'cron' => '*/10 * * * *',
       'class' => 'OperatorHealthMonitoringJob',
       'description' => 'Operator health monitoring every 10 minutes'
+    },
+    
+    # Security cleanup every hour
+    'security_cleanup' => {
+      'cron' => '0 * * * *',
+      'class' => 'SecurityCleanupJob',
+      'description' => 'Security cleanup and maintenance every hour'
     }
   })
   

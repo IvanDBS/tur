@@ -263,7 +263,8 @@ import Pagination from '../../components/Pagination.vue'
 import UserDetailsModal from './components/admin/UserDetailsModal.vue'
 
 // Admin API
-const { loading, getUsers } = useAdminApi()
+const { getAdminUsers } = useAdminApi()
+const loading = ref(false)
 
 // State
 const users = ref<AdminUser[]>([])
@@ -327,6 +328,7 @@ const debouncedSearch = debounce(() => {
 
 // Methods
 const loadUsers = async () => {
+  loading.value = true
   try {
     // Combine all search filters into a single search string
     const searchTerms = []
@@ -343,7 +345,7 @@ const loadUsers = async () => {
     
     const combinedSearch = searchTerms.length > 0 ? searchTerms.join(' ') : undefined
     
-    const response = await getUsers({
+    const response = await getAdminUsers({
       page: currentPage.value,
       role: filters.value.role || searchFilters.value.role || undefined,
       status: filters.value.status || searchFilters.value.status || undefined,
@@ -352,11 +354,15 @@ const loadUsers = async () => {
       sort_direction: sortDirection.value
     })
     
-    users.value = response.users
-    totalPages.value = response.pagination.total_pages
-    totalCount.value = response.pagination.total_count
+    // Backend returns data in { success: true, data: { users: [...], pagination: {...} } } format
+    const data = response.data || response
+    users.value = data.users || []
+    totalPages.value = data.pagination?.total_pages || 1
+    totalCount.value = data.pagination?.total_count || 0
   } catch (error) {
     console.error('Error loading users:', error)
+  } finally {
+    loading.value = false
   }
 }
 

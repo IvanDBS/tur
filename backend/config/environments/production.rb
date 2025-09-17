@@ -20,10 +20,10 @@ Rails.application.configure do
   config.require_master_key = true
 
   # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
-  # config.public_file_server.enabled = false
+  config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present?
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  config.asset_host = ENV['ASSET_HOST'] if ENV['ASSET_HOST'].present?
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
@@ -68,8 +68,16 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
+  # Use Redis cache store in production
+  config.cache_store = :redis_cache_store, {
+    url: ENV['REDIS_URL'] || 'redis://localhost:6379/2',
+    namespace: 'tour_booking_cache',
+    expires_in: 1.hour,
+    race_condition_ttl: 10.seconds,
+    error_handler: -> (method:, returning:, exception:) {
+      Rails.logger.error "Redis cache error: #{method} - #{exception.message}"
+    }
+  }
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter = :resque

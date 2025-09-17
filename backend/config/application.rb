@@ -28,6 +28,9 @@ module Backend
     # Time zone
     config.time_zone = 'Europe/Chisinau'
     
+    # Security middleware
+    config.middleware.use BruteForceProtection
+    
     # CORS configuration
     config.middleware.insert_before 0, Rack::Cors do
       allow do

@@ -21,7 +21,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Сначала очищаем старые токены, если они есть
     localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
     user.value = null
 
     try {
@@ -35,10 +34,10 @@ export const useAuthStore = defineStore('auth', () => {
       
       user.value = response.user
 
-      // Сохраняем токен в localStorage
+      // Сохраняем только access token в localStorage
+      // Refresh token теперь в HttpOnly cookie
       if (response.tokens) {
         localStorage.setItem('accessToken', response.tokens.accessToken)
-        localStorage.setItem('refreshToken', response.tokens.refreshToken)
       }
 
       return response
@@ -71,10 +70,10 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await AuthApi.register(credentials)
       user.value = response.user
 
-      // Сохраняем токен в localStorage
+      // Сохраняем только access token в localStorage
+      // Refresh token теперь в HttpOnly cookie
       if (response.tokens) {
         localStorage.setItem('accessToken', response.tokens.accessToken)
-        localStorage.setItem('refreshToken', response.tokens.refreshToken)
       }
 
       return response
@@ -97,7 +96,6 @@ export const useAuthStore = defineStore('auth', () => {
       // Очищаем состояние
       user.value = null
       localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
       
       // Очищаем кеш API
       const { apiClient } = await import('../utils/api')

@@ -41,4 +41,9 @@ export class AuthApi {
   }): Promise<{ message: string }> {
     return apiClient.put<{ message: string }>('/auth/change_password', data)
   }
+
+  // Обновление токена
+  static async refreshToken(): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
+    return apiClient.post<{ tokens: { accessToken: string; expiresIn: number } }>('/auth/refresh')
+  }
 }

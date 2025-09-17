@@ -23,11 +23,26 @@ class ApiClient {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      credentials: 'include', // Важно для cookies
       ...options,
     }
 
     // Добавляем токен авторизации если есть
-    const token = localStorage.getItem('accessToken')
+    let token = localStorage.getItem('accessToken')
+    if (token && this.isTokenExpired(token)) {
+      // Токен истек, пытаемся обновить
+      try {
+        const { AuthApi } = await import('./authApi')
+        const refreshResponse = await AuthApi.refreshToken()
+        token = refreshResponse.tokens.accessToken
+        localStorage.setItem('accessToken', token)
+      } catch (error) {
+        // Refresh failed, redirect to login
+        this.redirectToLogin()
+        throw new Error('Session expired')
+      }
+    }
+
     if (token) {
       config.headers = {
         ...config.headers,
@@ -37,6 +52,38 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
+
+      // Если получили 401, пытаемся обновить токен
+      if (response.status === 401 && token) {
+        try {
+          const { AuthApi } = await import('./authApi')
+          const refreshResponse = await AuthApi.refreshToken()
+          const newToken = refreshResponse.tokens.accessToken
+          localStorage.setItem('accessToken', newToken)
+          
+          // Повторяем запрос с новым токеном
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${newToken}`,
+          }
+          
+          const retryResponse = await fetch(url, config)
+          if (!retryResponse.ok) {
+            const errorData = await retryResponse.json().catch(() => ({}))
+            logger.error('API Error after retry:', errorData)
+            throw new Error(
+              errorData.message || `HTTP error! status: ${retryResponse.status}`
+            )
+          }
+          
+          const data = await retryResponse.json()
+          return data
+        } catch (refreshError) {
+          // Refresh failed, redirect to login
+          this.redirectToLogin()
+          throw new Error('Session expired')
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -133,6 +180,26 @@ class ApiClient {
       size: this.cache.size,
       keys: Array.from(this.cache.keys())
     }
+  }
+
+  // Проверка истечения токена
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Math.floor(Date.now() / 1000)
+      return payload.exp < currentTime
+    } catch {
+      return true // Если не можем декодировать, считаем истекшим
+    }
+  }
+
+  // Перенаправление на страницу входа
+  private redirectToLogin() {
+    localStorage.removeItem('accessToken')
+    // Очищаем кеш
+    this.clearCache()
+    // Перенаправляем на страницу входа
+    window.location.href = '/login'
   }
 }
 

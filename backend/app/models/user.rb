@@ -27,23 +27,27 @@ class User < ApplicationRecord
 
   # Instance methods
   def generate_jwt
+    jti = SecureRandom.uuid
     JWT.encode(
       {
         user_id: id,
-        exp: 24.hours.from_now.to_i,
-        iat: Time.current.to_i
+        exp: 15.minutes.from_now.to_i,
+        iat: Time.current.to_i,
+        jti: jti
       },
       Rails.application.credentials.secret_key_base
     )
   end
 
   def generate_refresh_jwt
+    jti = SecureRandom.uuid
     JWT.encode(
       {
         user_id: id,
         exp: 7.days.from_now.to_i,
         iat: Time.current.to_i,
-        type: 'refresh'
+        type: 'refresh',
+        jti: jti
       },
       Rails.application.credentials.secret_key_base
     )

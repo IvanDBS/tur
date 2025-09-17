@@ -10,7 +10,8 @@ if Rails.env.development?
     user.password_confirmation = 'password123'
     user.first_name = 'Admin'
     user.last_name = 'User'
-    user.phone = '+37312345678'    user.admin = true
+    user.phone = '+37312345678'
+    user.admin = true
     user.banned = false
   end
 

@@ -2,7 +2,9 @@ require 'jwt'
 
 module Api
   module V1
-    class BaseController < ApplicationController
+    class BaseController < ActionController::API
+      include ActionController::Cookies
+      include Pagy::Backend
       # Base controller for all API endpoints
       # Add common functionality here
 

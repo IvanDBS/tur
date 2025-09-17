@@ -10,6 +10,15 @@ module Api
             access_token = @user.generate_jwt
             refresh_token = @user.generate_refresh_jwt
             
+            # Устанавливаем refresh token в HttpOnly cookie
+            cookies[:refresh_token] = {
+              value: refresh_token,
+              httponly: true,
+              secure: Rails.env.production?,
+              same_site: :strict,
+              expires: 7.days.from_now
+            }
+            
             render json: {
               success: true,
               message: 'User registered successfully',
@@ -22,8 +31,7 @@ module Api
               },
               tokens: {
                 accessToken: access_token,
-                refreshToken: refresh_token,
-                expiresIn: 24.hours.to_i
+                expiresIn: 15.minutes.to_i
               }
             }, status: :created
           rescue => e

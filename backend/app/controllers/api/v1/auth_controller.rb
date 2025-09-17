@@ -2,6 +2,7 @@
 module Api
   module V1
     class AuthController < Api::V1::BaseController
+      include ActionController::Cookies
       before_action :authenticate_user!, only: %i[me update_profile change_password]
 
       # POST /api/v1/auth/sign_up
@@ -12,6 +13,9 @@ module Api
           # Генерируем JWT токены
           access_token = @user.generate_jwt
           refresh_token = @user.generate_refresh_jwt
+          
+          # Устанавливаем refresh token в HttpOnly cookie
+          set_refresh_token_cookie(refresh_token)
           
           render json: {
             success: true,
@@ -25,8 +29,7 @@ module Api
             },
             tokens: {
               accessToken: access_token,
-              refreshToken: refresh_token,
-              expiresIn: 24.hours.to_i
+              expiresIn: 15.minutes.to_i
             }
           }, status: :created
         else
@@ -57,6 +60,9 @@ module Api
             access_token = @user.generate_jwt
             refresh_token = @user.generate_refresh_jwt
             
+            # Устанавливаем refresh token в HttpOnly cookie
+            set_refresh_token_cookie(refresh_token)
+            
             Rails.logger.info "Generated tokens for user #{@user.id}: access_token=#{access_token[0..20]}..."
             
             render json: {
@@ -73,8 +79,7 @@ module Api
               },
               tokens: {
                 accessToken: access_token,
-                refreshToken: refresh_token,
-                expiresIn: 24.hours.to_i
+                expiresIn: 15.minutes.to_i
               }
             }
           rescue => e
@@ -103,10 +108,65 @@ module Api
         end
       end
 
+      # POST /api/v1/auth/refresh
+      def refresh
+        refresh_token = cookies[:refresh_token]
+        
+        if refresh_token.blank?
+          return render json: { 
+            success: false,
+            error: 'No refresh token' 
+          }, status: :unauthorized
+        end
+        
+        begin
+          payload = JWT.decode(refresh_token, Rails.application.credentials.secret_key_base)
+          user = User.find(payload[0]['user_id'])
+          
+          # Проверяем, не заблокирован ли пользователь
+          if user.banned?
+            clear_refresh_token_cookie
+            return render json: { 
+              success: false,
+              error: 'Account suspended' 
+            }, status: :forbidden
+          end
+          
+          # Генерируем новые токены
+          new_access_token = user.generate_jwt
+          new_refresh_token = user.generate_refresh_jwt
+          
+          # Обновляем refresh token в cookie
+          set_refresh_token_cookie(new_refresh_token)
+          
+          render json: {
+            success: true,
+            tokens: {
+              accessToken: new_access_token,
+              expiresIn: 15.minutes.to_i
+            }
+          }
+        rescue JWT::DecodeError, JWT::ExpiredSignature
+          clear_refresh_token_cookie
+          render json: { 
+            success: false,
+            error: 'Invalid refresh token' 
+          }, status: :unauthorized
+        rescue ActiveRecord::RecordNotFound
+          clear_refresh_token_cookie
+          render json: { 
+            success: false,
+            error: 'User not found' 
+          }, status: :unauthorized
+        end
+      end
+
       # DELETE /api/v1/auth/sign_out
       def sign_out
-        # JWT tokens are stateless, so we just return success
-        # In a real app, you might want to add the token to a blacklist
+        # Очищаем refresh token cookie
+        clear_refresh_token_cookie
+        
+        # В будущем можно добавить токен в blacklist
         render json: {
           success: true,
           message: 'Signed out successfully'
@@ -174,6 +234,20 @@ module Api
       end
 
       private
+
+      def set_refresh_token_cookie(token)
+        cookies[:refresh_token] = {
+          value: token,
+          httponly: true,
+          secure: Rails.env.production?,
+          same_site: :strict,
+          expires: 7.days.from_now
+        }
+      end
+
+      def clear_refresh_token_cookie
+        cookies.delete(:refresh_token)
+      end
 
       def sign_up_params
         params.permit(:email, :password, :password_confirmation, :first_name, :last_name, :phone)

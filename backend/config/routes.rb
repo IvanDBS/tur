@@ -17,6 +17,7 @@ Rails.application.routes.draw do
       
       # Custom auth routes
       get 'auth/me', to: 'auth#me'
+      post 'auth/refresh', to: 'auth#refresh'
       put 'auth/profile', to: 'auth#update_profile'
       put 'auth/change_password', to: 'auth#change_password'
       

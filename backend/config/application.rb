@@ -25,19 +25,17 @@ module Backend
     # API-only configuration
     config.api_only = true
     
+    # Enable cookies for JWT refresh tokens
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore
+    
     # Time zone
     config.time_zone = 'Europe/Chisinau'
     
     # Security middleware
-    config.middleware.use BruteForceProtection
+    # config.middleware.use BruteForceProtection  # Temporarily disabled
     
-    # CORS configuration
-    config.middleware.insert_before 0, Rack::Cors do
-      allow do
-        origins '*'
-        resource '*', headers: :any, methods: [:get, :post, :put, :patch, :delete, :options, :head]
-      end
-    end
+    # CORS configuration is handled in config/initializers/cors.rb
     
   end
 end

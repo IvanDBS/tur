@@ -72,22 +72,25 @@ module Api
           # Create booking record with OBS data
           # Filter only relevant tour details, exclude reference data
           tour_details = if booking_data.present?
-            filter_tour_details(booking_data)
-          else
-            booking_params[:tour_details] || {}
-          end
+                          filter_tour_details(booking_data)
+                        else
+                          booking_params[:tour_details] || {}
+                        end
           total_amount = booking_data.dig('price', 'total_sum') || booking_params[:total_amount] || 0
           
-          booking = current_user.bookings.build(
+          # Use safe booking creation with race condition protection
+          result = Booking.create_safely(
+            user: current_user,
+            booking_hash: booking_hash,
             search_query: search_query,
-            obs_booking_hash: booking_hash,
             total_amount: total_amount,
             tour_details: tour_details,
             customer_data: booking_params[:customer_data] || {},
             status: 'pending'
           )
 
-          if booking.save
+          if result[:success]
+            booking = result[:booking]
             # Create booking on OBS server
             Rails.logger.info "Creating booking on OBS server for hash: #{booking_hash}"
             begin
@@ -131,7 +134,10 @@ module Api
               render_error("Failed to create booking with operator: #{obs_error.message}", :bad_gateway)
             end
           else
-            render_error("Failed to create booking: #{booking.errors.full_messages.join(', ')}", :unprocessable_entity)
+            # Handle race condition or validation errors
+            error_message = result[:error] || 'Failed to create booking'
+            status_code = error_message.include?('already') ? :conflict : :unprocessable_entity
+            render_error(error_message, status_code)
           end
         rescue ObsAdapter::Error => e
           Rails.logger.error "OBS API error in booking creation: #{e.message}"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_16_140000) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_17_063339) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_16_140000) do
     t.json "payment_data"
     t.json "comments_data"
     t.boolean "is_checked", default: false
+    t.integer "lock_version", default: 0, null: false
     t.index ["expires_at"], name: "index_bookings_on_expires_at"
     t.index ["last_synced_at"], name: "index_bookings_on_last_synced_at"
     t.index ["obs_booking_hash"], name: "index_bookings_on_obs_booking_hash", unique: true
@@ -70,6 +71,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_16_140000) do
     t.index ["operator_type"], name: "index_bookings_on_operator_type"
     t.index ["search_query_id"], name: "index_bookings_on_search_query_id"
     t.index ["status"], name: "index_bookings_on_status"
+    t.index ["user_id", "obs_booking_hash"], name: "index_bookings_on_user_and_booking_hash", unique: true
+    t.index ["user_id", "status"], name: "index_bookings_on_user_and_status"
     t.index ["user_id"], name: "index_bookings_on_user_id"
   end
 

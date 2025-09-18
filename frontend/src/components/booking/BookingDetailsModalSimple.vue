@@ -636,14 +636,19 @@ const getSelectedFlight = () => {
   console.log('props.booking.tour_details:', props.booking.tour_details)
   console.log('props.booking.customer_data:', props.booking.customer_data)
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // PRIORITY 1: OBS API (external operator service)
   if (obsOrderDetails.value?.charter?.[0]) {
     console.log('✅ Using OBS API charter data (EXTERNAL OPERATOR SERVICE):', obsOrderDetails.value.charter[0])
     return obsOrderDetails.value.charter[0]
   }
   
-  // NO FALLBACK - if OBS API data is not available, return null
-  console.log('❌ OBS API data not available - no fallback to our DB')
+  // PRIORITY 2: API data from tour_details.flights
+  if (props.booking.tour_details?.flights) {
+    console.log('✅ Using API data from tour_details.flights:', props.booking.tour_details.flights)
+    return props.booking.tour_details.flights
+  }
+  
+  console.log('❌ No flight data available')
   return null
 }
 
@@ -652,46 +657,46 @@ const getOutboundFrom = () => {
   console.log('=== DEBUG: getOutboundFrom ===')
   console.log('flight:', flight)
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.there.departure.airport
+  if (flight?.there?.departure?.airport) {
+    const airport = flight.there.departure.airport
+    const result = `${airport.name} (${airport.prefix})`
+    console.log('✅ getOutboundFrom - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_there?.[0]?.destination?.airport_from) {
     const airportCode = flight.fly_segments_there[0].destination.airport_from
-    // Convert airport code to full name format
-    const airportNames: Record<string, string> = {
-      'RMO': 'CHISINAU AIRPORT (RMO)',
-      'AYT': 'ANTALYA AIRPORT (AYT)',
-      'IST': 'ISTANBUL AIRPORT (IST)',
-      'SAW': 'SABIHA GOKCEN AIRPORT (SAW)',
-      'OTP': 'HENRI COANDĂ INTERNATIONAL AIRPORT (OTP)'
-    }
-    const result = airportNames[airportCode] || `${airportCode} AIRPORT (${airportCode})`
+    const result = `${airportCode} AIRPORT (${airportCode})`
     console.log('✅ getOutboundFrom - using OBS API (external operator):', result)
     return result
   }
   
-  console.log('❌ OBS API data not available for getOutboundFrom')
+  console.log('❌ No airport data available for getOutboundFrom')
   return 'N/A'
 }
 
 const getInboundFrom = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.back.departure.airport
+  if (flight?.back?.departure?.airport) {
+    const airport = flight.back.departure.airport
+    const result = `${airport.name} (${airport.prefix})`
+    console.log('✅ getInboundFrom - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_back?.[0]?.destination?.airport_from) {
     const airportCode = flight.fly_segments_back[0].destination.airport_from
-    // Convert airport code to full name format
-    const airportNames: Record<string, string> = {
-      'RMO': 'CHISINAU AIRPORT (RMO)',
-      'AYT': 'ANTALYA AIRPORT (AYT)',
-      'IST': 'ISTANBUL AIRPORT (IST)',
-      'SAW': 'SABIHA GOKCEN AIRPORT (SAW)',
-      'OTP': 'HENRI COANDĂ INTERNATIONAL AIRPORT (OTP)'
-    }
-    const result = airportNames[airportCode] || `${airportCode} AIRPORT (${airportCode})`
+    const result = `${airportCode} AIRPORT (${airportCode})`
     console.log('✅ getInboundFrom - using OBS API (external operator):', result)
     return result
   }
   
-  console.log('❌ OBS API data not available for getInboundFrom')
+  console.log('❌ No airport data available for getInboundFrom')
   return 'N/A'
 }
 
@@ -918,7 +923,18 @@ const getInboundDeparture = () => {
 const getOutboundFlightInfo = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.there
+  if (flight?.there?.flight_number && flight?.there?.airline) {
+    const flightNumber = flight.there.flight_number
+    const airline = flight.there.airline
+    const prefix = flightNumber.prefix || ''
+    const number = flightNumber.number || ''
+    const result = `${prefix}${number} (${airline.name})`
+    console.log('✅ getOutboundFlightInfo - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_there?.[0]) {
     const segment = flight.fly_segments_there[0]
     const result = `${segment.prefix}${segment.flight} (${segment.airline})`
@@ -926,14 +942,25 @@ const getOutboundFlightInfo = () => {
     return result
   }
   
-  console.log('❌ OBS API data not available for getOutboundFlightInfo')
+  console.log('❌ No flight info available for getOutboundFlightInfo')
   return 'N/A'
 }
 
 const getInboundFlightInfo = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.back
+  if (flight?.back?.flight_number && flight?.back?.airline) {
+    const flightNumber = flight.back.flight_number
+    const airline = flight.back.airline
+    const prefix = flightNumber.prefix || ''
+    const number = flightNumber.number || ''
+    const result = `${prefix}${number} (${airline.name})`
+    console.log('✅ getInboundFlightInfo - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_back?.[0]) {
     const segment = flight.fly_segments_back[0]
     const result = `${segment.prefix}${segment.flight} (${segment.airline})`
@@ -941,53 +968,53 @@ const getInboundFlightInfo = () => {
     return result
   }
   
-  console.log('❌ OBS API data not available for getInboundFlightInfo')
+  console.log('❌ No flight info available for getInboundFlightInfo')
   return 'N/A'
 }
 
 const getOutboundTo = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.there.arrival.airport
+  if (flight?.there?.arrival?.airport) {
+    const airport = flight.there.arrival.airport
+    const result = `${airport.name} (${airport.prefix})`
+    console.log('✅ getOutboundTo - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_there?.[0]?.destination?.airport_to) {
     const airportCode = flight.fly_segments_there[0].destination.airport_to
-    // Convert airport code to full name format
-    const airportNames: Record<string, string> = {
-      'RMO': 'CHISINAU AIRPORT (RMO)',
-      'AYT': 'ANTALYA AIRPORT (AYT)',
-      'IST': 'ISTANBUL AIRPORT (IST)',
-      'SAW': 'SABIHA GOKCEN AIRPORT (SAW)',
-      'OTP': 'HENRI COANDĂ INTERNATIONAL AIRPORT (OTP)'
-    }
-    const result = airportNames[airportCode] || `${airportCode} AIRPORT (${airportCode})`
+    const result = `${airportCode} AIRPORT (${airportCode})`
     console.log('✅ getOutboundTo - using OBS API (external operator):', result)
     return result
   }
   
-  console.log('❌ OBS API data not available for getOutboundTo')
+  console.log('❌ No airport data available for getOutboundTo')
   return 'N/A'
 }
 
 const getInboundTo = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.back.arrival.airport
+  if (flight?.back?.arrival?.airport) {
+    const airport = flight.back.arrival.airport
+    const result = `${airport.name} (${airport.prefix})`
+    console.log('✅ getInboundTo - using API data:', result)
+    return result
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_back?.[0]?.destination?.airport_to) {
     const airportCode = flight.fly_segments_back[0].destination.airport_to
-    // Convert airport code to full name format
-    const airportNames: Record<string, string> = {
-      'RMO': 'CHISINAU AIRPORT (RMO)',
-      'AYT': 'ANTALYA AIRPORT (AYT)',
-      'IST': 'ISTANBUL AIRPORT (IST)',
-      'SAW': 'SABIHA GOKCEN AIRPORT (SAW)',
-      'OTP': 'HENRI COANDĂ INTERNATIONAL AIRPORT (OTP)'
-    }
-    const result = airportNames[airportCode] || `${airportCode} AIRPORT (${airportCode})`
+    const result = `${airportCode} AIRPORT (${airportCode})`
     console.log('✅ getInboundTo - using OBS API (external operator):', result)
     return result
   }
   
-  console.log('❌ OBS API data not available for getInboundTo')
+  console.log('❌ No airport data available for getInboundTo')
   return 'N/A'
 }
 
@@ -1080,7 +1107,21 @@ const getInboundArrival = () => {
 const getOutboundTravelTime = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.there.flight_time
+  if (flight?.there?.flight_time) {
+    const flightTime = flight.there.flight_time
+    // Convert "01:50" to "1ч 50м"
+    try {
+      const result = flightTime.replace(':', 'ч ') + 'м'
+      console.log('✅ getOutboundTravelTime - using API data:', result)
+      return result
+    } catch (error) {
+      console.log('Error converting travel time:', error)
+      return flightTime
+    }
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_there?.[0]?.fly_time) {
     const flyTime = flight.fly_segments_there[0].fly_time
     // Convert "00:30 - 02:30" to "2ч 30м"
@@ -1114,14 +1155,28 @@ const getOutboundTravelTime = () => {
     return flyTime
   }
   
-  console.log('❌ OBS API data not available for getOutboundTravelTime')
+  console.log('❌ No travel time data available for getOutboundTravelTime')
   return 'N/A'
 }
 
 const getInboundTravelTime = () => {
   const flight = getSelectedFlight() as any
   
-  // ONLY SOURCE: OBS API (external operator service)
+  // Use API data from flights.back.flight_time
+  if (flight?.back?.flight_time) {
+    const flightTime = flight.back.flight_time
+    // Convert "01:50" to "1ч 50м"
+    try {
+      const result = flightTime.replace(':', 'ч ') + 'м'
+      console.log('✅ getInboundTravelTime - using API data:', result)
+      return result
+    } catch (error) {
+      console.log('Error converting travel time:', error)
+      return flightTime
+    }
+  }
+  
+  // Fallback to OBS API (external operator service)
   if (flight?.fly_segments_back?.[0]?.fly_time) {
     const flyTime = flight.fly_segments_back[0].fly_time
     // Convert "03:30 - 05:30" to "2ч 0м"
@@ -1155,7 +1210,7 @@ const getInboundTravelTime = () => {
     return flyTime
   }
   
-  console.log('❌ OBS API data not available for getInboundTravelTime')
+  console.log('❌ No travel time data available for getInboundTravelTime')
   return 'N/A'
 }
 

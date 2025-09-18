@@ -58,7 +58,9 @@ module Api
           return
         end
 
-        return render_error('Booking hash is required', :bad_request) if booking_hash.blank?
+        if booking_hash.blank?
+          return render_error('Booking hash is required', :bad_request)
+        end
 
         # Find search query if provided (optional)
         search_query = nil
@@ -83,10 +85,10 @@ module Api
           # Create booking record with OBS data
           # Filter only relevant tour details, exclude reference data
           tour_details = if booking_data.present?
-                          filter_tour_details(booking_data)
-                        else
-                          booking_params[:tour_details] || {}
-                        end
+                            filter_tour_details(booking_data)
+                          else
+                            booking_params[:tour_details] || {}
+                          end
           total_amount = booking_data.dig('price', 'total_sum') || booking_params[:total_amount] || 0
           
           # Use safe booking creation with race condition protection
@@ -137,29 +139,30 @@ module Api
                                    tour_details: booking.tour_details_hash
                                  }
                                }, :created)
+                return
               else
                 # OBS response is empty - this is an error
                 Rails.logger.error "OBS booking creation failed: empty response"
                 booking.destroy # Remove the local booking since OBS failed
-                render_error("Failed to create booking with operator: empty response", :bad_gateway)
+                return render_error("Failed to create booking with operator: empty response", :bad_gateway)
               end
             rescue ObsAdapter::Error => obs_error
               Rails.logger.error "Failed to create booking on OBS server: #{obs_error.message}"
               booking.destroy # Remove the local booking since OBS failed
-              render_error("Failed to create booking with operator: #{obs_error.message}", :bad_gateway)
+              return render_error("Failed to create booking with operator: #{obs_error.message}", :bad_gateway)
             end
           else
             # Handle race condition or validation errors
             error_message = result[:error] || 'Failed to create booking'
             status_code = error_message.include?('already') ? :conflict : :unprocessable_entity
-            render_error(error_message, status_code)
+            return render_error(error_message, status_code)
           end
         rescue ObsAdapter::Error => e
           Rails.logger.error "OBS API error in booking creation: #{e.message}"
-          render_error("Failed to get booking data from operator: #{e.message}", :bad_gateway)
+          return render_error("Failed to get booking data from operator: #{e.message}", :bad_gateway)
         rescue StandardError => e
           Rails.logger.error "Unexpected error in booking creation: #{e.message}"
-          render_error("Internal server error: #{e.message}", :internal_server_error)
+          return render_error("Internal server error: #{e.message}", :internal_server_error)
         end
       end
 

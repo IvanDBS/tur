@@ -108,7 +108,7 @@ export const useObsApi = () => {
       clearError()
       
       logger.apiCall('GET', '/search/departure_cities')
-      const response = await apiClient.get<ApiResponse<{ departure_cities: ObsDepartureCity[] }>>('/search/departure_cities')
+      const response = await apiClient.get<ApiResponse<{ departure_cities: ObsDepartureCity[] }>>('/search/departure_cities', true, true)
       
       logger.debug('Departure cities response received', response)
       
@@ -132,7 +132,7 @@ export const useObsApi = () => {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch departure cities'
-      logger.apiError('GET', '/search/departure_cities', err)
+      logger.error('GET /search/departure_cities failed:', err)
       setError(message)
       return []
     } finally {
@@ -153,7 +153,7 @@ export const useObsApi = () => {
       
       logger.apiCall('GET', `/search/countries?airport_city_from=${departureCityId}`)
       
-      const response = await apiClient.get<ApiResponse<{ countries: ObsCountry[] }>>(`/search/countries?airport_city_from=${departureCityId}`)
+      const response = await apiClient.get<ApiResponse<{ countries: ObsCountry[] }>>(`/search/countries?airport_city_from=${departureCityId}`, true, true)
       
       if (response.success) {
         const mappedCountries = response.data.countries.map(country => ({
@@ -177,7 +177,7 @@ export const useObsApi = () => {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch countries'
-      logger.apiError('GET', `/search/countries?airport_city_from=${departureCityId}`, err)
+      logger.error(`GET /search/countries?airport_city_from=${departureCityId} failed:`, err)
       setError(message)
       return []
     } finally {
@@ -193,7 +193,7 @@ export const useObsApi = () => {
       
       logger.apiCall('GET', `/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`)
       
-      const response = await apiClient.get<ApiResponse<{ package_templates: ObsPackageTemplate[] }>>(`/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`)
+      const response = await apiClient.get<ApiResponse<{ package_templates: ObsPackageTemplate[] }>>(`/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`, true, true)
       
       logger.debug('Package templates API response received', response)
       
@@ -251,7 +251,7 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      const response = await apiClient.get<ApiResponse<{ hotel_categories: ObsHotelCategory[] }>>(`/search/package_templates/${packageTemplateId}/hotel_categories`)
+      const response = await apiClient.get<ApiResponse<{ hotel_categories: ObsHotelCategory[] }>>(`/search/package_templates/${packageTemplateId}/hotel_categories`, true, true)
       
       if (response.success) {
         categories.value = response.data.hotel_categories.map(cat => ({
@@ -277,7 +277,7 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      const response = await apiClient.get<ApiResponse<{ locations: ObsLocation[] }>>(`/search/package_templates/${packageTemplateId}/locations`)
+      const response = await apiClient.get<ApiResponse<{ locations: ObsLocation[] }>>(`/search/package_templates/${packageTemplateId}/locations`, true, true)
       
       if (response.success) {
         regions.value = response.data.locations.map(loc => ({
@@ -351,7 +351,7 @@ export const useObsApi = () => {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch hotels'
-      logger.apiError('GET', url, err)
+      logger.error(`GET ${url} failed:`, err)
       setError(message)
       return []
     } finally {
@@ -365,7 +365,7 @@ export const useObsApi = () => {
       loading.value = true
       clearError()
       
-      const response = await apiClient.get<ApiResponse<{ meals: string[] }>>(`/search/package_templates/${packageTemplateId}/meals`)
+      const response = await apiClient.get<ApiResponse<{ meals: string[] }>>(`/search/package_templates/${packageTemplateId}/meals`, true, true)
       
       if (response.success) {
         meals.value = response.data.meals.map((meal, index) => ({
@@ -403,7 +403,7 @@ export const useObsApi = () => {
       queryParams.append('city_from', params.city_from.toString())
       queryParams.append('city_to', params.city_to)
       
-      const response = await apiClient.get<ApiResponse<{ calendar_hints: Record<string, unknown[]> }>>(`/search/calendar_hints?${queryParams.toString()}`)
+      const response = await apiClient.get<ApiResponse<{ calendar_hints: Record<string, unknown[]> }>>(`/search/calendar_hints?${queryParams.toString()}`, true, true)
       
       logger.info('Calendar hints API response:', response)
       
@@ -443,7 +443,7 @@ export const useObsApi = () => {
       logger.info('🌙 Fetching available nights from:', url)
       logger.info('🌙 Request params:', params)
       
-      const response = await apiClient.get<{ success: boolean; message: string; data: number[] | { available_nights: number[] } }>(url)
+      const response = await apiClient.get<{ success: boolean; message: string; data: number[] | { available_nights: number[] } }>(url, true, true)
       
       logger.info('🌙 Raw API response:', response)
       
@@ -519,7 +519,7 @@ export const useObsApi = () => {
         logger.debug(`performSearch API call: ${url}`)
         logger.apiCall('POST', url)
         
-        const response = await apiClient.post<ApiResponse<Record<string, unknown>>>(url, requestBody)
+        const response = await apiClient.post<ApiResponse<Record<string, unknown>>>(url, requestBody, true)
       
       if (response.success) {
         return response.data

@@ -7,6 +7,8 @@ class ApiClient {
   private baseURL: string
   private cache = new Map<string, { data: unknown; timestamp: number }>()
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 минут
+  private isRefreshing = false
+  private refreshPromise: Promise<string> | null = null
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
@@ -14,7 +16,7 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { skipAuth?: boolean } = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
@@ -27,39 +29,35 @@ class ApiClient {
       ...options,
     }
 
-    // Добавляем токен авторизации если есть
+    // Добавляем токен авторизации если есть и не пропущена авторизация
     let token = localStorage.getItem('accessToken')
-    if (token && this.isTokenExpired(token)) {
-      // Токен истек, пытаемся обновить
-      try {
-        const { AuthApi } = await import('./authApi')
-        const refreshResponse = await AuthApi.refreshToken()
-        token = refreshResponse.tokens.accessToken
-        localStorage.setItem('accessToken', token)
-      } catch (error) {
-        // Refresh failed, redirect to login
-        this.redirectToLogin()
-        throw new Error('Session expired')
+    if (!options.skipAuth) {
+      if (token && this.isTokenExpired(token)) {
+        // Токен истек, пытаемся обновить
+        try {
+          token = await this.refreshTokenIfNeeded()
+        } catch (error) {
+          // Refresh failed, redirect to login
+          this.redirectToLogin()
+          throw new Error('Session expired')
+        }
       }
-    }
 
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
+      if (token) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${token}`,
+        }
       }
     }
 
     try {
       const response = await fetch(url, config)
 
-      // Если получили 401, пытаемся обновить токен
-      if (response.status === 401 && token) {
+      // Если получили 401, пытаемся обновить токен (только если авторизация не пропущена)
+      if (response.status === 401 && token && !options.skipAuth) {
         try {
-          const { AuthApi } = await import('./authApi')
-          const refreshResponse = await AuthApi.refreshToken()
-          const newToken = refreshResponse.tokens.accessToken
-          localStorage.setItem('accessToken', newToken)
+          const newToken = await this.refreshTokenIfNeeded()
           
           // Повторяем запрос с новым токеном
           config.headers = {
@@ -102,7 +100,7 @@ class ApiClient {
   }
 
   // GET запрос с кешированием
-  async get<T>(endpoint: string, useCache = true): Promise<T> {
+  async get<T>(endpoint: string, useCache = true, skipAuth = false): Promise<T> {
     const cacheKey = `GET:${endpoint}`
     
     // Проверяем кеш для GET запросов
@@ -118,7 +116,7 @@ class ApiClient {
       }
     }
     
-    const result = await this.request<T>(endpoint, { method: 'GET' })
+    const result = await this.request<T>(endpoint, { method: 'GET', skipAuth })
     
     // Кешируем только успешные GET запросы
     if (useCache) {
@@ -130,10 +128,11 @@ class ApiClient {
   }
 
   // POST запрос
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown, skipAuth = false): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+      skipAuth,
     })
   }
 
@@ -190,6 +189,45 @@ class ApiClient {
       return payload.exp < currentTime
     } catch {
       return true // Если не можем декодировать, считаем истекшим
+    }
+  }
+
+  // Безопасное обновление токена с защитой от бесконечных циклов
+  private async refreshTokenIfNeeded(): Promise<string> {
+    // Если уже идет процесс обновления, ждем его завершения
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise
+    }
+
+    // Если нет refresh token, выбрасываем ошибку
+    const currentToken = localStorage.getItem('accessToken')
+    if (!currentToken) {
+      throw new Error('No access token available')
+    }
+
+    this.isRefreshing = true
+    this.refreshPromise = this.performTokenRefresh()
+
+    try {
+      const newToken = await this.refreshPromise
+      return newToken
+    } finally {
+      this.isRefreshing = false
+      this.refreshPromise = null
+    }
+  }
+
+  // Выполнение обновления токена
+  private async performTokenRefresh(): Promise<string> {
+    try {
+      const { AuthApi } = await import('./authApi')
+      const refreshResponse = await AuthApi.refreshToken()
+      const newToken = refreshResponse.tokens.accessToken
+      localStorage.setItem('accessToken', newToken)
+      return newToken
+    } catch (error) {
+      logger.error('Token refresh failed:', error)
+      throw error
     }
   }
 

@@ -25,15 +25,15 @@
           <div class="info-row">
             <div class="info-item">
               <label>Владелец</label>
-              <span>{{ booking.user.first_name || booking.user.email.split('@')[0] }}</span>
+              <span>{{ booking.user?.first_name || booking.user?.email?.split('@')[0] || '-' }}</span>
             </div>
             <div class="info-item">
               <label>Email</label>
-              <span>{{ booking.user.email }}</span>
+              <span>{{ booking.user?.email || '-' }}</span>
             </div>
             <div class="info-item">
               <label>Телефон</label>
-              <span>{{ booking.user.phone || '-' }}</span>
+              <span>{{ booking.user?.phone || '-' }}</span>
             </div>
             <div class="info-item">
               <label>Статус</label>
@@ -50,28 +50,30 @@
             <div class="section-icon">🏨</div>
             <h3 class="section-title">Отель</h3>
           </div>
-          <div class="hotel-info">
+          <div class="section-content">
             <div class="hotel-main">
-              <div class="hotel-name">{{ getHotelName() }}</div>
-              <div class="hotel-category">{{ getHotelCategory() }}</div>
-              <div class="hotel-location">{{ getHotelCity() }}</div>
+              <div class="hotel-info-line">
+                <span class="hotel-name">{{ getHotelName() }}</span>
+                <span class="hotel-category">{{ getHotelCategory() }}</span>
+                <span class="hotel-location">{{ getHotelCity() }}</span>
+              </div>
             </div>
             <div class="hotel-details">
               <div class="detail-row">
                 <label>Тип комнаты</label>
-                <span>{{ getRoomType() }}</span>
+                <span :class="{ 'missing-info': getRoomType().includes('не указан') }">{{ getRoomType() }}</span>
               </div>
               <div class="detail-row">
                 <label>Питание</label>
-                <span>{{ getMealPlan() }}</span>
+                <span :class="{ 'missing-info': getMealPlan().includes('не указан') }">{{ getMealPlan() }}</span>
               </div>
               <div class="detail-row">
                 <label>Даты проживания</label>
-                <span>{{ getCheckInDate() }} - {{ getCheckOutDate() }}</span>
+                <span :class="{ 'missing-info': getCheckInDate().includes('не указан') || getCheckOutDate().includes('не указан') }">{{ getCheckInDate() }} - {{ getCheckOutDate() }}</span>
               </div>
               <div class="detail-row">
                 <label>Ночей</label>
-                <span>{{ getNights() }}</span>
+                <span :class="{ 'missing-info': getNights().includes('не указан') }">{{ getNights() }}</span>
               </div>
             </div>
           </div>
@@ -83,7 +85,7 @@
             <div class="section-icon">👥</div>
             <h3 class="section-title">Туристы</h3>
           </div>
-          <div class="tourists-table">
+          <div class="section-content">
             <div v-for="(tourist, index) in getTourists()" :key="index" class="tourist-row">
               <div class="tourist-number">№ {{ index + 1 }}</div>
               <div class="tourist-details-grid">
@@ -114,7 +116,7 @@
             <div class="section-icon">✈️</div>
             <h3 class="section-title">Перелет</h3>
           </div>
-          <div class="flight-tickets">
+          <div class="section-content">
             <div v-for="(tourist, index) in getTourists()" :key="index" class="flight-ticket">
               <!-- Tourist Info -->
               <div class="tourist-info">
@@ -212,7 +214,7 @@
             <div class="section-icon">🚌</div>
             <h3 class="section-title">Дополнительные услуги</h3>
           </div>
-          <div class="services-info">
+          <div class="section-content">
             <div class="service-item">
               <div class="service-header">
                 <div class="service-icon">🛡️</div>
@@ -654,7 +656,7 @@ const getHotelName = () => {
   if (tourDetails?.hotel?.name) {
     return tourDetails.hotel.name
   }
-  return tourDetails?.hotel_name || 'N/A'
+  return tourDetails?.hotel_name || 'Информация об отеле недоступна'
 }
 
 const getHotelCategory = () => {
@@ -678,7 +680,7 @@ const getHotelCategory = () => {
   if (tourDetails?.hotel?.category) {
     return tourDetails.hotel.category
   }
-  return tourDetails?.hotel_category || 'N/A'
+  return tourDetails?.hotel_category || 'Категория не указана'
 }
 
 const getHotelCity = () => {
@@ -699,7 +701,7 @@ const getHotelCity = () => {
   if (tourDetails?.hotel?.city) {
     return tourDetails.hotel.city
   }
-  return tourDetails?.city || 'N/A'
+  return tourDetails?.city || 'Город не указан'
 }
 
 const getRoomType = () => {
@@ -1920,7 +1922,7 @@ const getInsuranceName = (): string => {
     case 'NONE':
       return 'Без страхования'
     default:
-      return insurance.type || 'N/A'
+      return insurance.type || 'Тип страхования не указан'
   }
 }
 
@@ -1970,7 +1972,7 @@ const getTransferName = (): string => {
     case 'VIP':
       return 'VIP IND TRANSFER'
     default:
-      return transfer.type || 'N/A'
+      return transfer.type || 'Тип трансфера не указан'
   }
 }
 
@@ -2220,19 +2222,27 @@ export default {
 
 .section {
   margin-bottom: var(--spacing-xl);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: white;
 }
 
 .section:last-child {
   margin-bottom: 0;
 }
 
+.section-content {
+  padding: var(--spacing-lg);
+}
+
 .section-header {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 2px solid var(--color-border);
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-soft);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .section-icon {
@@ -2246,28 +2256,29 @@ export default {
   margin: 0;
 }
 
-.hotel-info {
-  background: var(--color-background-soft);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
-}
+/* Hotel info styles are now handled by section-content */
 
 .hotel-main {
   margin-bottom: var(--spacing-lg);
+}
+
+.hotel-info-line {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
 .hotel-name {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
-  margin-bottom: var(--spacing-xs);
 }
 
 .hotel-category {
   font-size: var(--font-size-sm);
-  color: var(--color-primary);
+  color: var(--color-text);
   font-weight: var(--font-weight-medium);
-  margin-bottom: var(--spacing-xs);
 }
 
 .hotel-location {
@@ -2301,6 +2312,11 @@ export default {
   font-weight: var(--font-weight-medium);
 }
 
+.detail-row span.missing-info {
+  color: var(--color-text-soft);
+  font-style: italic;
+}
+
 .tourists-table {
   display: flex;
   flex-direction: column;
@@ -2310,16 +2326,21 @@ export default {
 .tourist-row {
   display: flex;
   gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--color-background-soft);
   border-radius: var(--border-radius);
-  border-left: 4px solid var(--color-primary);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-md);
+}
+
+.tourist-row:last-child {
+  margin-bottom: 0;
 }
 
 .tourist-number {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-text);
   min-width: 40px;
   display: flex;
   align-items: center;
@@ -2460,11 +2481,16 @@ export default {
 .flight-ticket {
   display: flex;
   gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--color-background-soft);
   border-radius: var(--border-radius);
-  border-left: 4px solid var(--color-primary);
+  border: 1px solid var(--color-border);
   align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.flight-ticket:last-child {
+  margin-bottom: 0;
 }
 
 .tourist-info {
@@ -2478,12 +2504,12 @@ export default {
 .tourist-number {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-text);
   text-align: center;
   padding: var(--spacing-xs) var(--spacing-sm);
   background: white;
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--color-border);
 }
 
 .tourist-details {
@@ -2507,20 +2533,25 @@ export default {
 
 .flight-ticket .flight-segment {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   flex: 1;
-  padding: var(--spacing-md);
+  padding: 14px;
   background: white;
   border-radius: var(--border-radius);
   border: 1px solid var(--color-border);
+  margin-right: var(--spacing-xs);
+}
+
+.flight-ticket .flight-segment:last-child {
+  margin-right: 0;
 }
 
 .flight-ticket .flight-segment.outbound {
-  border-left: 3px solid var(--color-secondary);
+  border-left: 1px solid var(--color-border);
 }
 
 .flight-ticket .flight-segment.inbound {
-  border-left: 3px solid var(--color-accent);
+  border-left: 1px solid var(--color-border);
 }
 
 .flight-direction {
@@ -2535,7 +2566,7 @@ export default {
 .direction-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-text);
   text-align: center;
 }
 
@@ -2555,7 +2586,7 @@ export default {
 
 .flight-columns {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xs);
 }
 
 .flight-column {
@@ -2567,7 +2598,7 @@ export default {
 
 .flight-info-line {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   align-items: flex-start;
 }
 
@@ -2575,7 +2606,7 @@ export default {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-soft);
-  min-width: 60px;
+  min-width: 35px;
   flex-shrink: 0;
 }
 
@@ -2809,21 +2840,16 @@ export default {
   word-break: break-word;
 }
 
-/* Additional Services Information Styles */
-.services-info {
-  padding: var(--spacing-lg);
-  background: var(--color-background-soft);
-  border-radius: var(--border-radius);
-}
+/* Additional Services Information Styles - now handled by section-content */
 
 .service-item {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: white;
+  background: var(--color-background-soft);
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border);
   margin-bottom: var(--spacing-md);
 }
 

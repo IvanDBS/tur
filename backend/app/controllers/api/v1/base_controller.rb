@@ -136,6 +136,7 @@ module Api
           ApiLog.create!(
             method: request.method,
             path: request.path,
+            endpoint: "#{request.method} #{request.path}",
             status: response.status,
             duration_ms: duration,
             user_id: anonymized_user_id,

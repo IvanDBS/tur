@@ -220,11 +220,19 @@
   }
 
   const handleLogout = async () => {
-    await authStore.logout()
-    isUserMenuOpen.value = false
-    closeMobileMenu()
-    // Redirect to home page after logout
-    window.location.href = '/'
+    try {
+      await authStore.logout()
+      isUserMenuOpen.value = false
+      closeMobileMenu()
+      // Redirect to home page after logout
+      window.location.reload()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force logout even if API call fails
+      authStore.user = null
+      localStorage.removeItem('accessToken')
+      window.location.reload()
+    }
   }
 
   // Close user menu when clicking outside

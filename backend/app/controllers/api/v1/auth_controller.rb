@@ -163,10 +163,12 @@ module Api
 
       # DELETE /api/v1/auth/sign_out
       def sign_out
+        # Простой logout без JWT blacklist (пока не исправим конфигурацию)
         # Очищаем refresh token cookie
         clear_refresh_token_cookie
         
-        # В будущем можно добавить токен в blacklist
+        Rails.logger.info "User logged out successfully"
+        
         render json: {
           success: true,
           message: 'Signed out successfully'
@@ -246,7 +248,13 @@ module Api
       end
 
       def clear_refresh_token_cookie
-        cookies.delete(:refresh_token)
+        cookies.delete(:refresh_token, {
+          domain: Rails.env.production? ? '.yourdomain.com' : nil,
+          path: '/',
+          httponly: true,
+          secure: Rails.env.production?,
+          same_site: :strict
+        })
       end
 
       def sign_up_params
@@ -263,6 +271,24 @@ module Api
 
       def password_params
         params.permit(:current_password, :new_password)
+      end
+
+      def extract_jti_from_token(token)
+        begin
+          decoded = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' })
+          decoded[0]['jti']
+        rescue JWT::DecodeError
+          nil
+        end
+      end
+
+      def extract_exp_from_token(token)
+        begin
+          decoded = JWT.decode(token, Rails.application.credentials.secret_key_base, true, { algorithm: 'HS256' })
+          decoded[0]['exp']
+        rescue JWT::DecodeError
+          nil
+        end
       end
     end
   end

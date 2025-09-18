@@ -90,8 +90,9 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       await AuthApi.logout()
-    } catch {
-      // Logout error handled silently
+    } catch (error) {
+      logger.error('Logout API call failed:', error)
+      // Logout error handled silently, but we still clear local state
     } finally {
       // Очищаем состояние
       user.value = null
@@ -100,6 +101,8 @@ export const useAuthStore = defineStore('auth', () => {
       // Очищаем кеш API
       const { apiClient } = await import('../utils/api')
       apiClient.clearCache()
+      
+      logger.info('User logged out successfully')
     }
   }
 
@@ -192,6 +195,9 @@ export const useAuthStore = defineStore('auth', () => {
           localStorage.removeItem('accessToken')
         }
       }
+    } else if (!token) {
+      // Если нет токена, убеждаемся что пользователь не авторизован
+      user.value = null
     }
   }
 

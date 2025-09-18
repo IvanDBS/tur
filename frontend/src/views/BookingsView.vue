@@ -90,7 +90,7 @@
   import { formatDate, getNightWord } from '../utils/dateUtils'
   import { apiClient } from '../utils/api'
   import { logger } from '../utils/logger'
-  import BookingDetailsModal from '../components/booking/BookingDetailsModal.vue'
+  import BookingDetailsModal from '../components/booking/BookingDetailsModalSimple.vue'
 
   interface Booking {
     id: number

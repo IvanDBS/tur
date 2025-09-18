@@ -46,6 +46,12 @@
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
               </th>
+              <th class="sortable" @click="sortBy('operator_id')">
+                ID оператора
+                <span v-if="sortField === 'operator_id'" class="sort-icon">
+                  {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </th>
               <th class="sortable" @click="sortBy('booking_number')">
                 Номера оператора
                 <span v-if="sortField === 'booking_number'" class="sort-icon">
@@ -145,6 +151,14 @@
                   placeholder="Все"
                   size="xs"
                   @update:model-value="debouncedSearch"
+                />
+              </td>
+              <td>
+                <BaseInput
+                  v-model="searchFilters.operator_id"
+                  placeholder="ID оператора..."
+                  size="xs"
+                  @input="debouncedSearch"
                 />
               </td>
               <td>
@@ -258,13 +272,14 @@
           </thead>
           <tbody>
             <tr v-if="bookings.length === 0" class="empty-row">
-              <td colspan="16" class="empty-message">
+              <td colspan="17" class="empty-message">
                 Бронирования не найдены
               </td>
             </tr>
             <tr v-for="booking in bookings" :key="booking.id" class="table-row">
               <td class="booking-id">{{ booking.id }}</td>
               <td class="operator">{{ getOperator(booking) }}</td>
+              <td class="operator-id">{{ booking.operator_id || 'N/A' }}</td>
               <td class="booking-number">{{ booking.obs_order_id || 'N/A' }}</td>
               <td class="booking-date">{{ formatDateDDMMYYYY(booking.created_at) }}</td>
               <td class="country">{{ getCountryFromCity(getHotelCity(booking)) }}</td>
@@ -316,6 +331,7 @@
                 <button 
                   class="action-btn edit-btn" 
                   @click="viewDetails(booking)"
+                  :disabled="selectedBooking !== null"
                   title="Просмотреть детали"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -340,13 +356,24 @@
     </div>
 
     <!-- Booking Details Modal -->
-    <BookingDetailsModal
-      v-if="selectedBooking"
-      :booking="selectedBooking"
-      :is-admin-mode="true"
-      @close="selectedBooking = null"
-      @status-changed="handleStatusChanged"
-    />
+    <Suspense>
+      <template #default>
+        <BookingDetailsModal
+          v-if="selectedBooking"
+          :booking="selectedBooking"
+          :is-admin-mode="true"
+          @close="selectedBooking = null"
+          @status-changed="handleStatusChanged"
+        />
+      </template>
+      <template #fallback>
+        <div v-if="selectedBooking" class="modal-overlay">
+          <div class="modal-content">
+            <div class="loading-spinner">Загрузка...</div>
+          </div>
+        </div>
+      </template>
+    </Suspense>
   </div>
 </template>
 
@@ -356,7 +383,7 @@ import { useRoute } from 'vue-router'
 import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
-import BookingDetailsModal from '../../components/booking/BookingDetailsModal.vue'
+import BookingDetailsModal from '../../components/booking/BookingDetailsModalSimple.vue'
 import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
 import { logger } from '../../utils/logger'
@@ -393,6 +420,13 @@ const bookings = computed(() => {
   if (searchFilters.value.operator && searchFilters.value.operator.trim()) {
     filtered = filtered.filter(booking => 
       getOperator(booking) === searchFilters.value.operator
+    )
+  }
+
+  // Filter by operator_id if specified
+  if (searchFilters.value.operator_id && searchFilters.value.operator_id.trim()) {
+    filtered = filtered.filter(booking => 
+      booking.operator_id && booking.operator_id.toString().includes(searchFilters.value.operator_id)
     )
   }
 
@@ -483,6 +517,7 @@ const filters = ref({
 const searchFilters = ref({
   id: '',
   operator: '',
+  operator_id: '',
   booking_number: '',
   created_at: '',
   country: '',
@@ -638,6 +673,7 @@ const loadBookings = async () => {
         cancelled_at: booking.cancelled_at,
         obs_booking_hash: booking.obs_booking_hash,
         obs_order_id: booking.obs_order_id,
+        operator_id: booking.operator_id,
         search_query: booking.search_query,
         can_be_cancelled: false
       }
@@ -673,6 +709,7 @@ const clearAllFilters = () => {
   searchFilters.value = {
     id: '',
     operator: '',
+    operator_id: '',
     booking_number: '',
     created_at: '',
     country: '',
@@ -702,12 +739,17 @@ const handlePageChange = (page: number) => {
 }
 
 const viewDetails = (booking: AdminBooking) => {
+  // Предотвращаем множественные клики
+  if (selectedBooking.value) {
+    return
+  }
+  
   selectedBooking.value = booking
 }
 
 const confirmBooking = async (booking: AdminBooking) => {
   try {
-    await updateBookingStatus(booking.id, 'confirmed')
+    await updateBookingStatus(booking.id.toString(), 'confirmed')
     booking.status = 'confirmed'
     booking.confirmed_at = new Date().toISOString()
   } catch (error) {
@@ -717,7 +759,7 @@ const confirmBooking = async (booking: AdminBooking) => {
 
 const rejectBooking = async (booking: AdminBooking) => {
   try {
-    await updateBookingStatus(booking.id, 'cancelled')
+    await updateBookingStatus(booking.id.toString(), 'cancelled')
     booking.status = 'cancelled'
     booking.cancelled_at = new Date().toISOString()
   } catch (error) {
@@ -753,7 +795,7 @@ const syncAllBookings = async () => {
 const syncBooking = async (booking: AdminBooking) => {
   try {
     syncing.value = true
-    const response = await apiSyncBooking(booking.id)
+    const response = await apiSyncBooking(booking.id.toString())
     
     // Update the specific booking status
     await loadBookings()
@@ -842,6 +884,10 @@ const sortBookings = () => {
       case 'operator':
         aValue = getOperator(a)
         bValue = getOperator(b)
+        break
+      case 'operator_id':
+        aValue = a.operator_id || 0
+        bValue = b.operator_id || 0
         break
       case 'tourists':
         aValue = getTouristsNames(a)
@@ -1374,6 +1420,14 @@ onMounted(() => {
   border-color: var(--color-border);
 }
 
+/* Стили для отключенной кнопки */
+.action-btn:disabled,
+.edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-background-soft);
+}
+
 
 
 .empty-row {
@@ -1397,7 +1451,38 @@ onMounted(() => {
   padding: var(--spacing-lg);
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
+}
+
+/* Стили для загрузочного спиннера */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  font-size: var(--font-size-md);
+  color: var(--color-text-soft);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 

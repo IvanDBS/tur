@@ -65,42 +65,53 @@ module Api
       attr_reader :current_user
 
       def render_success(data = {}, message = 'Success', status = :ok)
-        render json: {
-          success: true,
-          message: message,
-          data: data
-        }, status: status
+        unless response_body.present?
+          render json: {
+            success: true,
+            message: message,
+            data: data
+          }, status: status
+        end
       end
 
       def render_error(message = 'Error', status = :unprocessable_entity, errors = [])
-        render json: {
-          success: false,
-          message: message,
-          errors: errors
-        }, status: status
+        unless response_body.present?
+          render json: {
+            success: false,
+            message: message,
+            errors: errors
+          }, status: status
+        end
       end
 
       def handle_exception(exception)
         Rails.logger.error "API Error: #{exception.class} - #{exception.message}"
         Rails.logger.error exception.backtrace.join("\n")
 
-        render_error(
-          'Internal server error',
-          :internal_server_error,
-          Rails.env.development? ? [exception.message] : []
-        )
+        # Prevent double render by checking if response has already been rendered
+        unless response_body.present?
+          render_error(
+            'Internal server error',
+            :internal_server_error,
+            Rails.env.development? ? [exception.message] : []
+          )
+        end
       end
 
       def handle_not_found(_exception)
-        render_error('Resource not found', :not_found)
+        unless response_body.present?
+          render_error('Resource not found', :not_found)
+        end
       end
 
       def handle_validation_error(exception)
-        render_error(
-          'Validation failed',
-          :unprocessable_entity,
-          exception.record.errors.full_messages
-        )
+        unless response_body.present?
+          render_error(
+            'Validation failed',
+            :unprocessable_entity,
+            exception.record.errors.full_messages
+          )
+        end
       end
 
       # API metrics tracking

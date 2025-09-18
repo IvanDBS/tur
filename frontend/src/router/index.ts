@@ -96,26 +96,45 @@ router.beforeEach(async (to, from, next) => {
   
   // Проверяем, требует ли маршрут админских прав
   if (to.meta.requiresAdmin) {
-    // Сначала пытаемся восстановить состояние аутентификации из localStorage
-    await authStore.initializeAuth()
-    
-    // Проверяем, авторизован ли пользователь
-    if (!authStore.isAuthenticated) {
-      next('/auth-test') // Перенаправляем на страницу входа
-      return
+    try {
+      // Добавляем таймаут для предотвращения зависания
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+      })
+      
+      const authPromise = (async () => {
+        // Сначала пытаемся восстановить состояние аутентификации из localStorage
+        await authStore.initializeAuth()
+        
+        // Проверяем, авторизован ли пользователь
+        if (!authStore.isAuthenticated) {
+          next('/auth-test') // Перенаправляем на страницу входа
+          return
+        }
+        
+        // Получаем актуальные данные пользователя
+        await authStore.getCurrentUser()
+        
+        // Проверяем, является ли пользователь админом
+        if (!authStore.currentUser?.admin) {
+          next('/') // Перенаправляем на главную страницу
+          return
+        }
+        
+        next()
+      })()
+      
+      // Ждем либо завершения проверки, либо таймаута
+      await Promise.race([authPromise, timeoutPromise])
+      
+    } catch (error) {
+      console.error('Auth guard error:', error)
+      // В случае ошибки перенаправляем на главную страницу
+      next('/')
     }
-    
-    // Получаем актуальные данные пользователя
-    await authStore.getCurrentUser()
-    
-    // Проверяем, является ли пользователь админом
-    if (!authStore.currentUser?.admin) {
-      next('/') // Перенаправляем на главную страницу
-      return
-    }
+  } else {
+    next()
   }
-  
-  next()
 })
 
 export default router

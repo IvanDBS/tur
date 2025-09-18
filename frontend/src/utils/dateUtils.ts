@@ -4,11 +4,31 @@
  * @returns отформатированная дата
  */
 export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-  })
+  if (!dateString) return ''
+  
+  try {
+    // If it's already in DD.MM.YYYY format, extract DD.MM
+    if (typeof dateString === 'string' && dateString.includes('.')) {
+      const parts = dateString.split('.')
+      if (parts.length === 3) {
+        const [day, month] = parts
+        return `${day}.${month}`
+      }
+    }
+    
+    // Try to parse as regular date
+    const date = new Date(dateString)
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+      })
+    }
+    
+    return dateString
+  } catch {
+    return dateString
+  }
 }
 
 /**

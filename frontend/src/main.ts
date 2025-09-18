@@ -1,4 +1,5 @@
 import './assets/base.css'
+import './styles/modal.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

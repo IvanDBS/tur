@@ -1,0 +1,617 @@
+type: collection.insomnia.rest/5.0
+name: TOCO-TOUR-V1.22.10
+meta:
+  id: wrk_3464559fd89e4a4db13c59aa58522d40
+  created: 1758174420479
+  modified: 1758174420479
+  description: ""
+collection:
+  - name: Authentication
+    meta:
+      id: fld_643471f383c04fd5b087803d0161d6a2
+      created: 1656326912493
+      modified: 1657784999627
+      sortKey: -1637918801508
+      description: >
+        For machine to machine communication OBS-API uses JWT authorization.
+        Please look at the https://jwt.io/introduction/ to learn more about JWT.
+
+
+        ### Creating authorization header
+
+
+        Prepare header according to the following scheme: Authorization: Bearer
+        `access_token`
+  - name: Search
+    meta:
+      id: fld_1a1ebef56ced4712af93c74e11179f7f
+      created: 1656326912529
+      modified: 1656326939053
+      sortKey: -1637918801458
+      description: ""
+    children:
+      - name: Booking
+        meta:
+          id: fld_07b2f8a3353544a5b9c4acff15063165
+          created: 1656326912546
+          modified: 1658316846938
+          sortKey: -1637921583323.5
+          description: ""
+  - name: AirTicketsSearch
+    meta:
+      id: fld_f602a6c4205742849d698b902f620f78
+      created: 1656326912568
+      modified: 1657782554753
+      sortKey: -1637918801454.875
+      description: ""
+    children:
+      - name: Booking
+        meta:
+          id: fld_d76b3fe0e41444a3a546d833f95d0430
+          created: 1658316559901
+          modified: 1658316857244
+          sortKey: -1658316559901
+          description: ""
+  - name: Order
+    meta:
+      id: fld_1ef679e791a04cd3b77644d3651bca6d
+      created: 1658316641092
+      modified: 1658316644736
+      sortKey: -1637918801404.875
+      description: ""
+    children:
+      - url: "  https://test-v2.obs.md/api/orders"
+        name: Index
+        meta:
+          id: req_dfbe9d4971e54b929c5c7e3da1f264c6
+          created: 1656326912554
+          modified: 1658843550953
+          isPrivate: false
+          description: |-
+            ### Order list endpoint.
+            **[GET]** `api/orders`
+
+            **List of orders**
+
+            **Available filters**
+            |Parameters  |value or format |description |
+            |--|--|--|
+            |`filters[id]`  |string |Order ids joined with comma, Ex. 1,2,3 |
+            |`filters[order_number]`  |string |Order number, Ex. TT22-TR/1 |
+            |`filters[status]`  |string |Statuses joined with comma, Ex. confirmed,wait |
+
+            List of available statuses:
+            `['wait','changed','confirmed','canceling','canceled','not_confirmed','penalty']`
+
+
+            **Pagination**
+            |Parameters  |value or format |description |
+            |--|--|--|
+            |`page[size]`  |int |Number of orders per page |
+            |`page[number]`  |int |Page number |
+          sortKey: -1643369932158
+        method: GET
+        parameters:
+          - id: pair_26c2f9793853437c88569fbe1020af86
+            name: filter[id]
+            value: "169351"
+            description: ""
+            disabled: true
+          - id: pair_9ed31425ae36465284833792f88fb81a
+            name: filter[order_number]
+            value: TT22-TR/597
+            description: ""
+            disabled: true
+            type: text
+            multiline: false
+          - id: pair_53ad05d4bb6b40c3aa9332cbc3fbeb3a
+            name: filter[booking_time]
+            value: 2022-02-11,2022-02-02
+            description: ""
+            disabled: true
+          - id: pair_369d767e86a5438f9f565b2ad0e83020
+            name: filter[check_in]
+            value: 2022-02-02,2022-02-02
+            description: ""
+            disabled: true
+          - id: pair_73ed6d0ccff642cc83f3c0f2bf53ee7f
+            name: filter[check_out]
+            value: 2022-02-01,2022-02-02
+            description: ""
+            disabled: true
+          - id: pair_40b73570e9004459809ff3c2f63d1376
+            name: filter[departure][dates]
+            value: 2022-04-26,2022-09-26
+            description: ""
+            disabled: true
+          - id: pair_9fc66dcc1e2a42569161a7eef5cd8fab
+            name: filter[arrival][dates]
+            value: 21.05.2022,21.05.2022
+            description: ""
+            disabled: true
+          - id: pair_fd6c15bbb1a74e48b9be6afe5f7cb0ee
+            name: filter[order_status]
+            value: canceled
+            description: ""
+            disabled: true
+          - id: pair_42901668468b4c7abdf185cbafb7a321
+            name: page[number]
+            value: "1"
+            description: ""
+            disabled: true
+          - id: pair_9c50a97c98b04ca1ac04e226c4492d4a
+            name: page[size]
+            value: "2"
+            description: ""
+            disabled: true
+        headers:
+          - id: pair_6980adbb568d49ea81c713c4cd977320
+            name: Accept
+            value: application/json
+            description: ""
+          - id: pair_138d3ad334124487813b1657b5f34696
+            name: X-localization
+            value: ru
+            description: ""
+        authentication:
+          type: bearer
+          token: "{access_token}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: https://test-v2.obs.md/api/orders/203
+        name: Details
+        meta:
+          id: req_8e1d2db7ba5b42e78d4805ab5a7442f8
+          created: 1656326912559
+          modified: 1658843552695
+          isPrivate: false
+          description: >
+            
+            ### Order details endpoint.
+
+            **[GET]** `api/orders/:order_id`
+
+
+            `order_id` - id of an order
+
+
+            You can get all your order details by accessing this endpoint. The
+            only required parameter is orderId
+
+
+            ```response:200
+
+            {}
+
+            ```
+
+
+            ### Response
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `info` | array | General reservation info |
+
+            | `hotels` | array | Data about hotels |
+
+            | `charter` | array | Data about charter flights |
+
+            | `transfers` | array | Data about transfers |
+
+            | `comments` | array | List of all comments |
+
+            | `payment` | array | Data about payment and debts |
+
+            | `order_price` | float | Net price |
+
+            | `agency_commission` | float | Agency commission |
+
+            | `order_total_sum` | float | Gross price |
+
+            | `currency` | string | Currency CODE |
+
+
+            ### Response/info
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `order` | string | Order number |
+
+            | `booking_time` | datetime (d.m.Y H:i) | Created time |
+
+            | `owner` | array | Data about owner agency and user |
+
+            | `tourist_phone` | array | Array of tourists phones and contact
+            name |
+
+            | `is_checked` | bool | Availability of print documents |
+
+            | `order_status` | array | Current status |
+
+            | `handler` | array | Data about handler person |
+
+
+            ### Response/info/owner
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `agency` | string | Agency name |
+
+            | `user` | string | User name |
+
+
+            ### Response/info/tourist_phone
+
+
+            | Key | Type | Desscription |
+
+            | --- | --- | --- |
+
+            | `phone` | string | Phone number |
+
+            | `owner` | string | Phone owner name |
+
+
+            ### Response/info/order_status
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `name` | string | Current status |
+
+            | `class` | string | Css class of this status |
+
+
+            ### Response/info/handler
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `name` | string | Name of handler |
+
+            | `email` | string | Email of handler |
+
+            | `phones` | array | Contact phones of this person |
+
+
+            ### Response/hotels
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `name` | string | Hotel name |
+
+            | `city` | string | Location name of the hotel |
+
+            | `category` | string | Hotel category (stars) |
+
+            | `room` | string | Room name |
+
+            | `placement` | string | Placement name and info (total ad, chd,
+            ages) |
+
+            | `meal` | string | Full name of meal |
+
+            | `check_in` | date | d.m.Y Check-in in hotel |
+
+            | `check_out` | date | d.m.Y Check-out from hotel |
+
+            | `days` | int | Total nights in hotel |
+
+            | `operator` | string | Operator name |
+
+            | `tourists` | array | Data of tourists in hotel |
+
+
+            ### Response/charter
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `tourist` | array | Data about tourist |
+
+            | `fly_segments_there` | array | Departure segment info |
+
+            | `fly_segments_back` | array | Arrival segment info |
+
+
+            ### Response/charter/tourist
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `category` | string | Tourist category (mr, mrs, chd) |
+
+            | `name` | string | Tourist full name |
+
+            | `birthday` | string | Tourists birthday and age |
+
+
+            ### Response/charter/fly_segments_there
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `departure_date` | date | d.m.Y Date of takeof |
+
+            | `prefix` | string | Airline IATA code |
+
+            | `flight` | string | Flight number |
+
+            | `color` | string | Color of airline |
+
+            | `fly_time` | string | Interval takeof - landing |
+
+            | `airline` | string | Airline name |
+
+            | `destination.city_from` | string | Departure city |
+
+            | `destination.airport_from` | string | Departure airport code |
+
+            | `destination.city_to` | string | Arrival city |
+
+            | `destination.airport_to` | string | Arrival airport code |
+
+
+            ### Response/charter/fly_segments_back
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `departure_date` | date | d.m.Y Date of takeof |
+
+            | `prefix` | string | Airline IATA code |
+
+            | `flight` | string | Flight number |
+
+            | `color` | string | Color of airline |
+
+            | `fly_time` | string | Interval takeof - landing |
+
+            | `airline` | string | Airline name |
+
+            | `destination.city_from` | string | Departure city |
+
+            | `destination.airport_from` | string | Departure airport code |
+
+            | `destination.city_to` | string | Arrival city |
+
+            | `destination.airport_to` | string | Arrival airport code |
+
+
+            ### Response/transfers
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `tourist` | array | Data about tourist |
+
+            | `airport_hotel` | array | Data about transfer from airport to
+            hotel |
+
+            | `hotel_airport` | array | Data about transfer from hotel to
+            airport |
+
+            | `hotel_hotel` | array | Data about transfer between hotels |
+
+
+            ### Response/transfers/tourist
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `category` | string | Tourist category (mr, mrs, chd) |
+
+            | `name` | string | Tourist full name |
+
+            | `birthday` | data | d.m.Y Tourists birthday |
+
+
+            ### Response/transfers/airport_hotel
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `name` | string | Name of transfer |
+
+            | `date` | date | d.m.Y Date of transfer |
+
+            | `destination.from` | string | Pickup location |
+
+            | `destination.to` | string | Destination location |
+
+
+            ### Response/transfers/hotel_airport
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `name` | string | Name of transfer |
+
+            | `date` | date | d.m.Y Date of transfer |
+
+            | `destination.from` | string | Pickup location |
+
+            | `destination.to` | string | Destination location |
+
+
+            ### Response/comments
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `author` | string | Comment author name |
+
+            | `text` | string | Comment text |
+
+            | `created.date` | date | d.m.Y Created date |
+
+            | `created.time` | time | H:i Created time |
+
+
+            ### Response/payment
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `transactions` | array |  |
+
+            | `debt` | array | Total debt for this order, in 3 currencies (USD,
+            EUR, RON) |
+
+            | `debt.amount` | float | Debt value |
+
+            | `debt.exchange_rate` | float | Exchange rate |
+
+            | `debt.currency` | string | Currency code |
+
+
+            ### Response/payment/transactions
+
+
+            | Key | Type | Description |
+
+            | --- | --- | --- |
+
+            | `payment_date` | date | d.m.Y Date of received payment |
+
+            | `source` | string | Source of payment |
+
+            | `amount` | float | Sum of payment |
+
+            | `currency` | string | Currency code |
+
+            | `exchange_rate` | float | Exchange rate |
+
+            | `order_amount` | float | Amount in order currency |
+
+            | `confirmed` | bool | Is confirmed by bookkepers |
+
+
+
+
+            ```response:404
+
+            {
+            	"message": "No query results for this record"
+            }
+
+            ```
+          sortKey: -1643369932108
+        method: GET
+        headers:
+          - id: pair_d9fff12a51694014aa23774c9c3e58a8
+            name: Accept
+            value: application/json
+            description: ""
+        authentication:
+          type: bearer
+          token: "{access_token}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_b292cf4b906f4afbb3f27d0ded7ef1a2
+    created: 1656326912478
+    modified: 1656328380503
+  cookies:
+    - key: XSRF-TOKEN
+      value: eyJpdiI6Ik1KWnl0d0VOd2h4VVdvUHVoVUxXU3c9PSIsInZhbHVlIjoiMFVoOFhkWWtoRlpZK2NWNzFuRFVIZERYU3cxUEJQSlN2RkxJN2ZaMXh5SlN3cnQwSHlJYWg1M0VQWVUwbThHbWtIOWJIVXVGTWsvRVhPd0dlQURoajdQeHBsb1ZDVXRkME5yRzJkbjEycUdWZFlwVW9NRGlDTzBOeHNmN2pYNXAiLCJtYWMiOiJjMzRjYTIyOGIwMzNiMDU5ZDU2ZDkzYmI3MzA4ZGNiN2UxMGNmMTM4YmI5OTM3NTcyYTA4Yzk5YzUwY2U1ZGI3IiwidGFnIjoiIn0%3D
+      maxAge: 7200
+      domain: api.obs.loc
+      path: /
+      extensions:
+        - samesite=lax
+      hostOnly: true
+      creation: 2022-02-23T14:30:23.620Z
+      lastAccessed: 2022-03-27T21:10:23.268Z
+      id: "6655952853700251"
+    - key: obs_api_session
+      value: eyJpdiI6IkRWd0puK1dpMWdhTmRRY1E5dlMyanc9PSIsInZhbHVlIjoiVlJiVit4ZWEyK1F6YlJHdGFTYzd3WUhXYTlETXRzZnFKcDdmV0pYeW1TdnlBMEc3L0o5MjFsTXFjL3QvL3NONHF0NzY0YnY3RGJRVWdsSjBIWEVSUFNFaUhZV1dGM0pnM1JmREwzUTRDLzBEUFdwRk5RenNEOGVIYkZ0bWxzTTIiLCJtYWMiOiI0MTNiODUyZTZjYmMyZGQ2ZDE4YzBmNTU0MzJkMTM3MzgxM2Y1ODY4OGZhZGY2MzAzODQ4YzZkYTc2ZTg5NmQ5IiwidGFnIjoiIn0%3D
+      maxAge: 7200
+      domain: api.obs.loc
+      path: /
+      httpOnly: true
+      extensions:
+        - samesite=lax
+      hostOnly: true
+      creation: 2022-02-23T14:30:23.621Z
+      lastAccessed: 2022-03-27T21:10:23.268Z
+      id: "5548023460336666"
+    - key: PHPSESSID
+      value: tdtmoel01ecerst2g76vlap2b3
+      maxAge: 253800
+      domain: a.toco-tour.ro
+      path: /
+      hostOnly: true
+      creation: 2022-06-27T11:13:00.499Z
+      lastAccessed: 2022-06-27T11:13:00.499Z
+      id: "37927618878138625"
+environments:
+  name: Base Environment
+  meta:
+    id: env_95a3391ab8684c33a294afdf0c19211b
+    created: 1656326912466
+    modified: 1656337965523
+    isPrivate: false
+  subEnvironments:
+    - name: Development
+      meta:
+        id: env_f59955a7fc25429b894fec44d5ae06ef
+        created: 1656326912467
+        modified: 1666697428835
+        isPrivate: false
+        sortKey: 1
+      data:
+        BASE_URL: https://test-v2.obs.md
+        LOGIN: test@domain.com
+        PASSWORD: password
+      color: "#00ff7b"

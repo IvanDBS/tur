@@ -1,8 +1,14 @@
 # SearchQuery model for storing OBS search requests
 class SearchQuery < ApplicationRecord
+  include JsonFieldSupport
+  
   # Associations
   belongs_to :user, optional: true
   has_many :bookings, dependent: :destroy
+  
+  # JSON fields with caching
+  json_field :search_params, cache_expires_in: 30.minutes
+  json_field :search_results, cache_expires_in: 30.minutes
 
   # Validations
   validates :search_params, presence: true
@@ -16,18 +22,6 @@ class SearchQuery < ApplicationRecord
   scope :by_user, ->(user) { where(user: user) }
 
   # Instance methods
-  def search_params_hash
-    @search_params_hash ||= begin
-      JSON.parse(search_params)
-    rescue StandardError
-      {}
-    end
-  end
-
-  def search_params_hash=(hash)
-    self.search_params = hash.to_json
-    @search_params_hash = hash
-  end
 
   def expired?
     created_at < 1.hour.ago

@@ -132,6 +132,7 @@ export interface AdminBooking {
   cancelled_at?: string
   obs_booking_hash?: string
   obs_order_id?: string
+  operator_id?: number
   search_query?: {
     id: number
     obs_search_id: string

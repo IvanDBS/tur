@@ -84,6 +84,26 @@ class ObsApiService < BaseApiService
     make_request(:get, "/api/orders/#{order_id}")
   end
 
+  # Get orders list with filters
+  def get_orders_list(filters: {}, pagination: {})
+    params = {}
+    
+    # Add filters
+    filters.each do |key, value|
+      params["filters[#{key}]"] = value
+    end
+    
+    # Add pagination
+    pagination.each do |key, value|
+      params["page[#{key}]"] = value
+    end
+    
+    query_string = params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+    endpoint = query_string.empty? ? "/api/orders" : "/api/orders?#{query_string}"
+    
+    make_request(:get, endpoint)
+  end
+
   # Custom error classes (наследуются от ApiError)
   class Error < ApiError::Error; end
   class UnauthorizedError < ApiError::UnauthorizedError; end

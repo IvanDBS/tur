@@ -41,7 +41,8 @@ module Api
               confirmed_at: booking.confirmed_at,
               cancelled_at: booking.cancelled_at,
               obs_booking_hash: booking.obs_booking_hash,
-              obs_order_id: booking.obs_order_id
+              obs_order_id: booking.obs_order_id,
+              operator_id: booking.operator_id
             }
           end,
           pagination: {
@@ -76,6 +77,7 @@ module Api
             cancelled_at: booking.cancelled_at,
             obs_booking_hash: booking.obs_booking_hash,
             obs_order_id: booking.obs_order_id,
+            operator_id: booking.operator_id,
             search_query: booking.search_query&.as_json(only: [:id, :obs_search_id, :created_at])
           }
         })
@@ -190,13 +192,49 @@ module Api
         booking_hash = params[:id]
         
         begin
-          # Get OBS booking details from OBS API using site authentication
+          # Get OBS order details from OBS API using site authentication
           site_auth = ObsSiteAuthService.instance
           obs_service = ObsApiService.new(
             base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
             access_token: site_auth.access_token
           )
           
+          # First try to get order details by operator_id (numeric ID from OBS API)
+          if params[:operator_id].present?
+            order_details = obs_service.get_order_details(params[:operator_id].to_i)
+            if order_details
+              render_success(order_details)
+              return
+            end
+          end
+          
+          # Fallback: try to get order details by order ID (more complete data)
+          if params[:order_id].present?
+            order_details = obs_service.get_order_details(params[:order_id].to_i)
+            if order_details
+              render_success(order_details)
+              return
+            end
+          end
+          
+          # Try to find order by order_number using GET Index
+          if params[:order_number].present?
+            orders_list = obs_service.get_orders_list(filters: { order_number: params[:order_number] })
+            if orders_list && orders_list.any?
+              # Get the first order and extract its ID
+              order_data = orders_list.first
+              order_id = order_data['id']
+              if order_id
+                order_details = obs_service.get_order_details(order_id)
+                if order_details
+                  render_success(order_details)
+                  return
+                end
+              end
+            end
+          end
+          
+          # Fallback to booking details by hash
           booking_details = obs_service.get_booking(booking_hash)
           
           if booking_details

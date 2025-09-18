@@ -59,8 +59,16 @@ export function useAdminApi() {
     return apiClient.post('/admin/bookings/sync_all')
   }
 
-  const getObsBookingDetails = async (id: string) => {
-    return apiClient.get(`/admin/bookings/${id}/obs-details`)
+  const getObsBookingDetails = async (id: string, orderId?: string, orderNumber?: string, operatorId?: string) => {
+    const params = new URLSearchParams()
+    if (orderId) params.append('order_id', orderId)
+    if (orderNumber) params.append('order_number', orderNumber)
+    if (operatorId) params.append('operator_id', operatorId)
+    
+    const endpoint = params.toString() 
+      ? `/admin/bookings/${id}/obs-details?${params.toString()}`
+      : `/admin/bookings/${id}/obs-details`
+    return apiClient.get(endpoint)
   }
 
   const getAdminUsers = async (params?: any) => {

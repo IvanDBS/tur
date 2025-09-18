@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_17_075934) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_18_154101) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_17_075934) do
     t.json "comments_data"
     t.boolean "is_checked", default: false
     t.integer "lock_version", default: 0, null: false
+    t.integer "operator_id"
     t.index ["expires_at"], name: "index_bookings_on_expires_at"
     t.index ["last_synced_at"], name: "index_bookings_on_last_synced_at"
     t.index ["obs_booking_hash"], name: "index_bookings_on_obs_booking_hash", unique: true

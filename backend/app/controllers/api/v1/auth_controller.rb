@@ -87,18 +87,9 @@ module Api
             Rails.logger.error e.backtrace.join("\n")
             
             render json: {
-              success: true,
-              message: 'Signed in successfully',
-              user: {
-                id: @user.id,
-                email: @user.email,
-                firstName: @user.first_name,
-                lastName: @user.last_name,
-                phone: @user.phone,
-                admin: @user.admin,
-                banned: @user.banned
-              }
-            }
+              success: false,
+              errors: ['Authentication failed. Please try again.']
+            }, status: :internal_server_error
           end
         else
           render json: {
@@ -163,7 +154,22 @@ module Api
 
       # DELETE /api/v1/auth/sign_out
       def sign_out
-        # Простой logout без JWT blacklist (пока не исправим конфигурацию)
+        # Add current token to blacklist if user is authenticated
+        if current_user
+          token = request.headers['Authorization']&.gsub(/^Bearer /, '')
+          if token.present?
+            begin
+              jti = extract_jti_from_token(token)
+              if jti.present?
+                JwtDenylist.create!(jti: jti, exp: Time.current)
+                Rails.logger.info "JWT token added to blacklist: #{jti}"
+              end
+            rescue => e
+              Rails.logger.error "Failed to blacklist JWT token: #{e.message}"
+            end
+          end
+        end
+        
         # Очищаем refresh token cookie
         clear_refresh_token_cookie
         

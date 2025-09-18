@@ -27,16 +27,16 @@ class Rack::Attack
   end
 
   # Rate limiting for API endpoints
-  # General API rate limiting: 100 requests per minute per IP
-  throttle('api/ip', limit: 100, period: 1.minute) do |req|
+  # General API rate limiting: 100 requests per minute per IP (production), 1000 for development
+  throttle('api/ip', limit: Rails.env.development? ? 1000 : 100, period: 1.minute) do |req|
     if req.path.start_with?('/api/')
       req.ip
     end
   end
 
   # Enhanced brute force protection for authentication endpoints
-  # 5 login attempts per minute per IP (stricter)
-  throttle('auth/ip', limit: 5, period: 1.minute) do |req|
+  # 5 login attempts per minute per IP (production), 50 for development
+  throttle('auth/ip', limit: Rails.env.development? ? 50 : 5, period: 1.minute) do |req|
     if req.path.include?('/auth/sign_in') || req.path.include?('/auth/sign_up')
       req.ip
     end
@@ -216,8 +216,8 @@ class Rack::Attack
   end
 end
 
-# Configure Rails to use Rack::Attack - COMPLETELY DISABLED IN DEVELOPMENT
+# Configure Rails to use Rack::Attack
 Rails.application.configure do
-  # Rack::Attack is completely disabled in development to avoid blocking OBS API requests
-  # config.middleware.use Rack::Attack
+  # Enable Rack::Attack with different configurations for different environments
+  config.middleware.use Rack::Attack
 end

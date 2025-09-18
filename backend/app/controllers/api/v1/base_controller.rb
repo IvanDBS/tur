@@ -37,6 +37,14 @@ module Api
             { algorithm: 'HS256' }
           )
           
+          # Check if token is in blacklist
+          jti = decoded_token[0]['jti']
+          if JwtDenylist.exists?(jti: jti)
+            Rails.logger.warn "Blocked JWT token attempted to access protected resource: #{jti}"
+            render_error('Token has been revoked', :unauthorized)
+            return
+          end
+          
           user_id = decoded_token[0]['user_id']
           @current_user = User.find(user_id)
           

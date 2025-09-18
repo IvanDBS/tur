@@ -105,17 +105,9 @@ class Booking < ApplicationRecord
   class << self
     # Safely create booking with race condition protection
     def create_safely(user:, booking_hash:, **attributes)
-      # Use pessimistic locking to prevent race conditions
+      # Use find_or_create_by for atomic operation
       ActiveRecord::Base.transaction do
-        # Check if booking already exists for this user and hash
-        existing_booking = where(user: user, obs_booking_hash: booking_hash).lock.first
-        
-        if existing_booking
-          Rails.logger.warn "Booking already exists for user #{user.id} and hash #{booking_hash}"
-          return { success: false, booking: existing_booking, error: 'Booking already exists' }
-        end
-        
-        # Check if any pending booking exists for this hash (across all users)
+        # First check if any pending booking exists for this hash (across all users)
         pending_booking = where(obs_booking_hash: booking_hash, status: 'pending').lock.first
         
         if pending_booking
@@ -123,16 +115,17 @@ class Booking < ApplicationRecord
           return { success: false, booking: nil, error: 'Tour is already being booked by another user' }
         end
         
-        # Create new booking
-        booking = new(
-          user: user,
-          obs_booking_hash: booking_hash,
-          **attributes
-        )
+        # Use find_or_create_by to handle race conditions atomically
+        booking = find_or_create_by(user: user, obs_booking_hash: booking_hash) do |b|
+          b.assign_attributes(attributes)
+        end
         
-        if booking.save
+        if booking.persisted? && booking.previously_new_record?
           Rails.logger.info "Booking created successfully: #{booking.id}"
           { success: true, booking: booking, error: nil }
+        elsif booking.persisted?
+          Rails.logger.warn "Booking already exists for user #{user.id} and hash #{booking_hash}"
+          { success: false, booking: booking, error: 'Booking already exists' }
         else
           Rails.logger.error "Failed to create booking: #{booking.errors.full_messages.join(', ')}"
           { success: false, booking: booking, error: booking.errors.full_messages.join(', ') }
@@ -140,7 +133,9 @@ class Booking < ApplicationRecord
       end
     rescue ActiveRecord::RecordNotUnique => e
       Rails.logger.error "Race condition detected: #{e.message}"
-      { success: false, booking: nil, error: 'Booking conflict detected. Please try again.' }
+      # Try to find the existing booking
+      existing_booking = find_by(user: user, obs_booking_hash: booking_hash)
+      { success: false, booking: existing_booking, error: 'Booking conflict detected. Please try again.' }
     rescue StandardError => e
       Rails.logger.error "Unexpected error in create_safely: #{e.message}"
       { success: false, booking: nil, error: 'Internal error occurred' }

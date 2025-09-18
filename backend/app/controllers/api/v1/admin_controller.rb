@@ -213,10 +213,8 @@ module Api
     private
 
       def ensure_admin!
-        # TODO: Implement proper admin role checking
-        # For now, allow any authenticated user to access admin panel
-        # In production, you should check for admin role/permissions
-        unless current_user
+        unless current_user&.admin?
+          Rails.logger.warn "Non-admin user #{current_user&.id} attempted to access admin panel"
           render_error('Admin access required', :forbidden)
         end
       end

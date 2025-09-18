@@ -44,7 +44,7 @@ class Booking < ApplicationRecord
 
   # Instance methods
   def tour_details_hash
-    @tour_details_hash ||= begin
+    @tour_details_hash ||= Rails.cache.fetch("booking_tour_details_#{id}_#{updated_at.to_i}", expires_in: 1.hour) do
       if tour_details.is_a?(String)
         JSON.parse(tour_details)
       elsif tour_details.is_a?(Hash)
@@ -63,7 +63,7 @@ class Booking < ApplicationRecord
   end
 
   def customer_data_hash
-    @customer_data_hash ||= begin
+    @customer_data_hash ||= Rails.cache.fetch("booking_customer_data_#{id}_#{updated_at.to_i}", expires_in: 1.hour) do
       if customer_data.is_a?(String)
         JSON.parse(customer_data)
       elsif customer_data.is_a?(Hash)

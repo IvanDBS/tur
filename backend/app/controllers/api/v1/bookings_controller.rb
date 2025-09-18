@@ -7,8 +7,11 @@ module Api
 
       # GET /api/v1/bookings
       def index
-        # Use replica for read operations
-        bookings = current_user.bookings.recent.includes(:search_query)
+        # Use replica for read operations with optimized includes
+        bookings = current_user.bookings
+          .recent
+          .includes(:search_query, :user)
+          .select('bookings.*, users.email, users.first_name, users.last_name')
 
         render_success({
                          bookings: bookings.map do |booking|
@@ -85,10 +88,10 @@ module Api
           # Create booking record with OBS data
           # Filter only relevant tour details, exclude reference data
           tour_details = if booking_data.present?
-                            filter_tour_details(booking_data)
-                          else
-                            booking_params[:tour_details] || {}
-                          end
+                           filter_tour_details(booking_data)
+                         else
+                           booking_params[:tour_details] || {}
+                         end
           total_amount = booking_data.dig('price', 'total_sum') || booking_params[:total_amount] || 0
           
           # Use safe booking creation with race condition protection

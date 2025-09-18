@@ -117,8 +117,20 @@ class AlertService
     email_content = format_email_message(alert_data)
     Rails.logger.info "EMAIL ALERT: #{email_content}"
     
-    # TODO: Implement actual email sending with ActionMailer
-    # AlertMailer.alert_notification(alert_data).deliver_now
+    # Send email via ActionMailer if configured
+    if Rails.application.config.action_mailer.delivery_method != :test
+      begin
+        AlertMailer.alert_notification(alert_data).deliver_now
+        Rails.logger.info "Email alert sent successfully"
+      rescue StandardError => e
+        Rails.logger.error "Failed to send email via ActionMailer: #{e.message}"
+        # Fallback to logging if email fails
+        Rails.logger.info "EMAIL ALERT (fallback): #{email_content}"
+      end
+    else
+      # In test environment, just log
+      Rails.logger.info "EMAIL ALERT (test): #{email_content}"
+    end
   rescue StandardError => e
     Rails.logger.error "Failed to send email alert: #{e.message}"
   end
@@ -127,8 +139,7 @@ class AlertService
     log_level = case alert_data[:level]
                 when :info then :info
                 when :warning then :warn
-                when :error then :error
-                when :critical then :error
+                when :error, :critical then :error
                 end
 
     Rails.logger.public_send(log_level, "ALERT [#{alert_data[:level].upcase}]: #{alert_data[:message]}")
@@ -203,7 +214,6 @@ class AlertService
     when :info then 'good'
     when :warning then 'warning'
     when :error, :critical then 'danger'
-    else 'good'
     end
   end
 end

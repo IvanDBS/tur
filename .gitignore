@@ -114,3 +114,8 @@ docs/
 # Documentation files (excluding README.md)
 *.md
 !README.md
+
+# Security sensitive files
+cookies.txt
+backend/cookies.txt
+*.cookies

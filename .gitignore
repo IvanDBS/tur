@@ -119,3 +119,8 @@ docs/
 cookies.txt
 backend/cookies.txt
 *.cookies
+
+# Test scripts with sensitive data
+*_test.sh
+test_*.sh
+obs_api_test.sh

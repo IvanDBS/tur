@@ -1,340 +1,569 @@
-import { logger } from '../utils/logger'
+import { formatDate } from '../utils/dateUtils'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useFlightData(booking: any) {
-  // Helper functions to get flight data (exact same logic as AdminBookingsView)
-  const getDepartureFlight = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tourDetails = booking.tour_details as any
-    logger.debug('getDepartureFlight - tourDetails:', tourDetails)
-    logger.debug('getDepartureFlight - flights:', tourDetails?.flights)
-    logger.debug('getDepartureFlight - there:', tourDetails?.flights?.there)
-    
-    // Try OBS flights structure first
-    if (tourDetails?.flights?.there) {
-      return tourDetails.flights.there
-    }
-    return null
-  }
-
-  const getArrivalFlight = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tourDetails = booking.tour_details as any
-    // Try OBS flights structure first
-    if (tourDetails?.flights?.back) {
-      return tourDetails.flights.back
-    }
-    return null
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getFlightNumber = (flightInfo: any) => {
-    if (!flightInfo) return 'N/A'
-    
-    // Try OBS flight structure first
-    if (flightInfo.flight_number?.number) {
-      const prefix = flightInfo.flight_number.prefix || ''
-      const number = flightInfo.flight_number.number || ''
-      return `${prefix}${number}`.trim()
-    }
-    if (flightInfo.flight_number) {
-      return flightInfo.flight_number
-    }
-    if (flightInfo.flightNumber) {
-      return flightInfo.flightNumber
-    }
-    if (flightInfo.number) {
-      return flightInfo.number
-    }
-    if (flightInfo.code) {
-      return flightInfo.code
-    }
-    return 'N/A'
-  }
-
-  const normalizeDate = (dateString: string) => {
-    logger.debug('normalizeDate - input:', dateString, 'type:', typeof dateString)
-    
-    if (!dateString || dateString === 'N/A') {
-      logger.debug('normalizeDate - returning N/A for empty/null input')
-      return 'N/A'
-    }
-    
-    // If already in DD.MM.YYYY format, return as is
-    if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
-      logger.debug('normalizeDate - already in DD.MM.YYYY format:', dateString)
-      return dateString
-    }
-    
-    // If in YYYY-MM-DD format, convert to DD.MM.YYYY
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      const [year, month, day] = dateString.split('-')
-      const result = `${day}.${month}.${year}`
-      logger.debug('normalizeDate - converted from YYYY-MM-DD:', dateString, 'to:', result)
-      return result
-    }
-    
-    // Try to parse as Date and format
-    try {
-      const date = new Date(dateString)
-      if (!isNaN(date.getTime())) {
-        const day = date.getDate().toString().padStart(2, '0')
-        const month = (date.getMonth() + 1).toString().padStart(2, '0')
-        const year = date.getFullYear()
-        const result = `${day}.${month}.${year}`
-        logger.debug('normalizeDate - parsed as Date:', dateString, 'to:', result)
-        return result
-      }
-    } catch (error) {
-      logger.debug('normalizeDate - error parsing date:', dateString, error)
-    }
-    
-    logger.debug('normalizeDate - returning original string:', dateString)
-    return dateString
-  }
-
+export function useFlightData(booking: any, obsOrderDetails?: any) {
+  // Get selected flight data
   const getSelectedFlight = () => {
-    const departureFlight = getDepartureFlight()
-    const arrivalFlight = getArrivalFlight()
+    // PRIORITY 1: OBS API (external operator service)
+    if (obsOrderDetails?.value?.charter?.[0]) {
+      return obsOrderDetails.value.charter[0]
+    }
     
-    logger.debug('getSelectedFlight - searching for flight data:', {
-      hasDepartureFlight: !!departureFlight,
-      hasArrivalFlight: !!arrivalFlight,
-      departureFlight,
-      arrivalFlight,
-      tourDetails: booking.tour_details
-    })
+    // PRIORITY 2: API data from customer_data.selected_flight
+    if (booking?.customer_data?.selected_flight) {
+      return booking.customer_data.selected_flight
+    }
     
-    // Return true if we have any flight data (same logic as table)
-    return !!(departureFlight || arrivalFlight)
+    // PRIORITY 3: API data from tour_details.flights
+    if (booking?.tour_details?.flights) {
+      return booking.tour_details.flights
+    }
+    
+    return null
   }
 
+  // Flight status
+  const getFlightStatus = () => {
+    const flight = getSelectedFlight() as any
+    if (flight?.fly_segments_there?.[0]?.status) {
+      const status = flight.fly_segments_there[0].status
+      return status === 'confirmed' ? 'Подтвержден' : status
+    }
+    if (flight?.fly_segments_back?.[0]?.status) {
+      const status = flight.fly_segments_back[0].status
+      return status === 'confirmed' ? 'Подтвержден' : status
+    }
+    return 'Не указано'
+  }
+
+  const getFlightStatusClass = () => {
+    const flight = getSelectedFlight() as any
+    if (flight?.fly_segments_there?.[0]?.status) {
+      const status = flight.fly_segments_there[0].status
+      return status === 'confirmed' ? 'status-confirmed' : 'status-pending'
+    }
+    if (flight?.fly_segments_back?.[0]?.status) {
+      const status = flight.fly_segments_back[0].status
+      return status === 'confirmed' ? 'status-confirmed' : 'status-pending'
+    }
+    return 'status-unknown'
+  }
+
+  // Outbound flight number
+  const getOutboundFlightNumber = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]?.prefix && flight?.fly_segments_there?.[0]?.flight) {
+      const prefix = flight.fly_segments_there[0].prefix
+      const flightNum = flight.fly_segments_there[0].flight
+      const airline = flight.fly_segments_there[0].airline
+      const result = `${prefix}${flightNum}${airline ? ` (${airline})` : ''}`
+      return result
+    }
+    
+    // PRIORITY 2: Standard format
+    if (flight?.fly_segments_there?.[0]?.flight_number) {
+      return flight.fly_segments_there[0].flight_number
+    }
+    
+    // Check for flight_number in other formats
+    if (flight?.flight_number) {
+      return flight.flight_number
+    }
+    
+    return ''
+  }
+
+  // Inbound flight number
+  const getInboundFlightNumber = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]?.prefix && flight?.fly_segments_back?.[0]?.flight) {
+      const prefix = flight.fly_segments_back[0].prefix
+      const flightNum = flight.fly_segments_back[0].flight
+      const airline = flight.fly_segments_back[0].airline
+      const result = `${prefix}${flightNum}${airline ? ` (${airline})` : ''}`
+      return result
+    }
+    
+    // PRIORITY 2: Standard format
+    if (flight?.fly_segments_back?.[0]?.flight_number) {
+      return flight.fly_segments_back[0].flight_number
+    }
+    
+    return ''
+  }
+
+  // Legacy function for backward compatibility
+  const getFlightNumber = () => {
+    return getOutboundFlightNumber()
+  }
+
+  // Outbound flight data
   const getOutboundFrom = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundFrom - departure flight data:', departureFlight)
+    const flight = getSelectedFlight() as any
     
-    if (departureFlight?.departure?.airport) {
-      const airport = departureFlight.departure.airport
-      const from = `${airport.name} (${airport.prefix})`
-      logger.debug('getOutboundFrom - using departure.airport:', from)
-      return from
-    }
-    
-    logger.debug('getOutboundFrom - no data found, returning N/A')
-    return 'N/A'
-  }
-
-  const getInboundFrom = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundFrom - arrival flight data:', arrivalFlight)
-    
-    if (arrivalFlight?.departure?.airport) {
-      const airport = arrivalFlight.departure.airport
-      const from = `${airport.name} (${airport.prefix})`
-      logger.debug('getInboundFrom - using departure.airport:', from)
-      return from
-    }
-    
-    logger.debug('getInboundFrom - no data found, returning N/A')
-    return 'N/A'
-  }
-
-  const getOutboundDeparture = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundDeparture - departure flight data:', departureFlight)
-    logger.debug('getOutboundDeparture - departure time:', departureFlight?.departure?.time)
-    logger.debug('getOutboundDeparture - departure date:', departureFlight?.departure?.date)
-    logger.debug('getOutboundDeparture - flight date:', departureFlight?.date)
-    
-    if (departureFlight?.departure?.time) {
-      // Use departure.date if available, otherwise use flight date
-      const dateToUse = departureFlight.departure.date || departureFlight.date
-      const formattedDate = normalizeDate(dateToUse)
-      const result = `${departureFlight.departure.time} ${formattedDate}`
-      logger.debug('getOutboundDeparture - using departure flight:', result)
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]?.destination?.airport_from) {
+      const airportCode = flight.fly_segments_there[0].destination.airport_from
+      const cityFrom = flight.fly_segments_there[0].destination.city_from
+      const result = `${cityFrom} AIRPORT (${airportCode})`
       return result
     }
     
-    logger.debug('getOutboundDeparture - no data found, returning N/A')
-    return 'N/A'
-  }
-
-  const getInboundDeparture = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundDeparture - arrival flight data:', arrivalFlight)
-    logger.debug('getInboundDeparture - departure time:', arrivalFlight?.departure?.time)
-    logger.debug('getInboundDeparture - departure date:', arrivalFlight?.departure?.date)
-    logger.debug('getInboundDeparture - flight date:', arrivalFlight?.date)
-    
-    if (arrivalFlight?.departure?.time) {
-      // Use departure.date if available, otherwise use flight date
-      const dateToUse = arrivalFlight.departure.date || arrivalFlight.date
-      const formattedDate = normalizeDate(dateToUse)
-      const result = `${arrivalFlight.departure.time} ${formattedDate}`
-      logger.debug('getInboundDeparture - using arrival flight:', result)
+    // Use API data from selected_flight.outbound.airports.from
+    if (flight?.outbound?.airports?.from) {
+      const airport = flight.outbound.airports.from
+      const result = `${airport.name} (${airport.prefix})`
       return result
     }
     
-    logger.debug('getInboundDeparture - no data found, returning N/A')
-    return 'N/A'
-  }
-
-  const getOutboundFlightInfo = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundFlightInfo - departure flight data:', departureFlight)
-    
-    if (departureFlight) {
-      const flightNumber = getFlightNumber(departureFlight)
-      const airline = departureFlight.airline?.name || 'MGA AIRLINES'
-      const info = `${flightNumber} (${airline})`
-      logger.debug('getOutboundFlightInfo - using departure flight:', info)
-      return info
+    // Use API data from flights.there.departure.airport
+    if (flight?.there?.departure?.airport) {
+      const airport = flight.there.departure.airport
+      const result = `${airport.name} (${airport.prefix})`
+      return result
     }
     
-    logger.debug('getOutboundFlightInfo - no data found, returning N/A')
-    return 'N/A'
-  }
-
-  const getInboundFlightInfo = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundFlightInfo - arrival flight data:', arrivalFlight)
-    
-    if (arrivalFlight) {
-      const flightNumber = getFlightNumber(arrivalFlight)
-      const airline = arrivalFlight.airline?.name || 'MGA AIRLINES'
-      const info = `${flightNumber} (${airline})`
-      logger.debug('getInboundFlightInfo - using arrival flight:', info)
-      return info
-    }
-    
-    logger.debug('getInboundFlightInfo - no data found, returning N/A')
     return 'N/A'
   }
 
   const getOutboundTo = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundTo - departure flight data:', departureFlight)
+    const flight = getSelectedFlight() as any
     
-    if (departureFlight?.arrival?.airport) {
-      const airport = departureFlight.arrival.airport
-      const to = `${airport.name} (${airport.prefix})`
-      logger.debug('getOutboundTo - using arrival.airport:', to)
-      return to
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]?.destination?.airport_to) {
+      const airportCode = flight.fly_segments_there[0].destination.airport_to
+      const cityTo = flight.fly_segments_there[0].destination.city_to
+      const result = `${cityTo} AIRPORT (${airportCode})`
+      return result
     }
     
-    logger.debug('getOutboundTo - no data found, returning N/A')
+    // Use API data from selected_flight.outbound.airports.to
+    if (flight?.outbound?.airports?.to) {
+      const airport = flight.outbound.airports.to
+      const result = `${airport.name} (${airport.prefix})`
+      return result
+    }
+    
+    // Use API data from flights.there.arrival.airport
+    if (flight?.there?.arrival?.airport) {
+      const airport = flight.there.arrival.airport
+      const result = `${airport.name} (${airport.prefix})`
+      return result
+    }
+    
     return 'N/A'
   }
 
-  const getInboundTo = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundTo - arrival flight data:', arrivalFlight)
+  const getOutboundDeparture = () => {
+    const flight = getSelectedFlight() as any
     
-    if (arrivalFlight?.arrival?.airport) {
-      const airport = arrivalFlight.arrival.airport
-      const to = `${airport.name} (${airport.prefix})`
-      logger.debug('getInboundTo - using arrival.airport:', to)
-      return to
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]?.departure_date) {
+      try {
+        const departureDate = flight.fly_segments_there[0].departure_date
+        const flyTime = flight.fly_segments_there[0].fly_time
+        const timeFrom = flyTime?.split(' - ')[0] || '00:00'
+        const result = `${departureDate} ${timeFrom}`
+        return result
+      } catch {
+        // Handle error silently
+      }
     }
     
-    logger.debug('getInboundTo - no data found, returning N/A')
+    // PRIORITY 2: OBS API (external operator service)
+    if (flight?.fly_segments_there?.[0]?.departure) {
+      try {
+        const departure = flight.fly_segments_there[0].departure
+        const result = `${departure.date} ${departure.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 3: API data from selected_flight.outbound.departure
+    if (flight?.outbound?.departure) {
+      try {
+        const departure = flight.outbound.departure
+        const formattedDate = formatDate(departure.date)
+        const result = `${formattedDate} ${departure.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 4: DB format
+    if (flight?.there?.date && flight?.there?.departure?.time) {
+      try {
+        const formattedDate = formatDate(flight.there.date)
+        const result = `${formattedDate} ${flight.there.departure.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
     return 'N/A'
   }
 
   const getOutboundArrival = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundArrival - departure flight data:', departureFlight)
-    logger.debug('getOutboundArrival - arrival time:', departureFlight?.arrival?.time)
-    logger.debug('getOutboundArrival - arrival date:', departureFlight?.arrival?.date)
-    logger.debug('getOutboundArrival - flight date:', departureFlight?.date)
+    const flight = getSelectedFlight() as any
     
-    if (departureFlight?.arrival?.time) {
-      // Use arrival.date if available, otherwise use flight date
-      const dateToUse = departureFlight.arrival.date || departureFlight.date
-      const formattedDate = normalizeDate(dateToUse)
-      const result = `${departureFlight.arrival.time} ${formattedDate}`
-      logger.debug('getOutboundArrival - using departure flight arrival:', result)
-      return result
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]?.departure_date) {
+      try {
+        const departureDate = flight.fly_segments_there[0].departure_date
+        const flyTime = flight.fly_segments_there[0].fly_time
+        const timeTo = flyTime?.split(' - ')[1] || '00:00'
+        const result = `${departureDate} ${timeTo}`
+        return result
+      } catch {
+        // Handle error silently
+      }
     }
     
-    logger.debug('getOutboundArrival - no data found, returning N/A')
+    // PRIORITY 2: OBS API (external operator service)
+    if (flight?.fly_segments_there?.[0]?.arrival) {
+      try {
+        const arrival = flight.fly_segments_there[0].arrival
+        const result = `${arrival.date} ${arrival.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 3: API data from selected_flight.outbound.arrival
+    if (flight?.outbound?.arrival) {
+      try {
+        const arrival = flight.outbound.arrival
+        const formattedDate = formatDate(arrival.date)
+        const result = `${formattedDate} ${arrival.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 4: DB format
+    if (flight?.there?.date && flight?.there?.arrival?.time) {
+      try {
+        const formattedDate = formatDate(flight.there.date)
+        const result = `${formattedDate} ${flight.there.arrival.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
     return 'N/A'
   }
 
-  const getInboundArrival = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundArrival - arrival flight data:', arrivalFlight)
-    logger.debug('getInboundArrival - arrival time:', arrivalFlight?.arrival?.time)
-    logger.debug('getInboundArrival - arrival date:', arrivalFlight?.arrival?.date)
-    logger.debug('getInboundArrival - flight date:', arrivalFlight?.date)
+  const getOutboundFlightInfo = () => {
+    const flight = getSelectedFlight() as any
     
-    if (arrivalFlight?.arrival?.time) {
-      // Use arrival.date if available, otherwise use flight date
-      const dateToUse = arrivalFlight.arrival.date || arrivalFlight.date
-      const formattedDate = normalizeDate(dateToUse)
-      const result = `${arrivalFlight.arrival.time} ${formattedDate}`
-      logger.debug('getInboundArrival - using arrival flight:', result)
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_there?.[0]) {
+      const flightNumber = getOutboundFlightNumber()
+      const result = `${flightNumber}`
       return result
     }
     
-    logger.debug('getInboundArrival - no data found, returning N/A')
+    // Use API data from flights.there
+    if (flight?.there) {
+      const flightNumber = getOutboundFlightNumber()
+      const result = `${flightNumber}`
+      return result
+    }
+    
     return 'N/A'
   }
 
   const getOutboundTravelTime = () => {
-    const departureFlight = getDepartureFlight()
-    logger.debug('getOutboundTravelTime - departure flight data:', departureFlight)
+    const flight = getSelectedFlight() as any
     
-    if (departureFlight?.flight_time) {
+    // PRIORITY 1: OBS API charter format - calculate from fly_time string
+    if (flight?.fly_segments_there?.[0]?.fly_time) {
       try {
-        const flightTime = departureFlight.flight_time
-        const result = flightTime.replace(':', 'ч ') + 'м'
-        logger.debug('getOutboundTravelTime - using flight_time:', result)
-        return result
+        const flyTime = flight.fly_segments_there[0].fly_time
+        
+        // Parse "00:30 - 02:30" format
+        const timeParts = flyTime.split(' - ')
+        if (timeParts.length === 2) {
+          const [departureTime, arrivalTime] = timeParts
+          const depTime = departureTime.split(':').map(Number)
+          const arrTime = arrivalTime.split(':').map(Number)
+          
+          const depMinutes = depTime[0] * 60 + depTime[1]
+          let arrMinutes = arrTime[0] * 60 + arrTime[1]
+          
+          // Handle next day arrival
+          if (arrMinutes < depMinutes) {
+            arrMinutes += 24 * 60
+          }
+          
+          const totalMinutes = arrMinutes - depMinutes
+          const hours = Math.floor(totalMinutes / 60)
+          const minutes = totalMinutes % 60
+          
+          const result = `${hours}ч ${minutes}м`
+          return result
+        }
       } catch {
-        logger.debug('getOutboundTravelTime - error parsing flight_time')
-        return 'N/A'
       }
     }
     
-    logger.debug('getOutboundTravelTime - no data found, returning N/A')
+    // PRIORITY 2: API data from selected_flight.outbound.duration
+    if (flight?.outbound?.duration) {
+      const result = flight.outbound.duration
+      return result
+    }
+    
+    // PRIORITY 3: API data from flights.there.duration
+    if (flight?.there?.duration) {
+      const result = flight.there.duration
+      return result
+    }
+    
+    // PRIORITY 4: Calculate from OBS API fly_time (numeric format)
+    if (flight?.fly_segments_there?.[0]?.fly_time && typeof flight.fly_segments_there[0].fly_time === 'number') {
+      try {
+        const flyTime = flight.fly_segments_there[0].fly_time
+        const hours = Math.floor(flyTime / 60)
+        const minutes = flyTime % 60
+        const result = `${hours}ч ${minutes}м`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    return 'N/A'
+  }
+
+  // Inbound flight data
+  const getInboundFrom = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]?.destination?.airport_from) {
+      const airportCode = flight.fly_segments_back[0].destination.airport_from
+      const cityFrom = flight.fly_segments_back[0].destination.city_from
+      const result = `${cityFrom} AIRPORT (${airportCode})`
+      return result
+    }
+    
+    // Use API data from flights.back.departure.airport
+    if (flight?.back?.departure?.airport) {
+      const airport = flight.back.departure.airport
+      const result = `${airport.name} (${airport.prefix})`
+      return result
+    }
+    
+    return 'N/A'
+  }
+
+  const getInboundTo = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]?.destination?.airport_to) {
+      const airportCode = flight.fly_segments_back[0].destination.airport_to
+      const cityTo = flight.fly_segments_back[0].destination.city_to
+      const result = `${cityTo} AIRPORT (${airportCode})`
+      return result
+    }
+    
+    // Use API data from flights.back.arrival.airport
+    if (flight?.back?.arrival?.airport) {
+      const airport = flight.back.arrival.airport
+      const result = `${airport.name} (${airport.prefix})`
+      return result
+    }
+    
+    return 'N/A'
+  }
+
+  const getInboundDeparture = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]?.departure_date) {
+      try {
+        const departureDate = flight.fly_segments_back[0].departure_date
+        const flyTime = flight.fly_segments_back[0].fly_time
+        const timeFrom = flyTime?.split(' - ')[0] || '00:00'
+        const result = `${departureDate} ${timeFrom}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 2: OBS API (external operator service)
+    if (flight?.fly_segments_back?.[0]?.departure) {
+      try {
+        const departure = flight.fly_segments_back[0].departure
+        const result = `${departure.date} ${departure.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 3: DB format
+    if (flight?.back?.date && flight?.back?.departure?.time) {
+      try {
+        const formattedDate = formatDate(flight.back.date)
+        const result = `${formattedDate} ${flight.back.departure.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    return 'N/A'
+  }
+
+  const getInboundArrival = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]?.departure_date) {
+      try {
+        const departureDate = flight.fly_segments_back[0].departure_date
+        const flyTime = flight.fly_segments_back[0].fly_time
+        const timeTo = flyTime?.split(' - ')[1] || '00:00'
+        const result = `${departureDate} ${timeTo}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 2: OBS API (external operator service)
+    if (flight?.fly_segments_back?.[0]?.arrival) {
+      try {
+        const arrival = flight.fly_segments_back[0].arrival
+        const result = `${arrival.date} ${arrival.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    // PRIORITY 3: DB format
+    if (flight?.back?.date && flight?.back?.arrival?.time) {
+      try {
+        const formattedDate = formatDate(flight.back.date)
+        const result = `${formattedDate} ${flight.back.arrival.time}`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
+    return 'N/A'
+  }
+
+  const getInboundFlightInfo = () => {
+    const flight = getSelectedFlight() as any
+    
+    // PRIORITY 1: OBS API charter format
+    if (flight?.fly_segments_back?.[0]) {
+      const flightNumber = getInboundFlightNumber()
+      const result = `${flightNumber}`
+      return result
+    }
+    
+    // Use API data from flights.back
+    if (flight?.back) {
+      const flightNumber = getInboundFlightNumber()
+      const result = `${flightNumber}`
+      return result
+    }
+    
     return 'N/A'
   }
 
   const getInboundTravelTime = () => {
-    const arrivalFlight = getArrivalFlight()
-    logger.debug('getInboundTravelTime - arrival flight data:', arrivalFlight)
+    const flight = getSelectedFlight() as any
     
-    if (arrivalFlight?.flight_time) {
+    // PRIORITY 1: OBS API charter format - calculate from fly_time string
+    if (flight?.fly_segments_back?.[0]?.fly_time) {
       try {
-        const flightTime = arrivalFlight.flight_time
-        const result = flightTime.replace(':', 'ч ') + 'м'
-        logger.debug('getInboundTravelTime - using flight_time:', result)
-        return result
+        const flyTime = flight.fly_segments_back[0].fly_time
+        
+        // Parse "03:30 - 05:30" format
+        const timeParts = flyTime.split(' - ')
+        if (timeParts.length === 2) {
+          const [departureTime, arrivalTime] = timeParts
+          const depTime = departureTime.split(':').map(Number)
+          const arrTime = arrivalTime.split(':').map(Number)
+          
+          const depMinutes = depTime[0] * 60 + depTime[1]
+          let arrMinutes = arrTime[0] * 60 + arrTime[1]
+          
+          // Handle next day arrival
+          if (arrMinutes < depMinutes) {
+            arrMinutes += 24 * 60
+          }
+          
+          const totalMinutes = arrMinutes - depMinutes
+          const hours = Math.floor(totalMinutes / 60)
+          const minutes = totalMinutes % 60
+          
+          const result = `${hours}ч ${minutes}м`
+          return result
+        }
       } catch {
-        logger.debug('getInboundTravelTime - error parsing flight_time')
-        return 'N/A'
       }
     }
     
-    logger.debug('getInboundTravelTime - no data found, returning N/A')
+    // PRIORITY 2: API data from flights.back.duration
+    if (flight?.back?.duration) {
+      const result = flight.back.duration
+      return result
+    }
+    
+    // PRIORITY 3: Calculate from OBS API fly_time (numeric format)
+    if (flight?.fly_segments_back?.[0]?.fly_time && typeof flight.fly_segments_back[0].fly_time === 'number') {
+      try {
+        const flyTime = flight.fly_segments_back[0].fly_time
+        const hours = Math.floor(flyTime / 60)
+        const minutes = flyTime % 60
+        const result = `${hours}ч ${minutes}м`
+        return result
+      } catch {
+        // Handle error silently
+      }
+    }
+    
     return 'N/A'
   }
 
   return {
     getSelectedFlight,
+    getFlightStatus,
+    getFlightStatusClass,
+    getFlightNumber,
+    getOutboundFlightNumber,
+    getInboundFlightNumber,
     getOutboundFrom,
-    getInboundFrom,
-    getOutboundDeparture,
-    getInboundDeparture,
-    getOutboundFlightInfo,
-    getInboundFlightInfo,
     getOutboundTo,
-    getInboundTo,
+    getOutboundDeparture,
     getOutboundArrival,
-    getInboundArrival,
+    getOutboundFlightInfo,
     getOutboundTravelTime,
+    getInboundFrom,
+    getInboundTo,
+    getInboundDeparture,
+    getInboundArrival,
+    getInboundFlightInfo,
     getInboundTravelTime
   }
 }
-

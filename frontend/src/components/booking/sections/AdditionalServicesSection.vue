@@ -1,5 +1,5 @@
 <template>
-  <div class="section" v-if="hasAdditionalServices">
+  <div class="section" v-if="hasAdditionalServices()">
     <div class="section-header">
       <div class="section-icon">🚌</div>
       <h3 class="section-title">Дополнительные услуги</h3>
@@ -11,10 +11,10 @@
           <div class="service-title">Страхование</div>
         </div>
         <div class="service-details">
-          <div class="service-name">{{ insuranceName }}</div>
-          <div class="service-description">{{ insuranceDescription }}</div>
-          <div class="service-price" v-if="!insuranceIncluded">
-            + {{ insurancePrice }} EUR
+          <div class="service-name">{{ getInsuranceName() }}</div>
+          <div class="service-description">{{ getInsuranceDescription() }}</div>
+          <div class="service-price" v-if="!getInsuranceIncluded()">
+            + {{ getInsurancePrice() }} EUR
           </div>
           <div class="service-price included" v-else>
             Включено
@@ -28,10 +28,10 @@
           <div class="service-title">Трансфер</div>
         </div>
         <div class="service-details">
-          <div class="service-name">{{ transferName }}</div>
-          <div class="service-description">{{ transferDescription }}</div>
-          <div class="service-price" v-if="!transferIncluded">
-            + {{ transferPrice }} EUR
+          <div class="service-name">{{ getTransferName() }}</div>
+          <div class="service-description">{{ getTransferDescription() }}</div>
+          <div class="service-price" v-if="!getTransferIncluded()">
+            + {{ getTransferPrice() }} EUR
           </div>
           <div class="service-price included" v-else>
             Включено
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <div class="service-item" v-if="covidInsuranceType === 'COVID_19'">
+      <div class="service-item" v-if="getCovidInsuranceType() === 'COVID_19'">
         <div class="service-header">
           <div class="service-icon">🦠</div>
           <div class="service-title">COVID-19 страхование</div>
@@ -47,7 +47,7 @@
         <div class="service-details">
           <div class="service-name">COVID-19</div>
           <div class="service-description">Дополнительная страховка от COVID-19</div>
-          <div class="service-price">+ {{ covidInsurancePrice }} EUR</div>
+          <div class="service-price">+ {{ getCovidInsurancePrice() }} EUR</div>
         </div>
       </div>
     </div>
@@ -55,7 +55,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useAdditionalServices } from '../../composables/useAdditionalServices'
 
 interface Props {
@@ -81,16 +80,6 @@ const {
   getCovidInsurancePrice
 } = useAdditionalServices(props.booking)
 
-const insuranceName = computed(() => getInsuranceName())
-const insuranceDescription = computed(() => getInsuranceDescription())
-const insuranceIncluded = computed(() => getInsuranceIncluded())
-const insurancePrice = computed(() => getInsurancePrice())
-const transferName = computed(() => getTransferName())
-const transferDescription = computed(() => getTransferDescription())
-const transferIncluded = computed(() => getTransferIncluded())
-const transferPrice = computed(() => getTransferPrice())
-const covidInsuranceType = computed(() => getCovidInsuranceType())
-const covidInsurancePrice = computed(() => getCovidInsurancePrice())
 </script>
 
 <script lang="ts">

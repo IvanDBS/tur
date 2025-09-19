@@ -303,11 +303,6 @@ export const useBooking = () => {
       // For debugging: send data in the format expected by the local booking controller
       // Use the same structure as seeds for consistency
       
-      // Debug logging
-      logger.debug('createBooking - dates:', {
-        check_in: searchResult.value.dates?.check_in,
-        check_out: searchResult.value.dates?.check_out
-      })
       
       // Create proper OBS booking hash from search result
       // According to OBS API docs: hash = rid:unique_key

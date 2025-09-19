@@ -206,8 +206,7 @@ const starRating = computed(() => {
 
 const hotelImageUrl = computed(() => {
   if (imageError.value) return null
-  // TODO: Implement TripAdvisor API integration
-  // For now, return null to show placeholder
+  // Return null to show placeholder
   return null
 })
 

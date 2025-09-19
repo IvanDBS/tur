@@ -80,7 +80,6 @@ export const useCalendarHints = () => {
       isLoading.value = true
       clearError()
       
-      logger.debug('Loading calendar hints with params:', params)
       
         const hints = await obsApi.fetchCalendarHints(params)
         logger.info('🔍 Raw hints from API:', hints)
@@ -140,7 +139,6 @@ export const useCalendarHints = () => {
       isLoading.value = true
       clearError()
       
-      logger.debug('Loading available nights with params:', params)
       
       const nights = await obsApi.fetchAvailableNights(params)
       availableNights.value = nights

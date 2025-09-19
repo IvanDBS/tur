@@ -110,11 +110,9 @@ export const useObsApi = () => {
       logger.apiCall('GET', '/search/departure_cities')
       const response = await apiClient.get<ApiResponse<{ departure_cities: ObsDepartureCity[] }>>('/search/departure_cities', true, true)
       
-      logger.debug('Departure cities response received', response)
       
       if (response.success) {
         const mappedCities = response.data.departure_cities.map(city => {
-          logger.debug('Processing city:', city)
           return {
             id: city.id,
             name: city.label,
@@ -195,7 +193,6 @@ export const useObsApi = () => {
       
       const response = await apiClient.get<ApiResponse<{ package_templates: ObsPackageTemplate[] }>>(`/search/countries/${countryId}/package_templates?airport_city_from=${departureCityId}`, true, true)
       
-      logger.debug('Package templates API response received', response)
       
       if (response.success) {
         const mappedPackages = response.data.package_templates.map(pkg => ({
@@ -334,7 +331,6 @@ export const useObsApi = () => {
       const response = await apiClient.get<ApiResponse<{ hotels: ObsHotel[] }>>(url)
       
       if (response.success) {
-        logger.debug('Hotels API response received', response.data)
         logger.info(`🏨 Raw hotels data:`, response.data.hotels)
         hotels.value = response.data.hotels.map(hotel => ({
           id: hotel.id,
@@ -516,7 +512,6 @@ export const useObsApi = () => {
       queryParams.append('_t', Date.now().toString())
       
         const url = `/search?${queryParams.toString()}`
-        logger.debug(`performSearch API call: ${url}`)
         logger.apiCall('POST', url)
         
         const response = await apiClient.post<ApiResponse<Record<string, unknown>>>(url, requestBody, true)

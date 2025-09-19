@@ -1,6 +1,4 @@
-import { computed } from 'vue'
 import { BOOKING_DEFAULTS, getDefaultValue, extractDataByPriority } from '../constants/bookingDefaults'
-import { logger } from '../utils/logger'
 
 export function useBookingData(booking: any, isAdminMode: boolean = false) {
   // Hotel data
@@ -297,40 +295,31 @@ export function useBookingData(booking: any, isAdminMode: boolean = false) {
   // Tourist data
   const getTourists = () => {
     const customerData = booking.customer_data as any
-    logger.debug('getTourists - customer_data:', customerData)
     
     if (customerData && Array.isArray(customerData.tourists)) {
-      logger.debug('getTourists - found in customer_data:', customerData.tourists)
       return customerData.tourists
     }
     
     const tourists = booking.tour_details?.tourists
-    logger.debug('getTourists - tour_details.tourists:', tourists)
     
     if (Array.isArray(tourists)) {
-      logger.debug('getTourists - found in tour_details:', tourists)
       return tourists
     }
     
-    logger.debug('getTourists - no tourists found')
     return []
   }
 
   const getTouristName = (tourist: any) => {
-    logger.debug('getTouristName - tourist data:', tourist)
     
     if (tourist.firstName && tourist.lastName) {
       const name = `${tourist.firstName} ${tourist.lastName}`
-      logger.debug('getTouristName - using firstName/lastName:', name)
       return name
     }
     if (tourist.first_name && tourist.last_name) {
       const name = `${tourist.first_name} ${tourist.last_name}`
-      logger.debug('getTouristName - using first_name/last_name:', name)
       return name
     }
     if (tourist.name) {
-      logger.debug('getTouristName - using name:', tourist.name)
       return tourist.name
     }
     
@@ -339,32 +328,24 @@ export function useBookingData(booking: any, isAdminMode: boolean = false) {
       const lastName = tourist.lastName || tourist.last_name || ''
       const name = `${firstName} ${lastName}`.trim()
       if (name) {
-        logger.debug('getTouristName - using title + name:', name)
         return name
       }
     }
-    
-    logger.debug('getTouristName - no name found, returning N/A')
     return 'N/A'
   }
 
   const getTouristPassport = (tourist: any) => {
-    logger.debug('getTouristPassport - tourist data:', tourist)
-    
     if (tourist.passportNumber) {
       const expiry = tourist.passportExpiry || 'N/A'
       const passport = `${tourist.passportNumber} (${expiry})`
-      logger.debug('getTouristPassport - using passportNumber:', passport)
       return passport
     }
     if (tourist.passport_number) {
       const expiry = tourist.passport_expiry || 'N/A'
       const passport = `${tourist.passport_number} (${expiry})`
-      logger.debug('getTouristPassport - using passport_number:', passport)
       return passport
     }
     
-    logger.debug('getTouristPassport - no passport found, returning N/A')
     return 'N/A'
   }
 

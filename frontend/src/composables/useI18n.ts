@@ -6,13 +6,11 @@ export function useI18n() {
   const { locale, t, setLocaleMessage } = useVueI18n()
 
   const changeLocale = (newLocale: SupportedLocale) => {
-    logger.debug('Changing locale to:', newLocale)
     locale.value = newLocale
     localStorage.setItem('preferred-locale', newLocale)
     // Обновляем заголовок страницы
     document.documentElement.lang = newLocale
     // Принудительно обновляем компоненты
-    logger.debug('Locale changed to:', newLocale, 'Current locale:', locale.value)
   }
 
   const getCurrentLocale = (): SupportedLocale => {
@@ -50,12 +48,8 @@ export function useI18n() {
   // Инициализация локали из localStorage
   const initializeLocale = () => {
     const savedLocale = localStorage.getItem('preferred-locale') as SupportedLocale
-    logger.debug('Initializing locale, saved:', savedLocale, 'supported:', supportedLocales)
     if (savedLocale && supportedLocales.includes(savedLocale)) {
       locale.value = savedLocale
-      logger.debug('Set locale to:', savedLocale)
-    } else {
-      logger.debug('Using default locale: ro')
     }
     document.documentElement.lang = locale.value
   }

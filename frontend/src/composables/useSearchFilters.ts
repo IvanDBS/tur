@@ -11,9 +11,6 @@ export const useSearchFilters = () => {
     hotels: { value: Array<{ id: number, city_id?: number }> },
     regions: { value: Array<{ id: number, cities?: Array<{ id: number }> }> }
   }) => {
-    logger.debug(`🏨 getSelectedHotelsForSearch called. Available hotels: ${searchData.hotels.value.length}`)
-    logger.debug(`🏨 Selected hotel filters: ${selectedFilters.value.hotels.length}`)
-    logger.debug(`🏨 Selected region filters: ${selectedFilters.value.regions.length}`)
     
     let hotelsToReturn = searchData.hotels.value
     
@@ -47,11 +44,9 @@ export const useSearchFilters = () => {
           return false // Исключаем отели без city_id
         })
         
-        logger.debug(`🏨 After region filtering: ${hotelsToReturn.length} hotels`)
       }
     } else {
       // Если не выбрано ни одного региона, возвращаем пустой список
-      logger.debug(`🏨 No regions selected, returning empty hotel list`)
       return []
     }
     
@@ -60,7 +55,6 @@ export const useSearchFilters = () => {
       // Если выбран ID=1 (все отели), используем все отели после фильтрации по регионам
       if (selectedFilters.value.hotels.includes(1)) {
         const allHotels = hotelsToReturn.map((hotel) => Number(hotel.id))
-        logger.debug(`🏨 "Any hotel" selected, returning ${allHotels.length} hotels after region filtering`)
         return allHotels
       }
       // Иначе возвращаем пересечение выбранных отелей и отелей после фильтрации по регионам
@@ -68,13 +62,11 @@ export const useSearchFilters = () => {
       const filteredHotelIds = hotelsToReturn.map(hotel => Number(hotel.id))
       const intersection = selectedHotelIds.filter(id => filteredHotelIds.includes(id))
       
-      logger.debug(`🏨 Selected hotels intersection with region-filtered hotels: ${intersection.length} hotels`)
       return intersection
     }
     
     // Если ничего не выбрано, возвращаем все отели после фильтрации по регионам
     const allHotels = hotelsToReturn.map((hotel) => Number(hotel.id))
-    logger.debug(`🏨 No hotels selected, returning ${allHotels.length} hotels after region filtering`)
     return allHotels
   }
 

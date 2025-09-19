@@ -658,8 +658,6 @@ export const useSearchForm = () => {
       per_page: serverPageSize // Загружаем все туры (per_page > 500)
     }
     
-    logger.debug(`Search params with pagination:`, searchParamsWithPagination)
-    logger.debug(`Search params with pagination - page: ${searchParamsWithPagination.page}, per_page: ${searchParamsWithPagination.per_page}`)
     
     // Сохраняем параметры поиска для пагинации
     lastSearchParams.value = searchParams
@@ -681,14 +679,11 @@ export const useSearchForm = () => {
           isLoading.value = false
         })
         
-        logger.debug('Raw search result:', result)
-        logger.debug('Result type:', typeof result)
-        logger.debug('Result keys:', result ? Object.keys(result) : 'null')
+        logger.info('Result keys:', result ? Object.keys(result) : 'null')
         
         // Обработка результатов поиска
         if (result) {
-          logger.debug('Full search result structure:', result)
-          logger.debug('Result keys:', Object.keys(result))
+          logger.info('Result keys:', Object.keys(result))
           
           // Проверяем разные возможные структуры ответа
           let resultsData: Record<string, ObsSearchResult> | null = null
@@ -698,7 +693,6 @@ export const useSearchForm = () => {
             // Стандартная структура: { results: {...}, total_results: N }
             resultsData = result.results as Record<string, ObsSearchResult>
             totalCount = (result.total_results as number) || 0
-            logger.debug('Using standard structure: result.results')
           } else if (typeof result === 'object' && !result.results) {
             // Прямая структура: результаты в корне объекта
             // Исключаем служебные поля
@@ -713,7 +707,6 @@ export const useSearchForm = () => {
                 }
               })
               totalCount = resultKeys.length
-              logger.debug('Using direct structure: results in root object')
             }
           }
           

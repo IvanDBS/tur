@@ -90,12 +90,13 @@
   import { formatDate, getNightWord } from '../utils/dateUtils'
   import { apiClient } from '../utils/api'
   import { logger } from '../utils/logger'
-  import BookingDetailsModal from '../components/booking/BookingDetailsModalSimple.vue'
+  import BookingDetailsModal from '../components/booking/BookingDetailsModal.vue'
 
   interface Booking {
     id: number
     obs_booking_hash: string
     obs_order_id?: string
+    operator_id?: number
     status: 'pending' | 'confirmed' | 'cancelled' | 'failed'
     total_amount: string | number
     tour_details: Record<string, unknown>
@@ -134,7 +135,6 @@
       } else {
         bookings.value = []
       }
-      logger.debug('Bookings loaded:', bookings.value.length, 'items')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load bookings'
       error.value = message

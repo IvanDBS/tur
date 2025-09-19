@@ -7,29 +7,29 @@
     <div class="section-content">
       <div class="hotel-main">
         <div class="hotel-info-line">
-          <span class="hotel-name">{{ hotelName }}</span>
-          <span class="hotel-category">{{ hotelCategory }}</span>
-          <span class="hotel-location">{{ hotelCity }}</span>
+          <span class="hotel-name">{{ getHotelName() }}</span>
+          <span class="hotel-category">{{ getHotelCategory() }}</span>
+          <span class="hotel-location">{{ getHotelCity() }}</span>
         </div>
       </div>
       <div class="hotel-details">
         <div class="detail-row">
           <label>Тип комнаты</label>
-          <span :class="{ 'missing-info': roomType.includes('не указан') }">{{ roomType }}</span>
+          <span :class="{ 'missing-info': getRoomType().includes('не указан') }">{{ getRoomType() }}</span>
         </div>
         <div class="detail-row">
           <label>Питание</label>
-          <span :class="{ 'missing-info': mealPlan.includes('не указан') }">{{ mealPlan }}</span>
+          <span :class="{ 'missing-info': getMealPlan().includes('не указан') }">{{ getMealPlan() }}</span>
         </div>
         <div class="detail-row">
           <label>Даты проживания</label>
-          <span :class="{ 'missing-info': checkInDate.includes('не указан') || checkOutDate.includes('не указан') }">
-            {{ checkInDate }} - {{ checkOutDate }}
+          <span :class="{ 'missing-info': getCheckInDate().includes('не указан') || getCheckOutDate().includes('не указан') }">
+            {{ getCheckInDate() }} - {{ getCheckOutDate() }}
           </span>
         </div>
         <div class="detail-row">
           <label>Ночей</label>
-          <span :class="{ 'missing-info': nights.includes('не указан') }">{{ nights }}</span>
+          <span :class="{ 'missing-info': getNights().toString().includes('не указан') }">{{ getNights() }}</span>
         </div>
       </div>
     </div>
@@ -37,7 +37,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useBookingData } from '../../composables/useBookingData'
 
 interface Props {
@@ -60,14 +59,6 @@ const {
   getNights 
 } = useBookingData(props.booking, props.isAdminMode)
 
-const hotelName = computed(() => getHotelName())
-const hotelCategory = computed(() => getHotelCategory())
-const hotelCity = computed(() => getHotelCity())
-const roomType = computed(() => getRoomType())
-const mealPlan = computed(() => getMealPlan())
-const checkInDate = computed(() => getCheckInDate())
-const checkOutDate = computed(() => getCheckOutDate())
-const nights = computed(() => getNights())
 </script>
 
 <script lang="ts">

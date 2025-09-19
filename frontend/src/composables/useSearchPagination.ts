@@ -23,7 +23,6 @@ export const useSearchPagination = () => {
       const groupedResults = groupResultsByHotel(allResults)
       
       const pages = Math.ceil(groupedResults.length / itemsPerPage)
-      logger.debug(`totalPages computed: groupedResults.length=${groupedResults.length}, itemsPerPage=${itemsPerPage}, pages=${pages}`)
       return pages
     } catch (error) {
       logger.error('Error in totalPages computed:', error)
@@ -47,13 +46,11 @@ export const useSearchPagination = () => {
       
       // Проверяем, что у нас есть валидные результаты
       if (allResults.length === 0) {
-        logger.debug('paginatedResults: no results to process')
         return []
       }
       
       // Группируем результаты по отелям
       const groupedResults = groupResultsByHotel(allResults)
-      logger.debug(`paginatedResults: groupedResults.length = ${groupedResults.length}`)
       
       // Calculate pagination for current page (20 items per page)
       const startIndex = (currentPage.value - 1) * itemsPerPage
@@ -184,7 +181,6 @@ export const useSearchPagination = () => {
       return
     }
     
-    logger.debug(`handlePageChange: changing from page ${currentPage.value} to page ${page}`)
     currentPage.value = page
     
     // Прокручиваем к началу результатов с отступом сверху
@@ -209,7 +205,7 @@ export const useSearchPagination = () => {
   const loadMoreData = async () => {
     // Поскольку мы загружаем все результаты сразу (per_page > 500), 
     // этот метод больше не нужен, но оставляем для совместимости
-    logger.debug('loadMoreData called - no additional loading needed (all results loaded at once)')
+('loadMoreData called - no additional loading needed (all results loaded at once)')
     return Promise.resolve()
   }
 

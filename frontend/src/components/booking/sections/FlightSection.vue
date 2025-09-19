@@ -1,11 +1,11 @@
 <template>
-  <div class="section" v-if="selectedFlight">
+  <div class="section" v-if="getSelectedFlight()">
     <div class="section-header">
       <div class="section-icon">✈️</div>
       <h3 class="section-title">Перелет</h3>
     </div>
     <div class="section-content">
-      <div v-for="(tourist, index) in tourists" :key="index" class="flight-ticket">
+      <div v-for="(tourist, index) in getTourists()" :key="index" class="flight-ticket">
         <!-- Tourist Info -->
         <div class="tourist-info">
           <div class="tourist-number">№ {{ index + 1 }}</div>
@@ -25,25 +25,25 @@
               <div class="flight-column">
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.fromLabel') }}</span>
-                  <span class="value">{{ outboundFrom }}</span>
+                  <span class="value">{{ getOutboundFrom() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
-                  <span class="value">{{ outboundTravelTime }}</span>
+                  <span class="value">{{ getOutboundTravelTime() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.flightLabel') }}</span>
-                  <span class="value">{{ outboundFlightInfo }}</span>
+                  <span class="value">{{ getOutboundFlightInfo() }}</span>
                 </div>
               </div>
               <div class="flight-column">
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.toLabel') }}</span>
-                  <span class="value">{{ outboundTo }}</span>
+                  <span class="value">{{ getOutboundTo() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
-                  <span class="value">{{ inboundTravelTime }}</span>
+                  <span class="value">{{ getInboundTravelTime() }}</span>
                 </div>
               </div>
             </div>
@@ -60,25 +60,25 @@
               <div class="flight-column">
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.fromLabel') }}</span>
-                  <span class="value">{{ inboundFrom }}</span>
+                  <span class="value">{{ getInboundFrom() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
-                  <span class="value">{{ inboundTravelTime }}</span>
+                  <span class="value">{{ getInboundTravelTime() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.flightLabel') }}</span>
-                  <span class="value">{{ inboundFlightInfo }}</span>
+                  <span class="value">{{ getInboundFlightInfo() }}</span>
                 </div>
               </div>
               <div class="flight-column">
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.toLabel') }}</span>
-                  <span class="value">{{ inboundTo }}</span>
+                  <span class="value">{{ getInboundTo() }}</span>
                 </div>
                 <div class="flight-info-line">
                   <span class="label">{{ $t('searchResults.travelTimeLabel') }}</span>
-                  <span class="value">{{ inboundTravelTime }}</span>
+                  <span class="value">{{ getInboundTravelTime() }}</span>
                 </div>
               </div>
             </div>
@@ -90,7 +90,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useBookingData } from '../../composables/useBookingData'
 import { useFlightData } from '../../composables/useFlightData'
 import { formatBirthday } from '../../utils/dateUtils'
@@ -99,6 +98,7 @@ import { useI18n } from '../../composables/useI18n'
 interface Props {
   booking: any
   isAdminMode?: boolean
+  obsOrderDetails?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,54 +111,15 @@ const {
   getSelectedFlight,
   getOutboundFrom,
   getInboundFrom,
-  getOutboundDeparture,
-  getInboundDeparture,
   getOutboundFlightInfo,
   getInboundFlightInfo,
   getOutboundTo,
   getInboundTo,
-  getOutboundArrival,
-  getInboundArrival,
   getOutboundTravelTime,
   getInboundTravelTime
-} = useFlightData(props.booking)
+} = useFlightData(props.booking, props.obsOrderDetails)
 
-// Debug logging
-console.log('FlightSection - booking data:', props.booking)
-console.log('FlightSection - tour_details:', props.booking?.tour_details)
-console.log('FlightSection - flights:', props.booking?.tour_details?.flights)
 
-const tourists = computed(() => getTourists())
-const selectedFlight = computed(() => getSelectedFlight())
-
-const outboundFrom = computed(() => getOutboundFrom())
-const inboundFrom = computed(() => getInboundFrom())
-const outboundDeparture = computed(() => {
-  const result = getOutboundDeparture()
-  console.log('FlightSection - outboundDeparture:', result)
-  return result
-})
-const inboundDeparture = computed(() => {
-  const result = getInboundDeparture()
-  console.log('FlightSection - inboundDeparture:', result)
-  return result
-})
-const outboundFlightInfo = computed(() => getOutboundFlightInfo())
-const inboundFlightInfo = computed(() => getInboundFlightInfo())
-const outboundTo = computed(() => getOutboundTo())
-const inboundTo = computed(() => getInboundTo())
-const outboundArrival = computed(() => {
-  const result = getOutboundArrival()
-  console.log('FlightSection - outboundArrival:', result)
-  return result
-})
-const inboundArrival = computed(() => {
-  const result = getInboundArrival()
-  console.log('FlightSection - inboundArrival:', result)
-  return result
-})
-const outboundTravelTime = computed(() => getOutboundTravelTime())
-const inboundTravelTime = computed(() => getInboundTravelTime())
 </script>
 
 <script lang="ts">

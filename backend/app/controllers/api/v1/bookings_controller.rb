@@ -17,6 +17,8 @@ module Api
                            {
                              id: booking.id,
                              obs_booking_hash: booking.obs_booking_hash,
+                             obs_order_id: booking.obs_order_id,
+                             operator_id: booking.operator_id,
                              status: booking.status,
                              total_amount: booking.total_amount,
                              tour_details: booking.tour_details_hash,
@@ -36,6 +38,7 @@ module Api
                            id: @booking.id,
                            obs_booking_hash: @booking.obs_booking_hash,
                            obs_order_id: @booking.obs_order_id,
+                           operator_id: @booking.operator_id,
                            status: @booking.status,
                            total_amount: @booking.total_amount,
                            customer_data: @booking.customer_data_hash,

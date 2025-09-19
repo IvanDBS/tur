@@ -139,7 +139,6 @@ export const useSearchData = () => {
 
   const loadCountries = async (departureCityId: number) => {
     try {
-      logger.debug(`Loading countries for city ${departureCityId}...`)
       const result = await obsApi.fetchCountries(departureCityId)
       // Обновляем локальную переменную countries
       countries.value = result || []
@@ -156,7 +155,6 @@ export const useSearchData = () => {
   // Альтернативный метод - загружает через obsApi и синхронизирует
   const syncCountriesFromApi = async (departureCityId: number) => {
     try {
-      logger.debug(`syncCountriesFromApi called for city ${departureCityId}`)
       
       // Используем loadCountries напрямую
       await loadCountries(departureCityId)
@@ -195,9 +193,8 @@ export const useSearchData = () => {
 
   const loadLocations = async (packageTemplateId: number) => {
     try {
-      logger.debug(`Loading locations for package ${packageTemplateId}...`)
       const loadedLocations = await obsApi.fetchLocations(packageTemplateId)
-      logger.debug(`🏙️ Received ${(loadedLocations || []).length} locations from obsApi.fetchLocations`)
+(`🏙️ Received ${(loadedLocations || []).length} locations from obsApi.fetchLocations`)
       
       // Синхронизируем данные между obsApi и searchData
       regions.value = loadedLocations || []
@@ -219,8 +216,8 @@ export const useSearchData = () => {
       
       await nextTick() // Ждем обновления реактивности
       logger.info(`🏙️ Locations synced to searchData. Total regions: ${regions.value.length}, Total cities: ${cities.value.length}`)
-      logger.debug(`🏙️ First 3 regions:`, regions.value.slice(0, 3))
-      logger.debug(`🏙️ First 3 cities:`, cities.value.slice(0, 3))
+(`🏙️ First 3 regions:`, regions.value.slice(0, 3))
+(`🏙️ First 3 cities:`, cities.value.slice(0, 3))
     } catch {
       logger.warn('Using fallback locations data')
       regions.value = fallbackRegions.value

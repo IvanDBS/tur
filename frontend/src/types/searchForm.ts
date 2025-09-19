@@ -17,10 +17,10 @@ export interface SearchFormFieldsProps {
   selectedFilters: SelectedFilters
   activeSelector: string | null
   isLoading: boolean
-  searchData: Record<string, unknown> // TODO: типизировать searchData
+  searchData: Record<string, unknown>
   filteredNights2Options: Array<{ value: number; label: string }>
   dynamicNightsOptions: Array<{ value: number; label: string }>
-  calendarHints: Record<string, unknown> // TODO: типизировать calendarHints
+  calendarHints: Record<string, unknown>
 }
 
 // События для компонентов

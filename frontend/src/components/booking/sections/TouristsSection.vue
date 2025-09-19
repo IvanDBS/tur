@@ -1,11 +1,11 @@
 <template>
-  <div class="section" v-if="tourists.length > 0">
+  <div class="section" v-if="getTourists().length > 0">
     <div class="section-header">
       <div class="section-icon">👥</div>
       <h3 class="section-title">Туристы</h3>
     </div>
     <div class="section-content">
-      <div v-for="(tourist, index) in tourists" :key="index" class="tourist-row">
+      <div v-for="(tourist, index) in getTourists()" :key="index" class="tourist-row">
         <div class="tourist-number">№ {{ index + 1 }}</div>
         <div class="tourist-details-grid">
           <div class="detail-item">
@@ -31,7 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useBookingData } from '../../composables/useBookingData'
 import { formatBirthday } from '../../utils/dateUtils'
 
@@ -46,7 +45,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { getTourists, getTouristName, getTouristPassport } = useBookingData(props.booking, props.isAdminMode)
 
-const tourists = computed(() => getTourists())
 </script>
 
 <script lang="ts">

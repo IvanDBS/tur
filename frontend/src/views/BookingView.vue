@@ -140,11 +140,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-// import { useRoute, useRouter } from 'vue-router' // TODO: implement route usage
 import { useBooking } from '../composables/useBooking'
 import { useI18n } from '../composables/useI18n'
 import '../styles/spinners.css'
-// import { useSearchData } from '../composables/useSearchData' // TODO: implement search functionality
 // Import components directly
 import HotelInfoBlock from '../components/booking/HotelInfoBlock.vue'
 import RoomSelectionBlock from '../components/booking/RoomSelectionBlock.vue'
@@ -164,8 +162,6 @@ const props = defineProps<Props>()
 const { t: $t } = useI18n()
 
 // Composables
-// const route = useRoute() // TODO: implement route usage
-// const router = useRouter() // TODO: implement router usage
 
 // Wrapper for updateTourist to match TouristDataBlock emit signature
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
@@ -186,13 +182,11 @@ const {
   resetSelectedFlight,
   updateTourist: updateTouristOriginal,
   updateAdditionalServices,
-  // calculateBooking, // TODO: implement calculation functionality
   createBooking,
   goBackToSearch,
   clearError
 } = useBooking()
 
-// const { performSearch } = useSearchData() // TODO: implement search functionality
 
 // State
 const touristErrors = ref<Record<string, Record<string, string>>>({})
@@ -238,8 +232,6 @@ const loadSearchResult = async () => {
       return
     }
     
-    // TODO: Implement loading search result by ID from API/store
-    // For now, we'll need to get the search result from the search results
     // Load search result from sessionStorage
     if (!props.searchResultId) {
       throw new Error('Search result ID is required')
@@ -297,7 +289,6 @@ const retryLoad = () => {
 //   const result = await calculateBooking()
 //   if (result) {
 //     // Booking calculated
-//     // TODO: Show calculation results to user
 //   }
 // }
 

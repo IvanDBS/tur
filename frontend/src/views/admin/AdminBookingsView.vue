@@ -296,14 +296,14 @@
                   <div class="flight-date">{{ normalizeDate(getDepartureFlight(booking).date) || 'N/A' }}</div>
                   <div class="flight-number">{{ getFlightNumber(getDepartureFlight(booking)) }}</div>
                 </div>
-                <span v-else>N/A - DEBUG: {{ getFlightDebugInfo(booking, 'departure') }}</span>
+                <span v-else>N/A</span>
               </td>
               <td class="arrival-flight">
                 <div v-if="getArrivalFlight(booking)">
                   <div class="flight-date">{{ normalizeDate(getArrivalFlight(booking).date) || 'N/A' }}</div>
                   <div class="flight-number">{{ getFlightNumber(getArrivalFlight(booking)) }}</div>
                 </div>
-                <span v-else>N/A - DEBUG: {{ getFlightDebugInfo(booking, 'arrival') }}</span>
+                <span v-else>N/A</span>
               </td>
               <td class="amount">{{ booking.total_amount }} €</td>
               <td class="owner">
@@ -383,7 +383,7 @@ import { useRoute } from 'vue-router'
 import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
-import BookingDetailsModal from '../../components/booking/BookingDetailsModalSimple.vue'
+import BookingDetailsModal from '../../components/booking/BookingDetailsModal.vue'
 import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
 import { logger } from '../../utils/logger'
@@ -606,15 +606,6 @@ const loadBookings = async () => {
     
     const combinedSearch = searchTerms.length > 0 ? searchTerms.join(' ') : undefined
     
-    logger.debug('Loading bookings...', {
-      page: currentPage.value,
-      per_page: 20,
-      status: filters.value.status || searchFilters.value.status || undefined,
-      search: combinedSearch,
-      sort_field: sortField.value || undefined,
-      sort_direction: sortDirection.value || undefined
-    })
-    
     const response = await getAdminBookings({
       page: currentPage.value,
       per_page: 20,
@@ -624,7 +615,6 @@ const loadBookings = async () => {
       sort_direction: sortDirection.value || undefined
     })
     
-    logger.debug('Bookings response:', response)
     
     // API returns data in response.data structure
     const data = (response.data || response) as {
@@ -635,8 +625,6 @@ const loadBookings = async () => {
       }
     }
     
-    logger.debug('Processed data:', data)
-    logger.debug('Bookings count:', data.bookings?.length || 0)
     
     // Transform API data to match AdminBooking interface
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -682,8 +670,6 @@ const loadBookings = async () => {
     totalPages.value = data.pagination?.total_pages || 1
     totalCount.value = data.pagination?.total_count || 0
     
-    logger.debug('Bookings loaded:', allBookings.value.length)
-    logger.debug('First booking sample:', allBookings.value[0])
   } catch (error) {
     console.error('Failed to load bookings:', error)
     // Fallback to empty array on error
@@ -784,7 +770,6 @@ const syncAllBookings = async () => {
     // Reload bookings to show updated statuses
     await loadBookings()
     
-    console.log('Sync initiated successfully:', response)
   } catch (error) {
     console.error('Failed to sync all bookings:', error)
   } finally {
@@ -800,7 +785,6 @@ const syncBooking = async (booking: AdminBooking) => {
     // Update the specific booking status
     await loadBookings()
     
-    console.log('Booking sync initiated successfully:', response)
   } catch (error) {
     console.error('Failed to sync booking:', error)
   } finally {
@@ -1115,14 +1099,6 @@ const getArrivalFlight = (booking: AdminBooking) => {
   return null
 }
 
-const getFlightDebugInfo = (booking: AdminBooking, direction: string) => {
-  const tourDetails = booking.tour_details as any
-  if (!tourDetails) return 'no tour_details'
-  if (!tourDetails.flights) return 'no flights'
-  if (direction === 'departure' && !tourDetails.flights.there) return 'flights exists but no there'
-  if (direction === 'arrival' && !tourDetails.flights.back) return 'flights exists but no back'
-  return 'unknown issue'
-}
 
 const getFlightNumber = (flightInfo: any) => {
   if (!flightInfo) return 'N/A'

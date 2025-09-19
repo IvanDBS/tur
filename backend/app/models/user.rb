@@ -27,12 +27,12 @@ class User < ApplicationRecord
 
   # Instance methods
   def generate_jwt
-    Rails.cache.fetch("user_jwt_#{id}_#{updated_at.to_i}", expires_in: 15.minutes) do
+    Rails.cache.fetch("user_jwt_#{id}_#{updated_at.to_i}", expires_in: 12.hours) do
       jti = SecureRandom.uuid
       JWT.encode(
         {
           user_id: id,
-          exp: 15.minutes.from_now.to_i,
+          exp: 12.hours.from_now.to_i,
           iat: Time.current.to_i,
           jti: jti
         },

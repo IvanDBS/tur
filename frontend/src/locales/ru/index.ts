@@ -292,6 +292,7 @@ export default {
     enterFiscalCode: 'Введите фискальный код',
     selectTitle: 'Выберите обращение',
     passportValidityWarning: 'Срок действия паспорта менее 6 месяцев!',
+    birthDateWarning: 'Дата рождения не может быть в будущем!',
     other: 'Другое'
   },
   timeUnits: {

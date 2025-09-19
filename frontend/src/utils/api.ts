@@ -186,7 +186,17 @@ class ApiClient {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const currentTime = Math.floor(Date.now() / 1000)
-      return payload.exp < currentTime
+      const expirationTime = payload.exp
+      
+      // Обновляем токен за 30 минут до истечения (12 часов - 30 минут = 11.5 часов)
+      const refreshThreshold = 30 * 60 // 30 минут в секундах
+      const shouldRefresh = (expirationTime - currentTime) < refreshThreshold
+      
+      if (shouldRefresh) {
+        logger.info(`Token expires in ${Math.floor((expirationTime - currentTime) / 60)} minutes, will refresh`)
+      }
+      
+      return shouldRefresh
     } catch {
       return true // Если не можем декодировать, считаем истекшим
     }
@@ -220,10 +230,32 @@ class ApiClient {
   // Выполнение обновления токена
   private async performTokenRefresh(): Promise<string> {
     try {
-      const { AuthApi } = await import('./authApi')
-      const refreshResponse = await AuthApi.refreshToken()
+      logger.info('Attempting to refresh token...')
+      
+      // Делаем запрос напрямую к API для обновления токена
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // Важно для передачи HttpOnly cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        logger.error('Token refresh failed:', errorData)
+        throw new Error(errorData.error || 'Token refresh failed')
+      }
+
+      const refreshResponse = await response.json()
       const newToken = refreshResponse.tokens.accessToken
+      
+      if (!newToken) {
+        throw new Error('No access token received from refresh')
+      }
+      
       localStorage.setItem('accessToken', newToken)
+      logger.info('Token refreshed successfully')
       return newToken
     } catch (error) {
       logger.error('Token refresh failed:', error)
@@ -233,9 +265,19 @@ class ApiClient {
 
   // Перенаправление на страницу входа
   private redirectToLogin() {
+    logger.warn('Redirecting to login due to authentication failure')
     localStorage.removeItem('accessToken')
     // Очищаем кеш
     this.clearCache()
+    
+    // Показываем уведомление пользователю
+    if (typeof window !== 'undefined' && window.alert) {
+      // Не показываем alert в production, только в development
+      if (import.meta.env.DEV) {
+        alert('Сессия истекла. Вы будете перенаправлены на страницу входа.')
+      }
+    }
+    
     // Перенаправляем на страницу входа
     window.location.href = '/login'
   }

@@ -264,6 +264,7 @@ export default {
     enterLastName: 'Enter last name',
     selectNationality: 'Select nationality',
     passportValidityWarning: 'Passport validity less than 6 months!',
+    birthDateWarning: 'Birth date cannot be in the future!',
     other: 'Other'
   },
   daysOfWeek: {

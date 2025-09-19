@@ -404,29 +404,68 @@ const getBasePriceDescription = () => {
 const validateTouristData = () => {
   const errors: Record<string, Record<string, string>> = {}
   
-  bookingData.value.tourists.forEach(tourist => {
+  bookingData.value.tourists.forEach((tourist) => {
     const touristErrors: Record<string, string> = {}
     
+    // Валидация имени
     if (!tourist.firstName.trim()) {
       touristErrors.firstName = $t('bookingSummary.nameRequired')
     }
     
+    // Валидация фамилии
     if (!tourist.lastName.trim()) {
       touristErrors.lastName = $t('bookingSummary.lastNameRequired')
     }
     
+    // Строгая валидация даты рождения
     if (!tourist.birthDate) {
       touristErrors.birthDate = $t('bookingSummary.birthDateRequired')
+    } else {
+      const date = new Date(tourist.birthDate)
+      const today = new Date()
+      
+      if (isNaN(date.getTime())) {
+        touristErrors.birthDate = 'Неверный формат даты рождения'
+      } else if (date > today) {
+        touristErrors.birthDate = 'Дата рождения не может быть из будущего'
+      } else {
+        // Проверяем возраст
+        const age = today.getFullYear() - date.getFullYear()
+        const monthDiff = today.getMonth() - date.getMonth()
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate()) ? age - 1 : age
+        
+        if (actualAge < 0) {
+          touristErrors.birthDate = 'Возраст не может быть отрицательным'
+        } else if (actualAge > 120) {
+          touristErrors.birthDate = 'Возраст не может быть больше 120 лет'
+        } else if (tourist.title === 'CHD' && actualAge >= 18) {
+          touristErrors.birthDate = 'Ребенок не может быть старше 17 лет'
+        } else if (tourist.title !== 'CHD' && actualAge < 18) {
+          touristErrors.birthDate = 'Взрослый не может быть младше 18 лет'
+        }
+      }
     }
     
+    // Валидация номера паспорта
     if (!tourist.passportNumber.trim()) {
       touristErrors.passportNumber = $t('bookingSummary.passportNumberRequired')
     }
     
+    // Валидация срока действия паспорта
     if (!tourist.passportExpiry) {
       touristErrors.passportExpiry = $t('bookingSummary.passportExpiryRequired')
+    } else {
+      const expiryDate = new Date(tourist.passportExpiry)
+      const today = new Date()
+      
+      if (isNaN(expiryDate.getTime())) {
+        touristErrors.passportExpiry = 'Неверный формат даты'
+      } else if (expiryDate <= today) {
+        touristErrors.passportExpiry = 'Паспорт должен быть действителен'
+      }
     }
     
+    // Валидация гражданства
     if (!tourist.nationality) {
       touristErrors.nationality = $t('bookingSummary.nationalityRequired')
     }

@@ -78,6 +78,7 @@
             :value="tourist.birthDate"
             @input="updateTourist(tourist.id, 'birthDate', $event.target.value)"
             type="date"
+            :max="getMaxBirthDate()"
             placeholder="dd.mm.yyyy"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'birthDate') }"
@@ -107,6 +108,7 @@
             :value="tourist.passportExpiry"
             @input="updateTourist(tourist.id, 'passportExpiry', $event.target.value)"
             type="date"
+            :min="getMinPassportDate()"
             placeholder="dd.mm.yyyy"
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'passportExpiry') }"
@@ -149,6 +151,14 @@
           <div class="warning-icon">⚠️</div>
           <div class="warning-text">
             {{ $t('touristInfo.passportValidityWarning') }}
+          </div>
+        </div>
+
+        <!-- Birth Date Warning -->
+        <div v-if="getBirthDateWarning(tourist)" class="birthdate-warning">
+          <div class="warning-icon">⚠️</div>
+          <div class="warning-text">
+            {{ $t('touristInfo.birthDateWarning') }}
           </div>
         </div>
       </div>
@@ -215,6 +225,29 @@ const getPassportValidityWarning = (tourist: TouristData) => {
   } catch {
     return false
   }
+}
+
+const getBirthDateWarning = (tourist: TouristData) => {
+  if (!tourist.birthDate) return false
+  
+  try {
+    const birthDate = new Date(tourist.birthDate)
+    const today = new Date()
+    
+    return birthDate > today
+  } catch {
+    return false
+  }
+}
+
+const getMaxBirthDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+const getMinPassportDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
 }
 </script>
 
@@ -324,6 +357,28 @@ const getPassportValidityWarning = (tourist: TouristData) => {
 }
 
 .passport-warning .warning-text {
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.birthdate-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+}
+
+.birthdate-warning .warning-icon {
+  font-size: 1rem;
+  color: #dc2626;
+}
+
+.birthdate-warning .warning-text {
   font-size: 0.875rem;
   color: #dc2626;
   font-weight: 500;

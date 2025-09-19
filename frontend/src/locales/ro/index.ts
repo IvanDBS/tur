@@ -291,6 +291,7 @@ export default {
     enterFiscalCode: 'Introduceți codul fiscal',
     selectTitle: 'Selectați titlul',
     passportValidityWarning: 'Pașaportul este valabil mai puțin de 6 luni!',
+    birthDateWarning: 'Data nașterii nu poate fi în viitor!',
     other: 'Altul'
   },
   timeUnits: {

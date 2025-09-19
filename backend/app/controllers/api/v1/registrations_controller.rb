@@ -31,7 +31,7 @@ module Api
               },
               tokens: {
                 accessToken: access_token,
-                expiresIn: 15.minutes.to_i
+                expiresIn: 12.hours.to_i
               }
             }, status: :created
           rescue => e

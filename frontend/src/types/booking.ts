@@ -50,7 +50,7 @@ export interface Airport {
 
 export interface TouristData {
   id: string
-  title: 'MR' | 'MRS' | 'MS'
+  title: 'MR' | 'MRS' | 'MS' | 'CHD'
   firstName: string
   lastName: string
   birthDate: string

@@ -273,6 +273,7 @@ export default {
     enterFiscalCode: 'Vergi kodunuzu girin',
     selectTitle: 'Unvan seçin',
     passportValidityWarning: 'Pasaport geçerlilik süresi 6 aydan az!',
+    birthDateWarning: 'Doğum tarihi gelecekte olamaz!',
     other: 'Diğer'
   },
   timeUnits: {

@@ -148,8 +148,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice } from '../../types/search'
+import { computed, watch, onMounted } from 'vue'
+import type { SearchResult, GroupedSearchResult, SearchResultTickets, SearchResultPrice, SearchResultFlight } from '../../types/search'
 import type { SelectedFlight, FlightSegment, SelectedRoom } from '../../types/booking'
 import { formatDateWithDay, calculateDuration } from '../../utils/dateUtils'
 import { useI18n } from '../../composables/useI18n'
@@ -256,10 +256,7 @@ const selectedFlightPair = computed(() => {
   return flightPairs.value.find(pair => pair.id === pairId) || null
 })
 
-
 // Methods
-// Функции formatDateWithDay и calculateDuration теперь импортируются из dateUtils
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectFlightPair = (flightPair: any) => {
   const newSelectedFlight: SelectedFlight = {
@@ -269,13 +266,26 @@ const selectFlightPair = (flightPair: any) => {
   emit('update:selectedFlight', newSelectedFlight)
 }
 
+// Auto-select first flight if no flight is selected
+const autoSelectFirstFlight = () => {
+  if (!props.selectedFlight && flightPairs.value.length > 0) {
+    const firstFlightPair = flightPairs.value[0]
+    selectFlightPair(firstFlightPair)
+  }
+}
+
+// Watch for changes in flightPairs and auto-select if needed
+watch(flightPairs, () => {
+  autoSelectFirstFlight()
+}, { immediate: true })
+
+// Auto-select on mount
+onMounted(() => {
+  autoSelectFirstFlight()
+})
+
 // Get availability text based on flight data
-const getAvailabilityText = (flight: any) => {
-  // Check if we have tickets data from the flight pair
-  const flightPair = flightPairs.value.find(pair => 
-    pair.outbound.id === flight.id || pair.inbound.id === flight.id
-  )
-  
+const getAvailabilityText = (flight: SearchResultFlight) => {
   // Get the original flight option to access on_request and has_tickets
   const flightOption = flightOptions.value.find(option => 
     option.from.id === flight.id || option.to.id === flight.id
@@ -300,7 +310,7 @@ const getAvailabilityText = (flight: any) => {
 }
 
 // Get availability CSS class
-const getAvailabilityClass = (flight: any) => {
+const getAvailabilityClass = (flight: SearchResultFlight) => {
   // Get the original flight option to access on_request and has_tickets
   const flightOption = flightOptions.value.find(option => 
     option.from.id === flight.id || option.to.id === flight.id
@@ -324,7 +334,7 @@ const getAvailabilityClass = (flight: any) => {
 }
 
 // Get airline logo for current airline
-const getAirlineLogo = (airline: any): string | undefined => {
+const getAirlineLogo = (airline: { airline?: string; iata_code?: string }): string | undefined => {
   if (!airline) return undefined
   
   // Check by airline name (case insensitive)

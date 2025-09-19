@@ -177,26 +177,34 @@ export const useAuthStore = defineStore('auth', () => {
 
   const initializeAuth = async () => {
     const token = localStorage.getItem('accessToken')
+    logger.info('Initializing auth, token present:', !!token)
+    
     if (token && !user.value) {
       try {
+        logger.info('Attempting to get current user with existing token')
         // Сначала пытаемся получить текущего пользователя
         await getCurrentUser()
+        logger.info('Successfully authenticated with existing token')
       } catch (error) {
+        logger.warn('Failed to get current user, attempting token refresh:', error)
         // Если токен истек, пытаемся обновить его через refresh token
         try {
           const refreshResponse = await AuthApi.refreshToken()
           localStorage.setItem('accessToken', refreshResponse.tokens.accessToken)
+          logger.info('Token refreshed successfully, getting current user')
           // Повторно получаем пользователя с новым токеном
           await getCurrentUser()
+          logger.info('Successfully authenticated after token refresh')
         } catch (refreshError) {
           // Если refresh тоже не сработал, очищаем состояние
-          logger.error('Failed to refresh token:', refreshError)
+          logger.error('Failed to refresh token, clearing auth state:', refreshError)
           user.value = null
           localStorage.removeItem('accessToken')
         }
       }
     } else if (!token) {
       // Если нет токена, убеждаемся что пользователь не авторизован
+      logger.info('No token found, user not authenticated')
       user.value = null
     }
   }

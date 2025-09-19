@@ -273,6 +273,7 @@ export default {
     enterFiscalCode: 'Введіть фіскальний код',
     selectTitle: 'Оберіть звернення',
     passportValidityWarning: 'Термін дії паспорта менше 6 місяців!',
+    birthDateWarning: 'Дата народження не може бути в майбутньому!',
     other: 'Інше'
   },
   timeUnits: {

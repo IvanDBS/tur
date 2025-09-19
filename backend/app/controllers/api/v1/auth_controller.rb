@@ -29,7 +29,7 @@ module Api
             },
             tokens: {
               accessToken: access_token,
-              expiresIn: 15.minutes.to_i
+              expiresIn: 12.hours.to_i
             }
           }, status: :created
         else
@@ -79,7 +79,7 @@ module Api
               },
               tokens: {
                 accessToken: access_token,
-                expiresIn: 15.minutes.to_i
+                expiresIn: 12.hours.to_i
               }
             }
           rescue => e
@@ -103,7 +103,10 @@ module Api
       def refresh
         refresh_token = cookies[:refresh_token]
         
+        Rails.logger.info "Token refresh attempt - refresh_token present: #{refresh_token.present?}"
+        
         if refresh_token.blank?
+          Rails.logger.warn "Token refresh failed: No refresh token in cookies"
           return render json: { 
             success: false,
             error: 'No refresh token' 
@@ -114,8 +117,11 @@ module Api
           payload = JWT.decode(refresh_token, Rails.application.credentials.secret_key_base)
           user = User.find(payload[0]['user_id'])
           
+          Rails.logger.info "Token refresh for user #{user.id} (#{user.email})"
+          
           # Проверяем, не заблокирован ли пользователь
           if user.banned?
+            Rails.logger.warn "Token refresh failed: User #{user.id} is banned"
             clear_refresh_token_cookie
             return render json: { 
               success: false,
@@ -130,20 +136,24 @@ module Api
           # Обновляем refresh token в cookie
           set_refresh_token_cookie(new_refresh_token)
           
+          Rails.logger.info "Token refresh successful for user #{user.id}"
+          
           render json: {
             success: true,
             tokens: {
               accessToken: new_access_token,
-              expiresIn: 15.minutes.to_i
+              expiresIn: 12.hours.to_i
             }
           }
-        rescue JWT::DecodeError, JWT::ExpiredSignature
+        rescue JWT::DecodeError, JWT::ExpiredSignature => e
+          Rails.logger.warn "Token refresh failed: Invalid or expired refresh token - #{e.message}"
           clear_refresh_token_cookie
           render json: { 
             success: false,
             error: 'Invalid refresh token' 
           }, status: :unauthorized
-        rescue ActiveRecord::RecordNotFound
+        rescue ActiveRecord::RecordNotFound => e
+          Rails.logger.warn "Token refresh failed: User not found - #{e.message}"
           clear_refresh_token_cookie
           render json: { 
             success: false,

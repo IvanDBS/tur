@@ -208,12 +208,17 @@ module Api
       def find_search_query(search_id)
         return nil if search_id.blank?
         
-        search_query = validate_resource_access!('search_query', search_id, 'read')
-        if search_query.nil?
-          Rails.logger.info "Search query access denied for search_id: #{search_id}, continuing without it"
+        begin
+          search_query = validate_resource_access!('search_query', search_id, 'read')
+          if search_query.nil?
+            Rails.logger.info "Search query access denied for search_id: #{search_id}, continuing without it"
+            nil
+          else
+            search_query
+          end
+        rescue => e
+          Rails.logger.warn "Failed to find search query for search_id: #{search_id}, continuing without it - #{e.message}"
           nil
-        else
-          search_query
         end
       end
 

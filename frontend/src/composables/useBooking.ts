@@ -321,7 +321,8 @@ export const useBooking = () => {
 
       const requestData = {
         booking: {
-          search_id: searchResult.value.unique_key,
+          // search_id is optional and not needed for booking creation
+          // search_id: searchResult.value.unique_key, // This was causing 404 error
           booking_hash: obsBookingHash,
           total_amount: totalPrice.value,
           tour_details: {

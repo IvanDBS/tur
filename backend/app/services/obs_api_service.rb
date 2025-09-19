@@ -84,6 +84,11 @@ class ObsApiService < BaseApiService
     make_request(:get, "/api/orders/#{order_id}")
   end
 
+  # Get booking status
+  def booking_status(hash)
+    make_request(:get, "/api/v2/orders/book/#{hash}")
+  end
+
   # Get orders list with filters
   def get_orders_list(filters: {}, pagination: {})
     params = {}

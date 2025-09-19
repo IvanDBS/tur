@@ -42,7 +42,8 @@ module Api
               cancelled_at: booking.cancelled_at,
               obs_booking_hash: booking.obs_booking_hash,
               obs_order_id: booking.obs_order_id,
-              operator_id: booking.operator_id
+              operator_id: booking.operator_id,
+              operator_status: booking.operator_status
             }
           end,
           pagination: {
@@ -78,6 +79,7 @@ module Api
             obs_booking_hash: booking.obs_booking_hash,
             obs_order_id: booking.obs_order_id,
             operator_id: booking.operator_id,
+            operator_status: booking.operator_status,
             search_query: booking.search_query&.as_json(only: [:id, :obs_search_id, :created_at])
           }
         })

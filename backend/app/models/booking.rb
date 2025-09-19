@@ -27,6 +27,8 @@ class Booking < ApplicationRecord
   # OBS API status mapping
   OBS_STATUS_MAPPING = {
     'wait' => 'pending',
+    'В ожидании' => 'pending',
+    'În așteptare' => 'pending',
     'changed' => 'changed',
     'confirmed' => 'confirmed',
     'canceling' => 'processing',
@@ -113,7 +115,7 @@ class Booking < ApplicationRecord
 
   # OBS status mapping methods
   def self.map_obs_status(obs_status)
-    OBS_STATUS_MAPPING[obs_status] || 'unknown'
+    OBS_STATUS_MAPPING[obs_status] || 'pending'
   end
 
   def map_obs_status(obs_status)

@@ -35,7 +35,7 @@
           <thead>
             <tr>
               <th class="sortable" @click="sortBy('id')">
-                ID
+                #
                 <span v-if="sortField === 'id'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -47,7 +47,7 @@
                 </span>
               </th>
               <th class="sortable" @click="sortBy('operator_id')">
-                ID оператора
+                ID
                 <span v-if="sortField === 'operator_id'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -314,7 +314,7 @@
                 <StatusBadge :status="booking.status" />
               </td>
               <td class="operator-status">
-                <StatusBadge :status="booking.operator_status || 'N/A'" />
+                <StatusBadge :status="getOperatorStatus(booking)" />
               </td>
               <td class="actions">
                 <button 
@@ -464,7 +464,7 @@ const bookings = computed(() => {
   // Filter by operator status if specified
   if (searchFilters.value.operator_status && searchFilters.value.operator_status.trim()) {
     filtered = filtered.filter(booking => 
-      booking.operator_status === searchFilters.value.operator_status
+      getOperatorStatus(booking) === searchFilters.value.operator_status
     )
   }
 
@@ -612,7 +612,8 @@ const loadBookings = async () => {
       status: filters.value.status || searchFilters.value.status || undefined,
       search: combinedSearch,
       sort_field: sortField.value || undefined,
-      sort_direction: sortDirection.value || undefined
+      sort_direction: sortDirection.value || undefined,
+      _t: Date.now() // Add timestamp to prevent caching
     })
     
     
@@ -653,6 +654,7 @@ const loadBookings = async () => {
         id: booking.id,
         user: booking.user,
         status: booking.status,
+        operator_status: booking.operator_status,
         total_amount: booking.total_amount,
         tour_details: tourDetails, // Keep original OBS structure
         customer_data: customerData,
@@ -767,11 +769,19 @@ const syncAllBookings = async () => {
     // Update last sync time
     lastSyncTime.value = new Date().toLocaleString('ru-RU')
     
+    console.log('Синхронизация всех заявок запущена')
+    
+    // Wait a bit for the jobs to complete
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    
     // Reload bookings to show updated statuses
     await loadBookings()
     
+    console.log('Все заявки синхронизированы')
+    
   } catch (error) {
     console.error('Failed to sync all bookings:', error)
+    alert(`Ошибка синхронизации всех заявок: ${error.message}`)
   } finally {
     syncing.value = false
   }
@@ -782,11 +792,20 @@ const syncBooking = async (booking: AdminBooking) => {
     syncing.value = true
     const response = await apiSyncBooking(booking.id.toString())
     
+    // Show success message
+    console.log(`Синхронизация заявки ${booking.id} запущена`)
+    
+    // Wait a bit for the job to complete
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    
     // Update the specific booking status
     await loadBookings()
     
+    console.log(`Заявка ${booking.id} синхронизирована`)
+    
   } catch (error) {
     console.error('Failed to sync booking:', error)
+    alert(`Ошибка синхронизации заявки ${booking.id}: ${error.message}`)
   } finally {
     syncing.value = false
   }
@@ -814,8 +833,8 @@ const sortBookings = () => {
     
     switch (sortField.value) {
       case 'id':
-        aValue = a.id
-        bValue = b.id
+        aValue = Number(a.id)
+        bValue = Number(b.id)
         break
       case 'booking_number':
         aValue = a.obs_order_id || ''
@@ -865,6 +884,10 @@ const sortBookings = () => {
         aValue = a.status
         bValue = b.status
         break
+      case 'operator_status':
+        aValue = getOperatorStatus(a)
+        bValue = getOperatorStatus(b)
+        break
       case 'operator':
         aValue = getOperator(a)
         bValue = getOperator(b)
@@ -881,6 +904,20 @@ const sortBookings = () => {
         return 0
     }
     
+    // Handle numeric comparison for ID field
+    if (sortField.value === 'id') {
+      const aNum = Number(aValue)
+      const bNum = Number(bValue)
+      if (aNum < bNum) {
+        return sortDirection.value === 'asc' ? -1 : 1
+      }
+      if (aNum > bNum) {
+        return sortDirection.value === 'asc' ? 1 : -1
+      }
+      return 0
+    }
+    
+    // Handle string comparison for other fields
     if (String(aValue) < String(bValue)) {
       return sortDirection.value === 'asc' ? -1 : 1
     }
@@ -1006,6 +1043,27 @@ const getTouristsCount = (booking: AdminBooking) => {
 const getOperator = (booking: AdminBooking) => {
   // For now, return OBS as default, can be extended based on booking data
   return 'OBS'
+}
+
+const getOperatorStatus = (booking: AdminBooking) => {
+  // Return operator_status from API if available
+  if (booking.operator_status) {
+    return booking.operator_status
+  }
+  
+  // Try to get from tour_details (OBS structure)
+  const tourDetails = booking.tour_details as any
+  if (tourDetails?.info?.order_status?.name) {
+    return tourDetails.info.order_status.name
+  }
+  
+  // Try to get from customer_data
+  const customerData = booking.customer_data as any
+  if (customerData?.info?.order_status?.name) {
+    return customerData.info.order_status.name
+  }
+  
+  return 'N/A'
 }
 
 const getTouristsNames = (booking: AdminBooking) => {
@@ -1192,16 +1250,18 @@ onMounted(() => {
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .table th,
 .table td {
-  padding: var(--spacing-xs);
+  padding: 2px 6px;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
   color: var(--color-text);
+  line-height: 1.2;
 }
 
 .table th {
@@ -1209,33 +1269,12 @@ onMounted(() => {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   font-size: var(--font-size-sm);
+  text-align: center;
 }
 
 .table th:first-child,
 .table td:first-child {
-  width: 60px;
-  max-width: 60px;
-  min-width: 60px;
   text-align: center;
-}
-
-.table th:nth-child(4) {
-  width: 70px;
-  max-width: 70px;
-  min-width: 70px;
-}
-
-.table th:nth-child(7),
-.table th:nth-child(8) {
-  width: 70px;
-  max-width: 70px;
-  min-width: 70px;
-}
-
-.table th:nth-child(12) {
-  width: 80px;
-  max-width: 80px;
-  min-width: 80px;
 }
 
 .sortable {
@@ -1260,7 +1299,7 @@ onMounted(() => {
 }
 
 .search-row td {
-  padding: var(--spacing-xs);
+  padding: 2px 4px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -1281,16 +1320,12 @@ onMounted(() => {
 }
 
 .booking-id {
-  width: 60px;
-  max-width: 60px;
-  min-width: 60px;
   text-align: center !important;
 }
 
 .user-info {
   min-width: 150px;
 }
-
 
 .hotel-info {
   min-width: 200px;
@@ -1370,7 +1405,7 @@ onMounted(() => {
 
 .actions {
   text-align: center;
-  padding: var(--spacing-xs);
+  padding: 2px;
 }
 
 .action-btn {

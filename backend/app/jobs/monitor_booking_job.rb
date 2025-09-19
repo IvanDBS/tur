@@ -129,7 +129,17 @@ class MonitorBookingJob < ApplicationJob
         base_url: ENV['OBS_API_BASE_URL'] || 'https://test-v2.obs.md',
         access_token: ObsSiteAuthService.instance.access_token
       )
-      booking_data = obs_service.booking_status(booking.obs_booking_hash)
+      
+      # Try to get order details by operator_id first (like in modal)
+      booking_data = nil
+      if booking.operator_id.present?
+        booking_data = obs_service.get_order_details(booking.operator_id.to_i)
+      end
+      
+      # Fallback to booking_status if no operator_id or no data
+      if booking_data.nil?
+        booking_data = obs_service.booking_status(booking.obs_booking_hash)
+      end
 
       # Update booking based on OBS status
       update_booking_from_obs_data(booking, booking_data)

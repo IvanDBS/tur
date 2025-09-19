@@ -292,6 +292,9 @@ export default {
     selectTitle: 'Selectați titlul',
     passportValidityWarning: 'Pașaportul este valabil mai puțin de 6 luni!',
     birthDateWarning: 'Data nașterii nu poate fi în viitor!',
+    nameValidationWarning: 'Doar literele latine sunt permise!',
+    passportValidationWarning: 'Doar literele latine și cifrele sunt permise!',
+    fiscalCodeValidationWarning: 'Doar cifrele sunt permise!',
     other: 'Altul'
   },
   timeUnits: {
@@ -329,6 +332,7 @@ export default {
     mealBySystem: 'masă prin sistemul',
     errorLoading: 'Eroare la încărcare',
     tryAgain: 'Încearcă din nou',
+    processingBooking: 'Procesăm rezervarea dvs...',
     searchResultNotFound: 'Rezultatul căutării nu a fost găsit',
     searchResultNotFoundDesc: 'Nu s-au putut găsi datele pentru rezervare. Reveniți la căutare și încercați din nou.',
     backToSearch: 'Înapoi la căutare',

@@ -265,6 +265,9 @@ export default {
     selectNationality: 'Select nationality',
     passportValidityWarning: 'Passport validity less than 6 months!',
     birthDateWarning: 'Birth date cannot be in the future!',
+    nameValidationWarning: 'Only Latin letters are allowed!',
+    passportValidationWarning: 'Only Latin letters and numbers are allowed!',
+    fiscalCodeValidationWarning: 'Only numbers are allowed!',
     other: 'Other'
   },
   daysOfWeek: {
@@ -333,6 +336,7 @@ export default {
     mealBySystem: 'meal by system',
     errorLoading: 'Loading error',
     tryAgain: 'Try again',
+    processingBooking: 'Processing your booking...',
     searchResultNotFound: 'Search result not found',
     searchResultNotFoundDesc: 'Could not find data for booking. Return to search and try again.',
     backToSearch: 'Back to search',

@@ -274,6 +274,9 @@ export default {
     selectTitle: 'Unvan seçin',
     passportValidityWarning: 'Pasaport geçerlilik süresi 6 aydan az!',
     birthDateWarning: 'Doğum tarihi gelecekte olamaz!',
+    nameValidationWarning: 'Sadece Latin harflerine izin verilir!',
+    passportValidationWarning: 'Sadece Latin harfleri ve rakamlar izin verilir!',
+    fiscalCodeValidationWarning: 'Sadece rakamlar izin verilir!',
     other: 'Diğer'
   },
   timeUnits: {
@@ -310,6 +313,7 @@ export default {
     mealBySystem: 'yemek sistemi',
     errorLoading: 'Yükleme hatası',
     tryAgain: 'Tekrar dene',
+    processingBooking: 'Rezervasyonunuz işleniyor...',
     searchResultNotFound: 'Arama sonucu bulunamadı',
     searchResultNotFoundDesc: 'Rezervasyon için veri bulunamadı. Aramaya geri dönün ve tekrar deneyin.',
     backToSearch: 'Aramaya geri dön',

@@ -53,6 +53,13 @@
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'lastName') }"
           />
+          <!-- Last Name Validation Warning -->
+          <div v-if="getNameFieldWarning(tourist, 'lastName')" class="field-warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+              {{ $t('touristInfo.nameValidationWarning') }}
+            </div>
+          </div>
           </div>
 
           <!-- First Name -->
@@ -67,6 +74,13 @@
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'firstName') }"
           />
+          <!-- First Name Validation Warning -->
+          <div v-if="getNameFieldWarning(tourist, 'firstName')" class="field-warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+              {{ $t('touristInfo.nameValidationWarning') }}
+            </div>
+          </div>
           </div>
 
           <!-- Birth Date -->
@@ -97,6 +111,13 @@
             class="form-input"
             :class="{ 'error': getFieldError(tourist.id, 'passportNumber') }"
           />
+          <!-- Passport Validation Warning -->
+          <div v-if="getPassportFieldWarning(tourist)" class="field-warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+              {{ $t('touristInfo.passportValidationWarning') }}
+            </div>
+          </div>
           </div>
 
           <!-- Passport Expiry -->
@@ -143,6 +164,13 @@
             :placeholder="$t('searchResults.enterFiscalCode')"
             class="form-input"
           />
+          <!-- Fiscal Code Validation Warning -->
+          <div v-if="getFiscalCodeWarning(tourist)" class="field-warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+              {{ $t('touristInfo.fiscalCodeValidationWarning') }}
+            </div>
+          </div>
           </div>
         </div>
 
@@ -206,7 +234,14 @@ const getTouristTitle = (index: number) => {
 }
 
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
-  emit('update:tourist', touristId, field, value)
+  let processedValue = value
+  
+  // Auto-convert to uppercase for text fields
+  if (typeof value === 'string' && ['firstName', 'lastName', 'passportNumber', 'fiscalCode'].includes(field)) {
+    processedValue = value.toUpperCase()
+  }
+  
+  emit('update:tourist', touristId, field, processedValue)
 }
 
 const getFieldError = (touristId: string, field: string) => {
@@ -238,6 +273,47 @@ const getBirthDateWarning = (tourist: TouristData) => {
   } catch {
     return false
   }
+}
+
+// Validation functions
+const validateNameField = (value: string) => {
+  if (!value) return false
+  // Only Latin letters, spaces, hyphens, and apostrophes
+  const latinRegex = /^[a-zA-Z\s\-']+$/
+  return latinRegex.test(value)
+}
+
+const validatePassportField = (value: string) => {
+  if (!value) return false
+  // Only Latin letters and numbers
+  const passportRegex = /^[a-zA-Z0-9]+$/
+  return passportRegex.test(value)
+}
+
+const validateFiscalCodeField = (value: string) => {
+  if (!value) return true // Fiscal code is optional
+  // Only numbers
+  const fiscalRegex = /^[0-9]+$/
+  return fiscalRegex.test(value)
+}
+
+// Get validation warnings
+const getNameFieldWarning = (tourist: TouristData, field: 'firstName' | 'lastName') => {
+  const value = tourist[field]
+  if (!value) return false
+  return !validateNameField(value)
+}
+
+const getPassportFieldWarning = (tourist: TouristData) => {
+  const value = tourist.passportNumber
+  if (!value) return false
+  return !validatePassportField(value)
+}
+
+const getFiscalCodeWarning = (tourist: TouristData) => {
+  const value = tourist.fiscalCode
+  if (!value) return false
+  return !validateFiscalCodeField(value)
 }
 
 const getMaxBirthDate = () => {
@@ -380,6 +456,29 @@ const getMinPassportDate = () => {
 
 .birthdate-warning .warning-text {
   font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.field-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+}
+
+.field-warning .warning-icon {
+  font-size: 0.875rem;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.field-warning .warning-text {
+  font-size: 0.75rem;
   color: #dc2626;
   font-weight: 500;
 }

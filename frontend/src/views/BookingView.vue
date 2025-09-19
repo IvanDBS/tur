@@ -15,9 +15,11 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ $t('searchResults.loading') }}</p>
+      <div v-if="loading" class="booking-loading">
+        <div class="spinner-container">
+          <div class="blue-spinner spinner-large"></div>
+          <p class="spinner-text">{{ $t('bookingSummary.processingBooking') }}</p>
+        </div>
       </div>
 
       <!-- Error State -->
@@ -141,6 +143,7 @@ import { ref, onMounted, watch } from 'vue'
 // import { useRoute, useRouter } from 'vue-router' // TODO: implement route usage
 import { useBooking } from '../composables/useBooking'
 import { useI18n } from '../composables/useI18n'
+import '../styles/spinners.css'
 // import { useSearchData } from '../composables/useSearchData' // TODO: implement search functionality
 // Import components directly
 import HotelInfoBlock from '../components/booking/HotelInfoBlock.vue'
@@ -299,6 +302,9 @@ const retryLoad = () => {
 // }
 
 const handleBook = async () => {
+  // Scroll to top to show the spinner
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  
   const result = await createBooking(bookingNotes.value)
   if (result) {
     // Booking created
@@ -544,7 +550,16 @@ onMounted(async () => {
   margin: 0;
 }
 
-.loading-state,
+.booking-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  padding: 2rem;
+}
+
 .error-state,
 .no-result-state {
   display: flex;
@@ -557,21 +572,6 @@ onMounted(async () => {
   border-radius: 12px;
   border: 1px solid var(--color-border);
   padding: 3rem;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--color-border);
-  border-top: 4px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .error-icon,

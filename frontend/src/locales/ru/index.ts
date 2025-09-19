@@ -293,6 +293,9 @@ export default {
     selectTitle: 'Выберите обращение',
     passportValidityWarning: 'Срок действия паспорта менее 6 месяцев!',
     birthDateWarning: 'Дата рождения не может быть в будущем!',
+    nameValidationWarning: 'Только латинские буквы разрешены!',
+    passportValidationWarning: 'Только латинские буквы и цифры разрешены!',
+    fiscalCodeValidationWarning: 'Только цифры разрешены!',
     other: 'Другое'
   },
   timeUnits: {
@@ -339,6 +342,7 @@ export default {
     mealBySystem: 'питание по системе',
     errorLoading: 'Ошибка загрузки',
     tryAgain: 'Попробовать снова',
+    processingBooking: 'Обрабатываем ваше бронирование...',
     searchResultNotFound: 'Результат поиска не найден',
     searchResultNotFoundDesc: 'Не удалось найти данные для бронирования. Вернитесь к поиску и попробуйте снова.',
     backToSearch: 'Вернуться к поиску',

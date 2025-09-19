@@ -5,16 +5,9 @@
       <div class="modal-header">
         <div class="flex justify-between items-start gap-4 mb-6">
           <div>
-            <h2 class="text-xl font-bold text-primary mb-2">
+            <h2 class="text-xl font-bold text-primary mb-4">
               {{ isAdminMode ? 'Детали пакета' : 'Детали бронирования' }}
             </h2>
-            <div class="flex flex-col gap-1">
-              <div class="text-sm text-secondary">ID: {{ booking.id }}</div>
-              <div class="text-sm text-secondary">
-                Создано: {{ formatDate(booking.created_at) }} {{ formatTime(booking.created_at) }}
-              </div>
-              <div class="text-sm text-secondary">Статус: {{ getStatusLabel(booking.status) }}</div>
-            </div>
           </div>
           <button class="modal-close" @click="closeModal">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -22,63 +15,115 @@
             </svg>
           </button>
         </div>
-        
-        <!-- Admin info -->
-        <div v-if="isAdminMode" class="card">
-          <div class="grid grid-4 gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-secondary uppercase tracking-wide">Владелец</label>
-              <span class="text-sm font-medium text-primary">
-                {{ booking.user?.first_name || booking.user?.email?.split('@')[0] || '-' }}
-              </span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-secondary uppercase tracking-wide">Email</label>
-              <span class="text-sm font-medium text-primary">{{ booking.user?.email || '-' }}</span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-secondary uppercase tracking-wide">Телефон</label>
-              <span class="text-sm font-medium text-primary">{{ booking.user?.phone || '-' }}</span>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-secondary uppercase tracking-wide">Статус</label>
-              <StatusBadge :status="booking.status" />
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="modal-body">
+        <!-- Booking Information -->
+        <div class="section">
+          <div class="section-content">
+            <div class="header-table">
+              <div class="table-row">
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">ID</label>
+                </div>
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">Создано</label>
+                </div>
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">Пользователь</label>
+                </div>
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">Email</label>
+                </div>
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">Телефон</label>
+                </div>
+                <div class="table-cell">
+                  <label class="uppercase tracking-wide">Статус</label>
+                </div>
+              </div>
+              <div class="table-row">
+                <div class="table-cell">
+                  <span>{{ booking.id }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ formatDateWithYear(booking.created_at) }} {{ formatTime(booking.created_at) }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>
+                    {{ booking.user?.first_name || booking.user?.email?.split('@')[0] || '-' }}
+                  </span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ booking.user?.email || '-' }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ booking.user?.phone || '-' }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getStatusLabel(booking.status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Hotel Information -->
         <div class="section">
           <div class="section-header">
-            <div class="section-icon">🏨</div>
-            <h3 class="section-title">Отель</h3>
+            <div class="flex items-center gap-2">
+              <div class="section-icon">
+                <img :src="HotelIcon" alt="Hotel" class="icon-svg" />
+              </div>
+              <h3 class="section-title">Отель</h3>
+              <div class="section-status">
+                <span class="text-sm text-secondary">Статус: </span>
+                <span class="text-sm" :class="booking.status === 'pending' ? 'text-warning' : 'text-secondary'">{{ getStatusLabel(booking.status) }}</span>
+              </div>
+            </div>
           </div>
           <div class="section-content">
-            <div class="mb-6">
+            <div class="mb-6" style="padding-left: 1.5rem;">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-lg font-semibold text-primary">{{ getHotelName() }}</span>
                 <span class="text-sm text-primary font-medium">{{ getHotelCategory() }}</span>
                 <span class="text-sm text-secondary">{{ getHotelCity() }}</span>
               </div>
             </div>
-            <div class="grid grid-4 gap-4">
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Тип комнаты</label>
-                <span class="text-sm font-medium text-primary">{{ getRoomType() }}</span>
+            <div class="hotel-table">
+              <div class="table-row">
+                <div class="table-cell">
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Тип комнаты</label>
+                </div>
+                <div class="table-cell">
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Питание</label>
+                </div>
+                <div class="table-cell">
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Даты проживания</label>
+                </div>
+                <div class="table-cell">
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Ночей</label>
+                </div>
+                <div class="table-cell">
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Оператор</label>
+                </div>
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Питание</label>
-                <span class="text-sm font-medium text-primary">{{ getMealPlan() }}</span>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Даты проживания</label>
-                <span class="text-sm font-medium text-primary">{{ getCheckInDate() }} - {{ getCheckOutDate() }}</span>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Ночей</label>
-                <span class="text-sm font-medium text-primary">{{ getNights() }}</span>
+              <div class="table-row">
+                <div class="table-cell">
+                  <span class="text-sm font-medium text-primary">{{ getRoomType() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span class="text-sm font-medium text-primary">{{ getMealPlan() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span class="text-sm font-medium text-primary">{{ getCheckInDate() }} - {{ getCheckOutDate() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span class="text-sm font-medium text-primary">{{ getNights() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span class="text-sm font-medium text-primary">{{ getOperator() }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -87,28 +132,30 @@
         <!-- Tourists -->
         <div v-if="getTourists().length > 0" class="section">
           <div class="section-header">
-            <div class="section-icon">👥</div>
+            <div class="section-icon">
+              <img :src="PeopleIcon" alt="People" class="icon-svg" />
+            </div>
             <h3 class="section-title">Туристы</h3>
           </div>
           <div class="section-content">
-            <div v-for="(tourist, index) in getTourists()" :key="index" class="flex gap-4 p-4 bg-soft rounded border mb-4 last:mb-0">
-              <div class="text-sm font-semibold text-primary min-w-[40px] flex items-center">№ {{ index + 1 }}</div>
-              <div class="grid grid-4 gap-4 flex-1">
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-secondary uppercase tracking-wide">ФИО</label>
-                  <span class="text-sm font-medium text-primary">{{ getTouristName(tourist) }}</span>
+            <div v-for="(tourist, index) in getTourists()" :key="index" class="tourist-item">
+              <div class="tourist-number">№ {{ index + 1 }}</div>
+              <div class="tourist-info">
+                <div class="info-item">
+                  <label class="info-label">ФИО</label>
+                  <span class="info-value">{{ getTouristName(tourist) }}</span>
                 </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-secondary uppercase tracking-wide">ДАТА РОЖДЕНИЯ</label>
-                  <span class="text-sm font-medium text-primary">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</span>
+                <div class="info-item">
+                  <label class="info-label">Дата рождения</label>
+                  <span class="info-value">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</span>
                 </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-secondary uppercase tracking-wide">ПАСПОРТ</label>
-                  <span class="text-sm font-medium text-primary">{{ getTouristPassport(tourist) }}</span>
+                <div class="info-item">
+                  <label class="info-label">Паспорт</label>
+                  <span class="info-value">{{ getTouristPassport(tourist) }}</span>
                 </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-secondary uppercase tracking-wide">ГРАЖДАНСТВО</label>
-                  <span class="text-sm font-medium text-primary">{{ tourist.nationality || 'MOLDOVA' }}</span>
+                <div class="info-item">
+                  <label class="info-label">Гражданство</label>
+                  <span class="info-value">{{ tourist.nationality || 'MOLDOVA' }}</span>
                 </div>
               </div>
             </div>
@@ -118,98 +165,92 @@
         <!-- Flight Information -->
         <div v-if="getSelectedFlight()" class="section">
           <div class="section-header">
-            <div class="section-icon">✈️</div>
-            <h3 class="section-title">Перелет</h3>
+            <div class="flex items-center gap-2">
+              <div class="section-icon">
+                <img :src="PlaneIcon" alt="Plane" class="icon-svg" />
+              </div>
+              <h3 class="section-title">Перелет</h3>
+              <div class="section-status">
+                <span class="text-sm text-secondary">Статус: </span>
+                <span class="text-sm" :class="getFlightStatusClass()">{{ getFlightStatus() }}</span>
+              </div>
+            </div>
           </div>
           <div class="section-content">
-            <div v-for="(tourist, index) in getTourists()" :key="index" class="flex gap-4 p-4 bg-soft rounded border mb-4 last:mb-0 items-start">
-              <!-- Tourist Info -->
-              <div class="flex flex-col gap-2 min-w-[150px] flex-shrink-0">
-                <div class="text-sm font-semibold text-primary text-center p-2 bg-white rounded border">№ {{ index + 1 }}</div>
-                <div class="flex flex-col gap-1">
-                  <div class="text-sm font-semibold text-primary text-center">{{ getTouristName(tourist) }}</div>
-                  <div class="text-xs text-secondary text-center">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</div>
+            <div class="flight-table">
+              <div class="table-row">
+                <div class="table-cell">
+                  <label>Турист</label>
+                </div>
+                <div class="table-cell">
+                  <label>Из</label>
+                </div>
+                <div class="table-cell">
+                  <label>В</label>
+                </div>
+                <div class="table-cell">
+                  <label>Вылет</label>
+                </div>
+                <div class="table-cell">
+                  <label>Прилет</label>
+                </div>
+                <div class="table-cell">
+                  <label>Рейс</label>
+                </div>
+                <div class="table-cell">
+                  <label>Время в пути</label>
                 </div>
               </div>
-              
-              <!-- Flight Info -->
-              <div class="flex gap-2 flex-1">
-                <!-- Outbound Flight -->
-                <div class="flex gap-2 flex-1 p-4 bg-white rounded border">
-                  <div class="flex flex-col items-center gap-1 min-w-[80px] flex-shrink-0">
-                    <div class="text-sm font-semibold text-primary text-center">Туда</div>
-                  </div>
-                  <div class="flex flex-col gap-1 flex-1">
-                    <div class="flex gap-2">
-                      <div class="flex flex-col gap-1 flex-1">
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Из:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundFrom() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Вылет</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundDeparture() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Рейс</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundFlightInfo() }}</span>
-                        </div>
-                      </div>
-                      <div class="flex flex-col gap-1 flex-1">
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">В:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundTo() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Прилет</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundArrival() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Время в пути:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getOutboundTravelTime() }}</span>
-                        </div>
-                      </div>
-                    </div>
+              <div v-for="(tourist, index) in getTourists()" :key="index" class="table-row">
+                <div class="table-cell">
+                  <div class="tourist-info">
+                    <div class="tourist-name">{{ getTouristName(tourist) }}</div>
+                    <div class="tourist-birthday">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</div>
                   </div>
                 </div>
-                
-                <!-- Inbound Flight -->
-                <div class="flex gap-2 flex-1 p-4 bg-white rounded border">
-                  <div class="flex flex-col items-center gap-1 min-w-[80px] flex-shrink-0">
-                    <div class="text-sm font-semibold text-primary text-center">Обратно</div>
+                <div class="table-cell">
+                  <span>{{ getOutboundFrom() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getOutboundTo() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getOutboundDeparture() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getOutboundArrival() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getOutboundFlightInfo() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getOutboundTravelTime() }}</span>
+                </div>
+              </div>
+              <div v-for="(tourist, index) in getTourists()" :key="`back-${index}`" class="table-row">
+                <div class="table-cell">
+                  <div class="tourist-info">
+                    <div class="tourist-name">{{ getTouristName(tourist) }}</div>
+                    <div class="tourist-birthday">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</div>
                   </div>
-                  <div class="flex flex-col gap-1 flex-1">
-                    <div class="flex gap-2">
-                      <div class="flex flex-col gap-1 flex-1">
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Из:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundFrom() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Вылет</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundDeparture() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Рейс</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundFlightInfo() }}</span>
-                        </div>
-                      </div>
-                      <div class="flex flex-col gap-1 flex-1">
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">В:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundTo() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Прилет</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundArrival() }}</span>
-                        </div>
-                        <div class="flex gap-2 items-start">
-                          <span class="text-xs font-semibold text-secondary min-w-[35px] flex-shrink-0">Время в пути:</span>
-                          <span class="text-xs font-medium text-primary flex-1">{{ getInboundTravelTime() }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundFrom() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundTo() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundDeparture() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundArrival() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundFlightInfo() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInboundTravelTime() }}</span>
                 </div>
               </div>
             </div>
@@ -218,54 +259,86 @@
 
         <!-- Additional Services Information -->
         <div v-if="hasAdditionalServices()" class="section">
-          <div class="section-header">
-            <div class="section-icon">🚌</div>
+          <div class="section-header services-section">
+            <div class="section-icon">
+              <img :src="AdditionalServicesIcon" alt="Services" class="icon-svg" />
+            </div>
             <h3 class="section-title">Дополнительные услуги</h3>
           </div>
           <div class="section-content">
-            <div class="flex flex-col gap-2 p-4 bg-soft rounded border mb-4 last:mb-0">
-              <div class="flex items-center gap-2 mb-1">
-                <div class="text-lg w-6 h-6 flex items-center justify-center">🛡️</div>
-                <div class="text-base font-semibold text-primary">Страхование</div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <div class="text-sm font-semibold text-secondary">{{ getInsuranceName() }}</div>
-                <div class="text-sm text-muted leading-relaxed">{{ getInsuranceDescription() }}</div>
-                <div v-if="!getInsuranceIncluded()" class="text-sm font-semibold text-primary text-right">
-                  + {{ getInsurancePrice() }} EUR
+            <div class="services-table">
+              <div class="table-row">
+                <div class="table-cell">
+                  <label>Услуга</label>
                 </div>
-                <div v-else class="text-sm font-semibold text-success text-right">
-                  Включено
+                <div class="table-cell">
+                  <label>Название</label>
                 </div>
-              </div>
-            </div>
-            
-            <div class="flex flex-col gap-2 p-4 bg-soft rounded border mb-4 last:mb-0">
-              <div class="flex items-center gap-2 mb-1">
-                <div class="text-lg w-6 h-6 flex items-center justify-center">🚐</div>
-                <div class="text-base font-semibold text-primary">Трансфер</div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <div class="text-sm font-semibold text-secondary">{{ getTransferName() }}</div>
-                <div class="text-sm text-muted leading-relaxed">{{ getTransferDescription() }}</div>
-                <div v-if="!getTransferIncluded()" class="text-sm font-semibold text-primary text-right">
-                  + {{ getTransferPrice() }} EUR
+                <div class="table-cell">
+                  <label>Описание</label>
                 </div>
-                <div v-else class="text-sm font-semibold text-success text-right">
-                  Включено
+                <div class="table-cell">
+                  <label>Статус</label>
                 </div>
               </div>
-            </div>
-
-            <div v-if="getCovidInsuranceType() === 'COVID_19'" class="flex flex-col gap-2 p-4 bg-soft rounded border mb-4 last:mb-0">
-              <div class="flex items-center gap-2 mb-1">
-                <div class="text-lg w-6 h-6 flex items-center justify-center">🦠</div>
-                <div class="text-base font-semibold text-primary">COVID-19 страхование</div>
+              <div class="table-row">
+                <div class="table-cell">
+                  <div class="service-info">
+                    <div class="service-icon">
+                      <img :src="InsuranceIcon" alt="Insurance" class="icon-svg" />
+                    </div>
+                    <div class="service-name">Страхование</div>
+                  </div>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInsuranceName() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getInsuranceDescription() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span v-if="!getInsuranceIncluded()" class="text-primary">+ {{ getInsurancePrice() }} EUR</span>
+                  <span v-else class="text-success">Включено</span>
+                </div>
               </div>
-              <div class="flex flex-col gap-1">
-                <div class="text-sm font-semibold text-secondary">COVID-19</div>
-                <div class="text-sm text-muted leading-relaxed">Дополнительная страховка от COVID-19</div>
-                <div class="text-sm font-semibold text-primary text-right">+ {{ getCovidInsurancePrice() }} EUR</div>
+              <div class="table-row">
+                <div class="table-cell">
+                  <div class="service-info">
+                    <div class="service-icon">
+                      <img :src="BusIcon" alt="Transfer" class="icon-svg" />
+                    </div>
+                    <div class="service-name">Трансфер</div>
+                  </div>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getTransferName() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getTransferDescription() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span v-if="!getTransferIncluded()" class="text-primary">+ {{ getTransferPrice() }} EUR</span>
+                  <span v-else class="text-success">Включено</span>
+                </div>
+              </div>
+              <div v-if="getCovidInsuranceType() === 'COVID_19'" class="table-row">
+                <div class="table-cell">
+                  <div class="service-info">
+                    <div class="service-icon">
+                      <img :src="InsuranceIcon" alt="COVID-19" class="icon-svg" />
+                    </div>
+                    <div class="service-name">COVID-19</div>
+                  </div>
+                </div>
+                <div class="table-cell">
+                  <span>COVID-19</span>
+                </div>
+                <div class="table-cell">
+                  <span>Дополнительная страховка от COVID-19</span>
+                </div>
+                <div class="table-cell">
+                  <span class="text-primary">+ {{ getCovidInsurancePrice() }} EUR</span>
+                </div>
               </div>
             </div>
           </div>
@@ -274,26 +347,40 @@
         <!-- Payment Information -->
         <div class="section">
           <div class="section-header">
-            <div class="section-icon">💰</div>
+            <div class="section-icon">
+              <img :src="BillIcon" alt="Payment" class="icon-svg" />
+            </div>
             <h3 class="section-title">Оплата</h3>
           </div>
-          <div class="payment-info">
-            <div class="grid grid-4 gap-4">
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Сумма</label>
-                <span class="text-lg font-bold text-primary">{{ booking.total_amount }} EUR</span>
+          <div class="section-content">
+            <div class="payment-table">
+              <div class="table-row">
+                <div class="table-cell">
+                  <label>Сумма</label>
+                </div>
+                <div class="table-cell">
+                  <label>Статус оплаты</label>
+                </div>
+                <div class="table-cell">
+                  <label>Дата создания</label>
+                </div>
+                <div v-if="booking.confirmed_at" class="table-cell">
+                  <label>Дата подтверждения</label>
+                </div>
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Статус оплаты</label>
-                <span class="text-sm font-medium text-primary">{{ getPaymentStatus() }}</span>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Дата создания</label>
-                <span class="text-sm font-medium text-primary">{{ formatDateTime(booking.created_at) }}</span>
-              </div>
-              <div v-if="booking.confirmed_at" class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-secondary uppercase tracking-wide">Дата подтверждения</label>
-                <span class="text-sm font-medium text-primary">{{ formatDateTime(booking.confirmed_at) }}</span>
+              <div class="table-row">
+                <div class="table-cell">
+                  <span class="text-lg font-bold text-primary">{{ booking.total_amount }} EUR</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ getPaymentStatus() }}</span>
+                </div>
+                <div class="table-cell">
+                  <span>{{ formatDateTime(booking.created_at) }}</span>
+                </div>
+                <div v-if="booking.confirmed_at" class="table-cell">
+                  <span>{{ formatDateTime(booking.confirmed_at) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -343,9 +430,18 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { BaseButton } from '../ui'
 import { StatusBadge } from '../ui'
-import { formatDate, formatDateTime } from '../../utils/dateUtils'
+import { formatDate, formatDateTime, formatDateWithYear } from '../../utils/dateUtils'
 import { logger } from '../../utils/logger'
 import { useAdminApi } from '../../composables/useAdminApi'
+
+// Icon paths
+const HotelIcon = '/src/assets/icons/hotel.svg'
+const PeopleIcon = '/src/assets/icons/people.svg'
+const PlaneIcon = '/src/assets/icons/plane.svg'
+const BusIcon = '/src/assets/icons/bus-03.svg'
+const InsuranceIcon = '/src/assets/icons/insurance-hand.svg'
+const BillIcon = '/src/assets/icons/bill.svg'
+const AdditionalServicesIcon = '/src/assets/icons/file-addition-one.svg'
 
 // Props
 interface Props {
@@ -495,6 +591,13 @@ const getPaymentStatus = () => {
 // Hotel data methods
 const getHotelName = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.name) {
+    return obsOrderDetails.value.hotels[0].name
+  }
+  
+  // PRIORITY 2: Check tour_details data
   if (tourDetails?.hotel?.hotel) {
     return tourDetails.hotel.hotel
   }
@@ -506,6 +609,13 @@ const getHotelName = () => {
 
 const getHotelCategory = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.category) {
+    return obsOrderDetails.value.hotels[0].category
+  }
+  
+  // PRIORITY 2: Check tour_details data
   if (tourDetails?.hotel?.hotel_category) {
     return tourDetails.hotel.hotel_category
   }
@@ -517,6 +627,13 @@ const getHotelCategory = () => {
 
 const getHotelCity = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.city) {
+    return obsOrderDetails.value.hotels[0].city
+  }
+  
+  // PRIORITY 2: Check tour_details data
   if (tourDetails?.hotel?.city) {
     return tourDetails.hotel.city
   }
@@ -525,6 +642,13 @@ const getHotelCity = () => {
 
 const getRoomType = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.room) {
+    return obsOrderDetails.value.hotels[0].room
+  }
+  
+  // PRIORITY 2: Check tour_details data
   if (tourDetails?.hotel?.room) {
     return tourDetails.hotel.room
   }
@@ -533,6 +657,13 @@ const getRoomType = () => {
 
 const getMealPlan = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.meal) {
+    return obsOrderDetails.value.hotels[0].meal
+  }
+  
+  // PRIORITY 2: Check tour_details data
   if (tourDetails?.hotel?.meal) {
     return tourDetails.hotel.meal
   }
@@ -541,6 +672,20 @@ const getMealPlan = () => {
 
 const getCheckInDate = () => {
   const tourDetails = props.booking.tour_details as any
+  
+  // PRIORITY 1: Check OBS API data (external operator service)
+  if (obsOrderDetails.value?.hotels?.[0]?.check_in) {
+    const checkIn = obsOrderDetails.value.hotels[0].check_in
+    if (checkIn && checkIn !== 'N/A') {
+      try {
+        return formatDate(checkIn)
+      } catch {
+        return checkIn
+      }
+    }
+  }
+  
+  // PRIORITY 2: Check tour_details data
   const checkIn = tourDetails?.hotel?.check_in || tourDetails?.check_in
   if (checkIn && checkIn !== 'N/A') {
     try {
@@ -571,6 +716,72 @@ const getNights = () => {
     return tourDetails.hotel.nights
   }
   return tourDetails?.nights || 0
+}
+
+const getOperator = () => {
+  const tourDetails = props.booking.tour_details as any
+  
+  // Debug logging
+  console.log('🔍 getOperator - tourDetails:', tourDetails)
+  console.log('🔍 getOperator - obsOrderDetails:', obsOrderDetails.value)
+  console.log('🔍 getOperator - obsOrderDetails.hotels:', obsOrderDetails.value?.hotels)
+  console.log('🔍 getOperator - obsOrderDetails.hotels[0]:', obsOrderDetails.value?.hotels?.[0])
+  console.log('🔍 getOperator - obsOrderDetails.hotels[0].operator:', obsOrderDetails.value?.hotels?.[0]?.operator)
+  
+  // PRIORITY 1: Check OBS API data (external operator service) - hotels[0].operator
+  if (obsOrderDetails.value?.hotels?.[0]?.operator) {
+    console.log('✅ Found operator in OBS API hotels[0].operator:', obsOrderDetails.value.hotels[0].operator)
+    return obsOrderDetails.value.hotels[0].operator
+  }
+  
+  // PRIORITY 2: Check tour_details API format: hotels[0].operator
+  if (tourDetails?.hotels?.[0]?.operator) {
+    console.log('✅ Found operator in tour_details hotels[0].operator:', tourDetails.hotels[0].operator)
+    return tourDetails.hotels[0].operator
+  }
+  
+  // PRIORITY 3: Check old format: hotel.operator
+  if (tourDetails?.hotel?.operator) {
+    console.log('✅ Found operator in hotel.operator:', tourDetails.hotel.operator)
+    return tourDetails.hotel.operator
+  }
+  
+  // PRIORITY 4: Check direct operator field
+  if (tourDetails?.operator) {
+    console.log('✅ Found operator in operator:', tourDetails.operator)
+    return tourDetails.operator
+  }
+  
+  console.log('❌ No operator found')
+  return 'Не указано'
+}
+
+const getFlightStatus = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.fly_segments_there?.[0]?.status) {
+    const status = flight.fly_segments_there[0].status
+    return status === 'confirmed' ? 'Подтвержден' : status
+  }
+  if (flight?.fly_segments_back?.[0]?.status) {
+    const status = flight.fly_segments_back[0].status
+    return status === 'confirmed' ? 'Подтвержден' : status
+  }
+  return 'Не указано'
+}
+
+const getFlightStatusClass = () => {
+  const flight = getSelectedFlight() as any
+  if (flight?.fly_segments_there?.[0]?.status) {
+    const status = flight.fly_segments_there[0].status
+    if (status === 'confirmed') return 'text-success'
+    if (status === 'pending' || status === 'В ожидании') return 'text-warning'
+  }
+  if (flight?.fly_segments_back?.[0]?.status) {
+    const status = flight.fly_segments_back[0].status
+    if (status === 'confirmed') return 'text-success'
+    if (status === 'pending' || status === 'В ожидании') return 'text-warning'
+  }
+  return ''
 }
 
 // Tourist data methods
@@ -1350,3 +1561,246 @@ export default {
   name: 'BookingDetailsModalSimple'
 }
 </script>
+
+<style scoped>
+.section-content {
+  padding: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+/* Специальное выравнивание для иконок, которые должны быть по центру текста */
+.section-header:not(.services-section) .section-icon {
+  align-items: flex-start;
+  padding-top: 0.125rem;
+}
+
+.section-status {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.header-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  table-layout: fixed;
+}
+
+.hotel-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.flight-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  table-layout: fixed;
+}
+
+.flight-table .table-cell:first-child {
+  width: 25%;
+}
+
+.flight-table .table-cell span {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.services-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  table-layout: fixed;
+}
+
+.payment-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+  table-layout: fixed;
+}
+
+.service-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.service-icon {
+  font-size: 0.875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-name {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.text-warning {
+  color: #f59e0b;
+}
+
+.text-success {
+  color: #10b981;
+}
+
+.icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+}
+
+.table-row {
+  display: table-row;
+}
+
+.table-cell {
+  display: table-cell;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: normal;
+}
+
+.table-cell:first-child {
+  padding-left: 1.5rem;
+}
+
+.table-cell:last-child {
+  padding-right: 1.5rem;
+}
+
+.tourist-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tourist-item:last-child {
+  border-bottom: none;
+}
+
+.tourist-number {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: normal;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.tourist-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  flex: 1;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.info-value {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.flight-table .tourist-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flight-table .tourist-name {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.flight-table .tourist-birthday {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: normal;
+}
+
+.table-row:first-child .table-cell {
+  border-bottom: 1px solid var(--color-border);
+  background-color: #f8fafc;
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.table-row:last-child .table-cell {
+  border-bottom: none;
+}
+
+@media (max-width: 768px) {
+  .header-table,
+  .hotel-table,
+  .flight-table,
+  .services-table,
+  .payment-table {
+    display: block;
+  }
+  
+  .table-row {
+    display: block;
+    margin-bottom: 1rem;
+  }
+  
+  .table-cell {
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: none;
+  }
+  
+  .table-row:first-child .table-cell {
+    border-bottom: 1px solid var(--color-border);
+    background-color: transparent;
+  }
+}
+</style>

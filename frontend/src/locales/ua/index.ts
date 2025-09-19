@@ -274,6 +274,9 @@ export default {
     selectTitle: 'Оберіть звернення',
     passportValidityWarning: 'Термін дії паспорта менше 6 місяців!',
     birthDateWarning: 'Дата народження не може бути в майбутньому!',
+    nameValidationWarning: 'Дозволені тільки латинські літери!',
+    passportValidationWarning: 'Дозволені тільки латинські літери та цифри!',
+    fiscalCodeValidationWarning: 'Дозволені тільки цифри!',
     other: 'Інше'
   },
   timeUnits: {
@@ -310,6 +313,7 @@ export default {
     mealBySystem: 'харчування за системою',
     errorLoading: 'Помилка завантаження',
     tryAgain: 'Спробувати знову',
+    processingBooking: 'Обробляємо ваше бронювання...',
     searchResultNotFound: 'Результат пошуку не знайдено',
     searchResultNotFoundDesc: 'Не вдалося знайти дані для бронювання. Поверніться до пошуку і спробуйте знову.',
     backToSearch: 'Повернутися до пошуку',

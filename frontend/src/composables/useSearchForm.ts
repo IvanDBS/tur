@@ -1,4 +1,5 @@
 import { computed, watch, nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSearchData } from './useSearchData'
 import { useCalendarHints } from './useCalendarHints'
 import { useNotifications } from './useNotifications'
@@ -135,6 +136,7 @@ interface ObsSearchResult {
 
 export const useSearchForm = () => {
   // Получаем данные из composables
+  const router = useRouter()
   const searchData = useSearchData()
   const calendarHints = useCalendarHints()
   const { showError } = useNotifications()
@@ -605,6 +607,8 @@ export const useSearchForm = () => {
       nights_from: Number(searchForm.value.nights),
       nights_to: Number(searchForm.value.nights2 || searchForm.value.nights),
       adults: Number(searchForm.value.adults),
+      children: searchForm.value.children && searchForm.value.children > 0 ? Number(searchForm.value.children) : undefined,
+      children_age: searchForm.value.children && searchForm.value.children > 0 && searchForm.value.childrenAges.length > 0 ? searchForm.value.childrenAges : undefined,
       price_from: searchForm.value.priceFrom || undefined,
       price_to: searchForm.value.priceTo || undefined,
       selected_hotels: (() => {
@@ -632,6 +636,8 @@ export const useSearchForm = () => {
       nights_from: searchParams.nights_from,
       nights_to: searchParams.nights_to,
       adults: searchParams.adults,
+      children: searchParams.children,
+      children_age: searchParams.children_age,
       price_from: searchParams.price_from,
       price_to: searchParams.price_to,
       meals: searchParams.meals,
@@ -829,6 +835,18 @@ export const useSearchForm = () => {
 
   // Обработчик бронирования тура
   const handleBook = (result: GroupedSearchResult) => {
+    // Добавляем данные о туристах из формы поиска к результату
+    const resultWithTourists = {
+      ...result,
+      tourists: {
+        adults: searchForm.value.adults || 1,
+        children_ages: searchForm.value.children && searchForm.value.children > 0 ? searchForm.value.childrenAges : []
+      }
+    }
+    
+    // Сохраняем результат с данными о туристах в sessionStorage для бронирования
+    sessionStorage.setItem('bookingSearchResult', JSON.stringify(resultWithTourists))
+    
     // Сохраняем состояние поиска перед переходом на бронирование
     saveSearchState({
       searchForm: searchForm.value,
@@ -841,8 +859,8 @@ export const useSearchForm = () => {
       loadedPages: Array.from(loadedPages.value)
     })
     
-    // Здесь можно добавить логику бронирования
-    alert(`Бронирование тура: ${result.hotel.name} от ${result.minPrice} ${result.currency}`)
+    // Переходим к бронированию
+    router.push(`/booking/${result.unique_key}`)
   }
 
 

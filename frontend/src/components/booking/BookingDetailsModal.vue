@@ -6,7 +6,7 @@
         <div class="flex justify-between items-start gap-4 mb-6">
           <div>
             <h2 class="text-xl font-bold text-primary mb-4">
-              {{ isAdminMode ? 'Детали пакета' : 'Детали бронирования' }}
+              {{ isAdminMode ? t('bookings.packageDetails') : t('bookings.bookingDetails') }}
             </h2>
           </div>
           <button class="modal-close" @click="closeModal">
@@ -24,22 +24,22 @@
             <div class="header-table">
               <div class="table-row">
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">ID</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.id') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">Создано</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.created') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">Пользователь</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.user') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">Email</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.email') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">Телефон</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.phone') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="uppercase tracking-wide">Статус</label>
+                  <label class="uppercase tracking-wide">{{ t('bookings.statusLabel') }}</label>
                 </div>
               </div>
               <div class="table-row">
@@ -75,9 +75,9 @@
               <div class="section-icon">
                 <img :src="HotelIcon" alt="Hotel" class="icon-svg" />
               </div>
-              <h3 class="section-title">Отель</h3>
+              <h3 class="section-title">{{ t('bookings.hotel') }}</h3>
               <div class="section-status">
-                <span class="text-sm text-secondary">Статус: </span>
+                <span class="text-sm text-secondary">{{ t('bookings.statusLabel') }}: </span>
                 <span class="text-sm" :class="booking.status === 'pending' ? 'text-warning' : 'text-secondary'">{{ getStatusLabel(booking.status) }}</span>
               </div>
             </div>
@@ -93,19 +93,19 @@
             <div class="hotel-table">
               <div class="table-row">
                 <div class="table-cell">
-                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Тип комнаты</label>
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">{{ t('bookings.roomType') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Питание</label>
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">{{ t('bookings.meals') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Даты проживания</label>
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">{{ t('bookings.accommodationDates') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Ночей</label>
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">{{ t('bookings.nights') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">Оператор</label>
+                  <label class="text-xs font-medium text-secondary uppercase tracking-wide">{{ t('bookings.operator') }}</label>
                 </div>
               </div>
               <div class="table-row">
@@ -135,26 +135,26 @@
             <div class="section-icon">
               <img :src="PeopleIcon" alt="People" class="icon-svg" />
             </div>
-            <h3 class="section-title">Туристы</h3>
+            <h3 class="section-title">{{ t('bookings.tourists') }}</h3>
           </div>
           <div class="section-content">
             <div v-for="(tourist, index) in getTourists()" :key="index" class="tourist-item">
               <div class="tourist-number">№ {{ index + 1 }}</div>
               <div class="tourist-info">
                 <div class="info-item">
-                  <label class="info-label">ФИО</label>
+                  <label class="info-label">{{ t('bookings.fullName') }}</label>
                   <span class="info-value">{{ getTouristName(tourist) }}</span>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">Дата рождения</label>
+                  <label class="info-label">{{ t('bookings.birthDate') }}</label>
                   <span class="info-value">{{ formatBirthday(tourist.birthDate || tourist.birth_date || tourist.birthday) }}</span>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">Паспорт</label>
+                  <label class="info-label">{{ t('bookings.passport') }}</label>
                   <span class="info-value">{{ getTouristPassport(tourist) }}</span>
                 </div>
                 <div class="info-item">
-                  <label class="info-label">Гражданство</label>
+                  <label class="info-label">{{ t('bookings.citizenship') }}</label>
                   <span class="info-value">{{ tourist.nationality || 'MOLDOVA' }}</span>
                 </div>
               </div>
@@ -169,10 +169,10 @@
               <div class="section-icon">
                 <img :src="PlaneIcon" alt="Plane" class="icon-svg" />
               </div>
-              <h3 class="section-title">Перелет</h3>
+              <h3 class="section-title">{{ t('bookings.flight') }}</h3>
               <div class="section-status">
-                <span class="text-sm text-secondary">Статус: </span>
-                <span class="text-sm" :class="getFlightStatusClass()">{{ getFlightStatus() }}</span>
+                <span class="text-sm text-secondary">{{ t('bookings.statusLabel') }}: </span>
+                <span class="text-sm" :class="getFlightStatusClass()">{{ getTranslatedFlightStatus() }}</span>
               </div>
             </div>
           </div>
@@ -180,25 +180,25 @@
             <div class="flight-table">
               <div class="table-row">
                 <div class="table-cell">
-                  <label>Турист</label>
+                  <label>{{ t('bookings.tourist') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Из</label>
+                  <label>{{ t('bookings.fromAirport') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>В</label>
+                  <label>{{ t('bookings.toAirport') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Вылет</label>
+                  <label>{{ t('bookings.departure') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Прилет</label>
+                  <label>{{ t('bookings.arrival') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Рейс</label>
+                  <label>{{ t('bookings.flightNumber') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Время в пути</label>
+                  <label>{{ t('bookings.travelTime') }}</label>
                 </div>
               </div>
               <div v-for="(tourist, index) in getTourists()" :key="index" class="table-row">
@@ -263,22 +263,22 @@
             <div class="section-icon">
               <img :src="AdditionalServicesIcon" alt="Services" class="icon-svg" />
             </div>
-            <h3 class="section-title">Дополнительные услуги</h3>
+            <h3 class="section-title">{{ t('bookings.additionalServices') }}</h3>
           </div>
           <div class="section-content">
             <div class="services-table">
               <div class="table-row">
                 <div class="table-cell">
-                  <label>Услуга</label>
+                  <label>{{ t('bookings.service') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Название</label>
+                  <label>{{ t('bookings.serviceName') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Описание</label>
+                  <label>{{ t('bookings.description') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Статус</label>
+                  <label>{{ t('bookings.statusLabel') }}</label>
                 </div>
               </div>
               <div class="table-row">
@@ -287,18 +287,18 @@
                     <div class="service-icon">
                       <img :src="InsuranceIcon" alt="Insurance" class="icon-svg" />
                     </div>
-                    <div class="service-name">Страхование</div>
+                    <div class="service-name">{{ t('bookings.insurance') }}</div>
                   </div>
                 </div>
                 <div class="table-cell">
                   <span>{{ getInsuranceName() }}</span>
                 </div>
                 <div class="table-cell">
-                  <span>{{ getInsuranceDescription() }}</span>
+                  <span>{{ getTranslatedInsuranceDescription() }}</span>
                 </div>
                 <div class="table-cell">
-                  <span v-if="!getInsuranceIncluded()" class="text-primary">+ {{ getInsurancePrice() }} EUR</span>
-                  <span v-else class="text-success">Включено</span>
+                  <span v-if="!getInsuranceIncluded() && getInsurancePrice() > 0" class="text-primary">+ {{ getInsurancePrice() }} EUR</span>
+                  <span v-else class="text-success">{{ t('bookings.included') }}</span>
                 </div>
               </div>
               <div class="table-row">
@@ -307,18 +307,18 @@
                     <div class="service-icon">
                       <img :src="BusIcon" alt="Transfer" class="icon-svg" />
                     </div>
-                    <div class="service-name">Трансфер</div>
+                    <div class="service-name">{{ t('bookings.transfer') }}</div>
                   </div>
                 </div>
                 <div class="table-cell">
                   <span>{{ getTransferName() }}</span>
                 </div>
                 <div class="table-cell">
-                  <span>{{ getTransferDescription() }}</span>
+                  <span>{{ getTranslatedTransferDescription() }}</span>
                 </div>
                 <div class="table-cell">
-                  <span v-if="!getTransferIncluded()" class="text-primary">+ {{ getTransferPrice() }} EUR</span>
-                  <span v-else class="text-success">Включено</span>
+                  <span v-if="!getTransferIncluded() && getTransferPrice() > 0" class="text-primary">+ {{ getTransferPrice() }} EUR</span>
+                  <span v-else class="text-success">{{ t('bookings.included') }}</span>
                 </div>
               </div>
               <div v-if="getCovidInsuranceType() === 'COVID_19'" class="table-row">
@@ -327,14 +327,14 @@
                     <div class="service-icon">
                       <img :src="InsuranceIcon" alt="COVID-19" class="icon-svg" />
                     </div>
-                    <div class="service-name">COVID-19</div>
+                    <div class="service-name">{{ t('bookings.covid19') }}</div>
                   </div>
                 </div>
                 <div class="table-cell">
-                  <span>COVID-19</span>
+                  <span>{{ t('bookings.covid19') }}</span>
                 </div>
                 <div class="table-cell">
-                  <span>Дополнительная страховка от COVID-19</span>
+                  <span>{{ t('bookings.covid19Description') }}</span>
                 </div>
                 <div class="table-cell">
                   <span class="text-primary">+ {{ getCovidInsurancePrice() }} EUR</span>
@@ -350,22 +350,22 @@
             <div class="section-icon">
               <img :src="BillIcon" alt="Payment" class="icon-svg" />
             </div>
-            <h3 class="section-title">Оплата</h3>
+            <h3 class="section-title">{{ t('bookings.payment') }}</h3>
           </div>
           <div class="section-content">
             <div class="payment-table">
               <div class="table-row">
                 <div class="table-cell">
-                  <label>Сумма</label>
+                  <label>{{ t('bookings.amount') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Статус оплаты</label>
+                  <label>{{ t('bookings.paymentStatusLabel') }}</label>
                 </div>
                 <div class="table-cell">
-                  <label>Дата создания</label>
+                  <label>{{ t('bookings.creationDate') }}</label>
                 </div>
                 <div v-if="booking.confirmed_at" class="table-cell">
-                  <label>Дата подтверждения</label>
+                  <label>{{ t('bookings.confirmationDate') }}</label>
                 </div>
               </div>
               <div class="table-row">
@@ -397,29 +397,29 @@
               @click="confirmBooking"
               :loading="actionLoading"
             >
-              Подтвердить
+              {{ t('bookings.confirm') }}
             </BaseButton>
             <BaseButton 
               variant="danger" 
               @click="rejectBooking"
               :loading="actionLoading"
             >
-              Отклонить
+              {{ t('bookings.reject') }}
             </BaseButton>
           </div>
           
           <!-- Print actions -->
           <div class="print-actions">
             <BaseButton variant="secondary" size="sm">
-              📄 Распечатать
+              📄 {{ t('bookings.print') }}
             </BaseButton>
             <BaseButton variant="secondary" size="sm">
-              📧 Отправить
+              📧 {{ t('bookings.send') }}
             </BaseButton>
           </div>
         </div>
         <BaseButton variant="ghost" @click="closeModal">
-          Закрыть
+          {{ t('bookings.close') }}
         </BaseButton>
       </div>
     </div>
@@ -435,6 +435,7 @@ import { useAdminApi } from '../../composables/useAdminApi'
 import { useBookingData } from '../../composables/useBookingData'
 import { useFlightData } from '../../composables/useFlightData'
 import { useAdditionalServices } from '../../composables/useAdditionalServices'
+import { useI18n } from 'vue-i18n'
 
 // Icon paths
 const HotelIcon = '/src/assets/icons/hotel.svg'
@@ -485,6 +486,7 @@ const obsOrderDetails = ref<Record<string, unknown> | null>(null)
 const obsOrderLoading = ref(false)
 
 // Use composables
+const { t } = useI18n()
 const { getHotelName, getHotelCategory, getHotelCity, getRoomType, getMealPlan, getCheckInDate, getCheckOutDate, getNights, getTourists, getTouristName, getTouristPassport } = useBookingData(props.booking, props.isAdminMode)
 const { getSelectedFlight, getFlightStatus, getFlightStatusClass, getOutboundFrom, getInboundFrom, getOutboundDeparture, getInboundDeparture, getOutboundFlightInfo, getInboundFlightInfo, getOutboundTo, getInboundTo, getOutboundArrival, getInboundArrival, getOutboundTravelTime, getInboundTravelTime } = useFlightData(props.booking, obsOrderDetails)
 const { hasAdditionalServices, getInsuranceName, getInsuranceDescription, getInsuranceIncluded, getInsurancePrice, getTransferName, getTransferDescription, getTransferIncluded, getTransferPrice, getCovidInsuranceType, getCovidInsurancePrice } = useAdditionalServices(props.booking)
@@ -575,10 +577,10 @@ const formatTime = (dateString: string) => {
 
 const getStatusLabel = (status: string) => {
   const statusMap: Record<string, string> = {
-    pending: 'В ожидании',
-    confirmed: 'Подтверждено',
-    cancelled: 'Отменено',
-    failed: 'Ошибка',
+    pending: t('bookings.status.pending'),
+    confirmed: t('bookings.status.confirmed'),
+    cancelled: t('bookings.status.cancelled'),
+    failed: t('bookings.status.failed'),
   }
   return statusMap[status] || status
 }
@@ -586,16 +588,57 @@ const getStatusLabel = (status: string) => {
 const getPaymentStatus = () => {
   switch (props.booking.status) {
     case 'confirmed':
-      return 'Оплачено'
+      return t('bookings.paymentStatus.paid')
     case 'pending':
-      return 'Ожидает оплаты'
+      return t('bookings.paymentStatus.pending')
     case 'cancelled':
-      return 'Отменено'
+      return t('bookings.paymentStatus.cancelled')
     case 'failed':
-      return 'Ошибка оплаты'
+      return t('bookings.paymentStatus.failed')
     default:
-      return 'Неизвестно'
+      return t('bookings.paymentStatus.unknown')
   }
+}
+
+// Override getFlightStatus to use translations
+const getTranslatedFlightStatus = () => {
+  const flightStatus = getFlightStatus()
+  if (flightStatus === 'Подтвержден' || flightStatus === 'confirmed') {
+    return t('bookings.status.confirmed')
+  }
+  if (flightStatus === 'Не указано') {
+    return t('common.notSpecified')
+  }
+  return flightStatus
+}
+
+// Override service descriptions to use translations
+const getTranslatedInsuranceDescription = () => {
+  const description = getInsuranceDescription()
+  if (description === 'Стандартная страховка на 10000 EUR') {
+    return t('bookings.insuranceDescription.standard')
+  }
+  if (description === 'Расширенная страховка') {
+    return t('bookings.insuranceDescription.extended')
+  }
+  if (description === 'Без страховки') {
+    return t('bookings.insuranceDescription.none')
+  }
+  return description
+}
+
+const getTranslatedTransferDescription = () => {
+  const description = getTransferDescription()
+  if (description === 'Групповой трансфер на автобусе') {
+    return t('bookings.transferDescription.group')
+  }
+  if (description === 'Индивидуальный трансфер') {
+    return t('bookings.transferDescription.individual')
+  }
+  if (description === 'VIP индивидуальный трансфер') {
+    return t('bookings.transferDescription.vip')
+  }
+  return description
 }
 
 // Hotel data methods - now using useBookingData composable
@@ -622,7 +665,7 @@ const getOperator = () => {
   if (tourDetails?.operator) {
     return tourDetails.operator
   }
-  return 'Не указано'
+  return t('common.notSpecified')
 }
 
 // Flight status functions removed - now using useFlightData composable
@@ -641,7 +684,7 @@ const formatBirthday = (birthday: string) => {
     }
     
     const age = new Date().getFullYear() - date.getFullYear()
-    return `${date.toLocaleDateString('ru-RU')} (${age} лет)`
+    return `${date.toLocaleDateString('ru-RU')} (${age} ${t('bookings.years')})`
   } catch {
     return 'N/A'
   }

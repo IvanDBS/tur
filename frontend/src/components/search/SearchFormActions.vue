@@ -3,13 +3,13 @@
     <div class="action-buttons-row">
       <div class="results-count">
         <span v-if="hasResults">
-          Найдено туров: {{ totalResults }}
+          {{ $t('search.toursFound') }}: {{ totalResults }}
         </span>
         <!-- Окно с ошибкой, когда результатов нет -->
         <div v-if="showNoResultsError" class="no-results-warning">
           <img src="/src/assets/icons/alert-triangle.svg" alt="Warning" class="warning-icon" />
           <div class="warning-text">
-            Туры не найдены. Попробуйте изменить параметры поиска.
+            {{ $t('search.toursNotFound') }}
           </div>
         </div>
       </div>

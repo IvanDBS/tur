@@ -178,7 +178,7 @@
       <div class="filters-column options">
         <!-- Options -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
-          <label>Опции:</label>
+          <label>{{ $t('search.options') }}:</label>
           <div class="filter-options vertical">
             <label class="checkbox-v9 all-checkbox" :class="{ disabled: props.disabled }">
               <input 

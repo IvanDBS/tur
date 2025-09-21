@@ -13,7 +13,7 @@
         :value="modelValue ? modelValue.name : $t('search.arrivalCityAuto')"
         :disabled="true"
         class="arrival-input"
-        title="Автоматически устанавливается на основе выбранного пакета"
+        :title="$t('search.autoSetByPackage')"
       />
     </template>
   </BaseSearchField>

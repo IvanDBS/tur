@@ -798,6 +798,8 @@ export const useSearchForm = () => {
       await resetSearchForm()
       resetFilters()
       resetPagination()
+      // Сбрасываем флаг поиска, чтобы скрыть ошибку "Туры не найдены"
+      hasSearched.value = false
     } catch (error) {
       logger.error('Error in handleReset:', error)
     }

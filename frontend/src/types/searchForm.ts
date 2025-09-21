@@ -6,6 +6,7 @@ export interface SearchFormActionsProps {
   totalResults: number
   isLoading?: boolean
   isSearchPending?: boolean
+  hasSearched?: boolean
 }
 
 export interface SearchFormLoadingProps {

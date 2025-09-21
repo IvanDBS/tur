@@ -138,9 +138,9 @@
         </div>
       </div>
 
-      <!-- Питание - 10% -->
+      <!-- Питание - 10% - ЗАКОММЕНТИРОВАНО -->
+      <!--
       <div class="filters-column meals">
-        <!-- Meals -->
         <div class="filter-group" :class="{ 'disabled': props.disabled }">
           <label>{{ $t('search.meals') }}:</label>
           <div class="filter-options vertical">
@@ -172,6 +172,7 @@
           </div>
         </div>
       </div>
+      -->
 
       <!-- Опции - скрыт CSS -->
       <div class="filters-column options">
@@ -504,7 +505,7 @@
 
   .filters-row {
     display: grid;
-    grid-template-columns: 0.8fr 0.8fr 2.5fr 0.8fr 0fr;
+    grid-template-columns: 1fr 1fr 3fr 0fr 0fr;
     gap: 12px;
     width: 100%;
   }
@@ -524,6 +525,7 @@
     width: auto !important;
     min-width: 0 !important;
     max-width: none !important;
+    grid-column: 3 / -1; /* Занимает от 3-й колонки до конца */
   }
 
   /* Ширина колонок теперь задается в grid-template-columns */

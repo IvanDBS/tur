@@ -192,6 +192,7 @@ export const useSearchForm = () => {
   // Состояние для debounce
   const isSearchPending = ref(false)
   const searchRequestId = ref(0)
+  const hasSearched = ref(false)
 
   // Функция для определения пакетов без перелета
   const isPackageWithoutFlight = (pkg: Package | null): boolean => {
@@ -529,6 +530,9 @@ export const useSearchForm = () => {
   const performSearchInternal = () => {
     logger.info('🔍 performSearchInternal called')
     const currentRequestId = ++searchRequestId.value
+    
+    // Отмечаем, что поиск был выполнен
+    hasSearched.value = true
     
     logger.info('🔍 Current selectedFilters before validation:', {
       regions: selectedFilters.value.regions.length,
@@ -896,6 +900,7 @@ export const useSearchForm = () => {
     selectedFilters,
     isLoading,
     isSearchPending,
+    hasSearched,
     searchResults,
     totalResults,
     currentPage,

@@ -14,7 +14,6 @@
           type="number"
           :value="modelValue"
           @input="handlePriceFromInput"
-          :placeholder="$t('search.from')"
           :disabled="disabled"
           class="price-input"
         />
@@ -35,7 +34,6 @@
           type="number"
           :value="modelValue"
           @input="handlePriceToInput"
-          :placeholder="$t('search.to')"
           :disabled="disabled"
           class="price-input"
         />

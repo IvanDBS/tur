@@ -74,7 +74,7 @@
     justify-content: center;
     min-height: 60vh;
     background: var(--color-background);
-    padding-top: 7rem;
+    padding-top: 3rem;
     overflow: hidden;
   }
 
@@ -88,6 +88,7 @@
   }
 
   .hero-text {
+    margin-top: -1rem;
     margin-bottom: 2rem;
   }
 

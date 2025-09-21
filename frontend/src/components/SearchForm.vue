@@ -63,21 +63,15 @@
       </div>
 
       <!-- Action Buttons -->
-      <Suspense>
-        <template #default>
-          <SearchFormActions
-            :has-results="!!(searchResults && Object.keys(searchResults).length > 0)"
-            :total-results="totalResults"
-            :is-loading="isLoading"
-            :is-search-pending="isSearchPending"
-            @search="handleSearchWithEmit"
-            @reset="handleReset"
-          />
-        </template>
-        <template #fallback>
-          <div class="loading-placeholder">Загрузка кнопок...</div>
-        </template>
-      </Suspense>
+      <SearchFormActions
+        :has-results="!!(searchResults && Object.keys(searchResults).length > 0)"
+        :total-results="totalResults"
+        :is-loading="isLoading"
+        :is-search-pending="isSearchPending"
+        :has-searched="hasSearched"
+        @search="handleSearchWithEmit"
+        @reset="handleReset"
+      />
     </div>
 
     <!-- Результаты поиска -->
@@ -116,6 +110,7 @@
     selectedFilters,
     isLoading,
     isSearchPending,
+    hasSearched,
     searchResults,
     totalResults,
     currentPage,

@@ -29,21 +29,11 @@
         :disabled="isLoading || !searchForm.destination"
       />
 
-      <!-- Город прилета -->
-      <SearchFieldArrival
-        :model-value="searchForm.arrivalCity"
-        :active-selector="activeSelector"
-        :disabled="!searchForm.package || isPackageWithoutFlight"
-      />
-    </div>
-
-    <!-- Row 2 - Даты и ночи -->
-    <div class="form-row">
-      <!-- Период заезда от -->
+      <!-- Дата вылета -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.package || (!isPackageWithoutFlight && !searchForm.arrivalCity) }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkInDate'" class="field-arrow"></span>
-          {{ $t('search.checkInFrom') }}:
+          Дата вылета:
         </label>
         <VueDatePicker
           :model-value="searchForm.checkInDate"
@@ -66,7 +56,65 @@
         />
       </div>
 
-      <!-- Период заезда до -->
+      <!-- Город прилета -->
+      <SearchFieldArrival
+        :model-value="searchForm.arrivalCity"
+        :active-selector="activeSelector"
+        :disabled="!searchForm.package || isPackageWithoutFlight"
+      />
+    </div>
+
+    <!-- Row 2 - Ночи, люди и цены -->
+    <div class="form-row">
+      <!-- Ночей -->
+      <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
+        <label class="field-label">
+          <span v-if="activeSelector === 'nights'" class="field-arrow"></span>
+          Ночей:
+        </label>
+        <Multiselect
+          :model-value="searchForm.nights"
+          @update:model-value="updateField('nights', $event)"
+          :options="filteredNightsOptions"
+          :searchable="false"
+          :canClear="false"
+          :canDeselect="false"
+          placeholder="Количество ночей"
+          label="label"
+          valueProp="value"
+          :disabled="!searchForm.checkInDate"
+          @change="$emit('update-nights2-min')"
+        />
+      </div>
+
+      <!-- Люди -->
+      <SearchFieldPeople
+        :adults="searchForm.adults"
+        :children="searchForm.children"
+        :children-ages="searchForm.childrenAges"
+        :adults-options="searchData.adultsOptions.value"
+        :children-options="searchData.childrenOptions.value"
+        :active-selector="activeSelector"
+        :disabled="!searchForm.checkInDate || searchForm.nights === null"
+        @update:adults="updateField('adults', $event)"
+        @update:children="updateField('children', $event)"
+        @update:children-age="updateChildrenAge($event.index, $event.value)"
+      />
+
+      <!-- Цены -->
+      <SearchFieldPrice
+        :price-from="searchForm.priceFrom"
+        :price-to="searchForm.priceTo"
+        :active-selector="activeSelector"
+        :disabled="searchForm.children === null"
+        @update:price-from="updateField('priceFrom', $event)"
+        @update:price-to="updateField('priceTo', $event)"
+      />
+    </div>
+
+    <!-- ЗАКОММЕНТИРОВАННЫЕ ПОЛЯ -->
+    <!--
+    <div class="form-row">
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'checkOutDate'" class="field-arrow"></span>
@@ -93,28 +141,6 @@
         />
       </div>
 
-      <!-- Ночей в отеле от -->
-      <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
-        <label class="field-label">
-          <span v-if="activeSelector === 'nights'" class="field-arrow"></span>
-          {{ $t('search.nightsFrom') }}:
-        </label>
-        <Multiselect
-          :model-value="searchForm.nights"
-          @update:model-value="updateField('nights', $event)"
-          :options="filteredNightsOptions"
-          :searchable="false"
-          :canClear="false"
-          :canDeselect="false"
-          :placeholder="$t('search.selectNights')"
-          label="label"
-          valueProp="value"
-          :disabled="!searchForm.checkInDate"
-          @change="$emit('update-nights2-min')"
-        />
-      </div>
-
-      <!-- Ночей в отеле до -->
       <div class="field-group" :class="{ 'disabled-field': !searchForm.checkInDate }">
         <label class="field-label">
           <span v-if="activeSelector === 'nights2'" class="field-arrow"></span>
@@ -134,31 +160,8 @@
         />
       </div>
     </div>
+    -->
 
-    <!-- Row 3 - Люди и цены -->
-    <div class="form-row">
-      <SearchFieldPeople
-        :adults="searchForm.adults"
-        :children="searchForm.children"
-        :children-ages="searchForm.childrenAges"
-        :adults-options="searchData.adultsOptions.value"
-        :children-options="searchData.childrenOptions.value"
-        :active-selector="activeSelector"
-        :disabled="!searchForm.checkInDate || searchForm.nights === null"
-        @update:adults="updateField('adults', $event)"
-        @update:children="updateField('children', $event)"
-        @update:children-age="updateChildrenAge($event.index, $event.value)"
-      />
-
-      <SearchFieldPrice
-        :price-from="searchForm.priceFrom"
-        :price-to="searchForm.priceTo"
-        :active-selector="activeSelector"
-        :disabled="searchForm.children === null"
-        @update:price-from="updateField('priceFrom', $event)"
-        @update:price-to="updateField('priceTo', $event)"
-      />
-    </div>
   </div>
 </template>
 
@@ -289,10 +292,20 @@ const updateChildrenAge = (index: number, value: unknown) => {
 /* Базовые стили для строк форм */
 .form-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 12px;
   align-items: center;
+}
+
+/* Убеждаемся, что все строки имеют одинаковые отступы */
+.form-row:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+/* Увеличиваем отступ после первой строки */
+.form-row:first-child {
+  margin-bottom: 24px;
 }
 
 /* Базовые стили для групп полей */

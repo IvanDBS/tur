@@ -36,10 +36,10 @@
       }
       
       .email-wrapper {
-        padding: 2rem 1rem;
+        padding: 1rem;
         min-height: 100vh;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
       }
       
@@ -58,7 +58,7 @@
       .header {
         background: linear-gradient(135deg, #1A3C61 0%, #2d5a8a 100%);
         color: white;
-        padding: 2.5rem 2rem;
+        padding: 2rem;
         text-align: center;
         position: relative;
         overflow: hidden;
@@ -80,14 +80,8 @@
         50% { transform: translateY(-20px) rotate(180deg); }
       }
       
-      .logo {
-        position: relative;
-        z-index: 2;
-        margin-bottom: 1rem;
-      }
-      
       .logo-text {
-        font-size: 2.5rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #FF5A5F;
         letter-spacing: -0.02em;
@@ -96,7 +90,7 @@
       
       .header h1 {
         margin: 0;
-        font-size: 1.875rem;
+        font-size: 1.5rem;
         font-weight: 600;
         color: white;
         line-height: 1.25;
@@ -118,17 +112,6 @@
         position: relative;
       }
       
-      .welcome-icon {
-        text-align: center;
-        margin-bottom: 1.5rem;
-      }
-      
-      .welcome-icon svg {
-        width: 64px;
-        height: 64px;
-        color: #FF5A5F;
-        filter: drop-shadow(0 4px 8px rgba(255, 90, 95, 0.2));
-      }
       
       .greeting {
         font-size: 1.25rem;
@@ -213,22 +196,12 @@
         position: relative;
       }
       
-      .security-note::before {
-        content: 'SECURITY';
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #FF5A5F;
-        letter-spacing: 0.5px;
-      }
       
       .security-note p {
         margin: 0;
-        font-size: 0.9rem;
-        color: #6B7280;
-        line-height: 1.6;
+        font-size: 0.8rem;
+        color: #9CA3AF;
+        line-height: 1.5;
       }
       
       .security-note strong {
@@ -265,14 +238,15 @@
         margin: 1rem 0;
         display: flex;
         justify-content: center;
-        gap: 1.5rem;
-        flex-wrap: wrap;
+        gap: 0.75rem;
+        flex-wrap: nowrap;
       }
       
       .footer a {
         color: #1A3C61;
         text-decoration: none;
         font-weight: 500;
+        font-size: 0.75rem;
         transition: all 0.3s ease;
         position: relative;
       }
@@ -376,27 +350,18 @@
     <div class="email-wrapper">
       <div class="email-container">
         <div class="header">
-          <div class="logo">
-            <span class="logo-text">migo.md</span>
-          </div>
-          <h1>Добро пожаловать!</h1>
-          <p class="header-subtitle">Ваше путешествие начинается здесь</p>
+          <h1>Добро пожаловать на <span class="logo-text">migo.md</span>!</h1>
+          <p class="header-subtitle">Ваше путешествие начинается здесь.</p>
         </div>
         
         <div class="content">
-          <div class="welcome-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
           
           <div class="greeting">
             Здравствуйте, <%= @user.first_name.present? ? @user.first_name : 'Пользователь' %>!
           </div>
           
           <div class="message">
-            Спасибо за регистрацию в <strong>migo.md</strong>! Мы рады приветствовать вас в нашем сообществе путешественников. 
+            Спасибо за регистрацию в <strong>migo.md</strong>! 
             Для завершения регистрации и активации вашего аккаунта, пожалуйста, подтвердите ваш email адрес.
           </div>
           
@@ -412,18 +377,14 @@
           
           <div class="security-note">
             <p>
-              <strong>Безопасность:</strong> Эта ссылка действительна в течение 24 часов. 
+              Эта ссылка действительна в течение 24 часов. 
               Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.
             </p>
           </div>
         </div>
         
         <div class="footer">
-          <div class="footer-logo">
-            <span class="footer-logo-text">migo.md</span>
-          </div>
-          
-          <p>С уважением, команда migo.md</p>
+          <p>С уважением, команда <span class="footer-logo-text">migo.md</span></p>
           
           <div class="footer-links">
             <a href="#">Служба поддержки</a>

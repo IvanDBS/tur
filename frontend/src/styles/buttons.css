@@ -69,6 +69,8 @@
 .btn--danger:hover:not(:disabled) {
   background: #DC2626;
   border-color: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Success Button */
@@ -81,6 +83,22 @@
 .btn--success:hover:not(:disabled) {
   background: #059669;
   border-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Outline Button */
+.btn--outline {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--color-background-soft);
+  border-color: var(--color-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* ========================================

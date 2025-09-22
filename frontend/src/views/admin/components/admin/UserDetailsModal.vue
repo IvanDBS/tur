@@ -45,6 +45,14 @@
                 <span class="detail-value">{{ user.email }}</span>
               </div>
               <div class="detail-item">
+                <span class="detail-label">Подтвержден:</span>
+                <span class="detail-value">
+                  <span :class="user.confirmed_at ? 'status-confirmed' : 'status-unconfirmed'">
+                    {{ user.confirmed_at ? 'Да' : 'Нет' }}
+                  </span>
+                </span>
+              </div>
+              <div class="detail-item">
                 <span class="detail-label">Телефон:</span>
                 <span class="detail-value">{{ user.phone || 'Не указан' }}</span>
               </div>
@@ -107,26 +115,38 @@
             <BaseButton
               v-if="!user.admin"
               :variant="user.banned ? 'success' : 'danger'"
+              size="sm"
               :loading="loading"
               @click="toggleBan"
             >
-              {{ user.banned ? 'Разблокировать пользователя' : 'Заблокировать пользователя' }}
+              {{ user.banned ? 'Разблокировать' : 'Заблокировать' }}
             </BaseButton>
             
             <BaseButton
               v-if="!user.banned"
               :variant="user.admin ? 'secondary' : 'primary'"
+              size="sm"
               :loading="loading"
               @click="toggleAdmin"
             >
-              {{ user.admin ? 'Убрать права администратора' : 'Назначить администратором' }}
+              {{ user.admin ? 'Убрать админ' : 'Назначить админом' }}
             </BaseButton>
 
             <BaseButton
               variant="outline"
+              size="sm"
               @click="viewUserBookings"
             >
-              Просмотреть бронирования
+              Бронирования
+            </BaseButton>
+
+            <BaseButton
+              v-if="!user.admin"
+              variant="danger"
+              size="sm"
+              @click="confirmDeleteUser"
+            >
+              Удалить
             </BaseButton>
           </div>
         </div>
@@ -138,12 +158,52 @@
         </BaseButton>
       </div>
     </div>
+
+    <!-- Confirmation Dialogs -->
+    <ConfirmDialog
+      :is-open="showBanDialog"
+      :title="props.user.banned ? 'Разблокировать пользователя' : 'Заблокировать пользователя'"
+      :message="`Вы уверены, что хотите ${props.user.banned ? 'разблокировать' : 'заблокировать'} пользователя ${props.user.email}?`"
+      :type="props.user.banned ? 'info' : 'warning'"
+      :confirm-text="props.user.banned ? 'Разблокировать' : 'Заблокировать'"
+      :loading="loading"
+      @confirm="handleBanConfirm"
+      @cancel="handleBanCancel"
+    />
+
+    <ConfirmDialog
+      :is-open="showAdminDialog"
+      :title="props.user.admin ? 'Убрать права администратора' : 'Назначить администратором'"
+      :message="`Вы уверены, что хотите ${props.user.admin ? 'убрать права администратора у' : 'назначить администратором'} пользователя ${props.user.email}?`"
+      :type="props.user.admin ? 'warning' : 'info'"
+      :confirm-text="props.user.admin ? 'Убрать права' : 'Назначить админом'"
+      :loading="loading"
+      @confirm="handleAdminConfirm"
+      @cancel="handleAdminCancel"
+    />
+
+    <ConfirmDialog
+      :is-open="showDeleteDialog"
+      title="Удалить пользователя"
+      :message="`ВНИМАНИЕ! Вы уверены, что хотите УДАЛИТЬ пользователя ${props.user.email}?`"
+      :details="[
+        'Удаление всех данных пользователя',
+        'Удаление всех бронирований',
+        'Невозможность восстановления'
+      ]"
+      type="danger"
+      confirm-text="Удалить навсегда"
+      :loading="loading"
+      @confirm="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseButton } from '../../../../components/ui'
+import { BaseButton, ConfirmDialog } from '../../../../components/ui'
 import { useAdminApi } from '../../../../composables/useAdminApi'
 import { useNotifications } from '../../../../composables/useNotifications'
 import type { AdminUser } from '../../../../types/admin'
@@ -157,16 +217,28 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   userUpdated: [user: AdminUser]
+  userDeleted: [userId: number]
 }>()
 
 // Admin API
-const { updateUserStatus, loading } = useAdminApi()
+const { updateAdminUser, deleteAdminUser } = useAdminApi()
 const { showSuccess, showError } = useNotifications()
+const loading = ref(false)
+
+// Dialog states
+const showBanDialog = ref(false)
+const showAdminDialog = ref(false)
+const showDeleteDialog = ref(false)
 
 // Methods
 const close = () => {
+  // Восстанавливаем прокрутку
+  document.body.style.overflow = ''
   emit('close')
 }
+
+// Блокируем прокрутку при открытии модалки
+document.body.style.overflow = 'hidden'
 
 const getUserInitials = (user: AdminUser): string => {
   if (user.first_name && user.last_name) {
@@ -198,9 +270,17 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-const toggleBan = async () => {
+const toggleBan = () => {
+  showBanDialog.value = true
+}
+
+const handleBanConfirm = async () => {
+  showBanDialog.value = false
+  loading.value = true
+  
   try {
-    const updatedUser = await updateUserStatus(props.user.id, { banned: !props.user.banned })
+    const response = await updateAdminUser(props.user.id.toString(), { banned: !props.user.banned })
+    const updatedUser = response.data.user
     emit('userUpdated', updatedUser)
     
     if (updatedUser.banned) {
@@ -211,12 +291,26 @@ const toggleBan = async () => {
   } catch (error) {
     console.error('Error updating user ban status:', error)
     showError('Ошибка при изменении статуса пользователя')
+  } finally {
+    loading.value = false
   }
 }
 
-const toggleAdmin = async () => {
+const handleBanCancel = () => {
+  showBanDialog.value = false
+}
+
+const toggleAdmin = () => {
+  showAdminDialog.value = true
+}
+
+const handleAdminConfirm = async () => {
+  showAdminDialog.value = false
+  loading.value = true
+  
   try {
-    const updatedUser = await updateUserStatus(props.user.id, { admin: !props.user.admin })
+    const response = await updateAdminUser(props.user.id.toString(), { admin: !props.user.admin })
+    const updatedUser = response.data.user
     emit('userUpdated', updatedUser)
     
     if (updatedUser.admin) {
@@ -227,7 +321,39 @@ const toggleAdmin = async () => {
   } catch (error) {
     console.error('Error updating user admin status:', error)
     showError('Ошибка при изменении прав пользователя')
+  } finally {
+    loading.value = false
   }
+}
+
+const handleAdminCancel = () => {
+  showAdminDialog.value = false
+}
+
+const confirmDeleteUser = () => {
+  showDeleteDialog.value = true
+}
+
+const handleDeleteConfirm = async () => {
+  showDeleteDialog.value = false
+  loading.value = true
+  
+  try {
+    await deleteAdminUser(props.user.id.toString())
+    showSuccess('Пользователь успешно удален')
+    // Emit userDeleted event to remove user from list
+    emit('userDeleted', props.user.id)
+    emit('close')
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    showError('Ошибка при удалении пользователя')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleDeleteCancel = () => {
+  showDeleteDialog.value = false
 }
 
 const viewUserBookings = () => {
@@ -258,10 +384,11 @@ const viewUserBookings = () => {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  padding: var(--spacing-lg);
+  padding: 80px var(--spacing-lg) var(--spacing-lg);
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -269,9 +396,10 @@ const viewUserBookings = () => {
   border-radius: var(--border-radius-lg);
   max-width: 800px;
   width: 100%;
-  max-height: 90vh;
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  margin-top: 0;
 }
 
 .modal-header {
@@ -459,6 +587,16 @@ const viewUserBookings = () => {
   font-weight: var(--font-weight-semibold);
 }
 
+.status-confirmed {
+  color: var(--color-success);
+  font-weight: var(--font-weight-semibold);
+}
+
+.status-unconfirmed {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-semibold);
+}
+
 .user-actions-section {
   margin-bottom: var(--spacing-lg);
 }
@@ -472,8 +610,10 @@ const viewUserBookings = () => {
 
 .actions-grid {
   display: flex;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .modal-footer {
@@ -499,7 +639,14 @@ const viewUserBookings = () => {
   }
   
   .actions-grid {
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  
+  .actions-grid .btn {
+    flex: 1;
+    min-width: 0;
   }
 }
 </style>
+

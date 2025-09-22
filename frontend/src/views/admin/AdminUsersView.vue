@@ -21,7 +21,7 @@
           <thead>
             <tr>
               <th class="sortable" @click="sortBy('id')">
-                ID#
+                ID
                 <span v-if="sortField === 'id'" class="sort-icon">
                   {{ sortDirection === 'asc' ? '↑' : '↓' }}
                 </span>
@@ -160,7 +160,7 @@
               }"
             >
               <td class="table-cell table-cell--id">
-                <span class="user-id">#{{ user.id }}</span>
+                <span class="user-id">{{ user.id }}</span>
               </td>
               
               <td class="table-cell table-cell--email">
@@ -247,6 +247,7 @@
       :user="selectedUser"
       @close="selectedUser = null"
       @user-updated="handleUserUpdated"
+      @user-deleted="handleUserDeleted"
     />
   </div>
 </template>
@@ -267,7 +268,8 @@ const { getAdminUsers } = useAdminApi()
 const loading = ref(false)
 
 // State
-const users = ref<AdminUser[]>([])
+const allUsers = ref<AdminUser[]>([]) // All users from server
+const users = ref<AdminUser[]>([]) // Filtered and sorted users for display
 const selectedUser = ref<AdminUser | null>(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
@@ -323,42 +325,24 @@ const statusFilterOptions = [
 // Debounced search
 const debouncedSearch = debounce(() => {
   currentPage.value = 1
-  loadUsers()
+  applyFiltersAndSorting()
 }, 500)
 
 // Methods
 const loadUsers = async () => {
   loading.value = true
   try {
-    // Combine all search filters into a single search string
-    const searchTerms = []
-    Object.entries(searchFilters.value).forEach(([key, value]) => {
-      if (value && value.trim()) {
-        searchTerms.push(`${key}:${value.trim()}`)
-      }
-    })
-    
-    // Also include the main search filter
-    if (filters.value.search && filters.value.search.trim()) {
-      searchTerms.push(filters.value.search.trim())
-    }
-    
-    const combinedSearch = searchTerms.length > 0 ? searchTerms.join(' ') : undefined
-    
+    // Load all users without pagination and sorting (we'll do it client-side)
     const response = await getAdminUsers({
-      page: currentPage.value,
-      role: filters.value.role || searchFilters.value.role || undefined,
-      status: filters.value.status || searchFilters.value.status || undefined,
-      search: combinedSearch,
-      sort_field: sortField.value,
-      sort_direction: sortDirection.value
+      per_page: 1000 // Load all users
     })
     
     // Backend returns data in { success: true, data: { users: [...], pagination: {...} } } format
     const data = response.data || response
-    users.value = data.users || []
-    totalPages.value = data.pagination?.total_pages || 1
-    totalCount.value = data.pagination?.total_count || 0
+    allUsers.value = data.users || []
+    
+    // Apply client-side filtering and sorting
+    applyFiltersAndSorting()
   } catch (error) {
     console.error('Error loading users:', error)
   } finally {
@@ -374,7 +358,168 @@ const sortBy = (field: string) => {
     sortDirection.value = 'asc'
   }
   currentPage.value = 1
-  loadUsers()
+  console.log('Sorting by:', field, 'Direction:', sortDirection.value)
+  applyFiltersAndSorting()
+}
+
+// Apply client-side filtering and sorting
+const applyFiltersAndSorting = () => {
+  let filteredUsers = [...allUsers.value]
+  
+  // Apply filters
+  if (filters.value.role) {
+    if (filters.value.role === 'admin') {
+      filteredUsers = filteredUsers.filter(user => user.admin)
+    } else if (filters.value.role === 'user') {
+      filteredUsers = filteredUsers.filter(user => !user.admin)
+    }
+  }
+  
+  if (filters.value.status) {
+    if (filters.value.status === 'banned') {
+      filteredUsers = filteredUsers.filter(user => user.banned)
+    } else if (filters.value.status === 'active') {
+      filteredUsers = filteredUsers.filter(user => !user.banned)
+    }
+  }
+  
+  // Apply search filters
+  if (filters.value.search) {
+    const searchTerm = filters.value.search.toLowerCase()
+    filteredUsers = filteredUsers.filter(user => 
+      user.email.toLowerCase().includes(searchTerm) ||
+      (user.first_name && user.first_name.toLowerCase().includes(searchTerm)) ||
+      (user.last_name && user.last_name.toLowerCase().includes(searchTerm))
+    )
+  }
+  
+  // Apply column-specific search filters
+  Object.entries(searchFilters.value).forEach(([key, value]) => {
+    if (value && value.trim()) {
+      const searchTerm = value.trim().toLowerCase()
+      filteredUsers = filteredUsers.filter(user => {
+        switch (key) {
+          case 'id':
+            return user.id.toString().includes(searchTerm)
+          case 'email':
+            return user.email.toLowerCase().includes(searchTerm)
+          case 'name':
+            const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim().toLowerCase()
+            return fullName.includes(searchTerm)
+          case 'created_at':
+            return user.created_at.toLowerCase().includes(searchTerm)
+          case 'last_sign_in_at':
+            return user.last_sign_in_at.toLowerCase().includes(searchTerm)
+          case 'bookings_count':
+            return user.bookings_count.toString().includes(searchTerm)
+          case 'role':
+            const role = user.admin ? 'admin' : 'user'
+            return role.includes(searchTerm)
+          case 'status':
+            const status = user.banned ? 'banned' : 'active'
+            return status.includes(searchTerm)
+          default:
+            return true
+        }
+      })
+    }
+  })
+  
+  // Apply sorting
+  if (sortField.value) {
+    filteredUsers.sort((a, b) => {
+      let aValue: unknown
+      let bValue: unknown
+      
+      switch (sortField.value) {
+        case 'id':
+          aValue = Number(a.id)
+          bValue = Number(b.id)
+          break
+        case 'email':
+          aValue = a.email.toLowerCase()
+          bValue = b.email.toLowerCase()
+          break
+        case 'first_name':
+          aValue = (a.first_name || '').toLowerCase()
+          bValue = (b.first_name || '').toLowerCase()
+          break
+        case 'last_name':
+          aValue = (a.last_name || '').toLowerCase()
+          bValue = (b.last_name || '').toLowerCase()
+          break
+        case 'created_at':
+          aValue = new Date(a.created_at)
+          bValue = new Date(b.created_at)
+          break
+        case 'last_sign_in_at':
+          aValue = a.last_sign_in_at ? new Date(a.last_sign_in_at) : new Date(0)
+          bValue = b.last_sign_in_at ? new Date(b.last_sign_in_at) : new Date(0)
+          break
+        case 'bookings_count':
+          aValue = Number(a.bookings_count)
+          bValue = Number(b.bookings_count)
+          break
+        case 'admin':
+          aValue = a.admin ? 1 : 0
+          bValue = b.admin ? 1 : 0
+          break
+        case 'banned':
+          aValue = a.banned ? 1 : 0
+          bValue = b.banned ? 1 : 0
+          break
+        default:
+          return 0
+      }
+      
+      // Handle numeric comparison for ID and counts
+      if (sortField.value === 'id' || sortField.value === 'bookings_count') {
+        const aNum = Number(aValue)
+        const bNum = Number(bValue)
+        if (aNum < bNum) {
+          return sortDirection.value === 'asc' ? -1 : 1
+        }
+        if (aNum > bNum) {
+          return sortDirection.value === 'asc' ? 1 : -1
+        }
+        return 0
+      }
+      
+      // Handle date comparison
+      if (sortField.value === 'created_at' || sortField.value === 'last_sign_in_at') {
+        const aDate = aValue as Date
+        const bDate = bValue as Date
+        if (aDate < bDate) {
+          return sortDirection.value === 'asc' ? -1 : 1
+        }
+        if (aDate > bDate) {
+          return sortDirection.value === 'asc' ? 1 : -1
+        }
+        return 0
+      }
+      
+      // Handle string comparison for other fields
+      if (String(aValue) < String(bValue)) {
+        return sortDirection.value === 'asc' ? -1 : 1
+      }
+      if (String(aValue) > String(bValue)) {
+        return sortDirection.value === 'asc' ? 1 : -1
+      }
+      return 0
+    })
+  }
+  
+  // Update total count
+  totalCount.value = filteredUsers.length
+  
+  // Apply pagination
+  const perPage = 20
+  const startIndex = (currentPage.value - 1) * perPage
+  const endIndex = startIndex + perPage
+  users.value = filteredUsers.slice(startIndex, endIndex)
+  
+  // Update total pages
+  totalPages.value = Math.ceil(filteredUsers.length / perPage)
 }
 
 // const resetFilters = () => {
@@ -412,12 +557,12 @@ const clearAllFilters = () => {
   sortDirection.value = 'asc'
   
   currentPage.value = 1
-  loadUsers()
+  applyFiltersAndSorting()
 }
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
-  loadUsers()
+  applyFiltersAndSorting()
 }
 
 const getUserInitials = (user: AdminUser): string => {
@@ -450,10 +595,26 @@ const viewUserDetails = (user: AdminUser) => {
 }
 
 const handleUserUpdated = (updatedUser: AdminUser) => {
-  const index = users.value.findIndex(u => u.id === updatedUser.id)
+  // Update in allUsers array
+  const index = allUsers.value.findIndex(u => u.id === updatedUser.id)
   if (index !== -1) {
-    users.value[index] = updatedUser
+    allUsers.value[index] = updatedUser
   }
+  
+  // Reapply filters and sorting
+  applyFiltersAndSorting()
+  selectedUser.value = null
+}
+
+const handleUserDeleted = (userId: number) => {
+  // Remove from allUsers array
+  const index = allUsers.value.findIndex(u => u.id === userId)
+  if (index !== -1) {
+    allUsers.value.splice(index, 1)
+  }
+  
+  // Reapply filters and sorting
+  applyFiltersAndSorting()
   selectedUser.value = null
 }
 

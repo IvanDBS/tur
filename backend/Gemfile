@@ -89,6 +89,9 @@ group :development do
   # Performance monitoring
   gem 'bullet', '~> 7.0', require: false  # N+1 query detection
   
+  # Email preview and testing
+  gem 'letter_opener', '~> 1.8'  # Opens emails in browser for development
+  
   # Environment variables
   # gem 'dotenv-rails', '~> 2.8' # Moved to top
 end

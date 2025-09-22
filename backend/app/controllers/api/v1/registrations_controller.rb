@@ -6,6 +6,9 @@ module Api
 
         if @user.save
           begin
+            # Отправляем письмо подтверждения
+            UserMailer.confirmation_email(@user).deliver_now
+            
             # Генерируем JWT токены
             access_token = @user.generate_jwt
             refresh_token = @user.generate_refresh_jwt
@@ -21,7 +24,7 @@ module Api
             
             render json: {
               success: true,
-              message: 'User registered successfully',
+              message: 'User registered successfully. Please check your email for confirmation.',
               user: {
                 id: @user.id,
                 email: @user.email,
@@ -40,7 +43,7 @@ module Api
             
             render json: {
               success: true,
-              message: 'User registered successfully',
+              message: 'User registered successfully. Please check your email for confirmation.',
               user: {
                 id: @user.id,
                 email: @user.email,

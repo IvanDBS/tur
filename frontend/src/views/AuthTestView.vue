@@ -67,17 +67,26 @@
       <div class="api-test">
         <h2>Тест API</h2>
         <div class="api-buttons">
-          <button @click="testRegister" class="btn btn--outline">
-            Тест регистрации
+          <button @click="testRegister" class="btn btn--primary">
+            🎲 Случайная регистрация
           </button>
-          <button @click="testLogin" class="btn btn--outline">
-            Тест входа
+          <button @click="createSpecificUser(1)" class="btn btn--outline">
+            👤 Создать user1@example.com
+          </button>
+          <button @click="createSpecificUser(2)" class="btn btn--outline">
+            👤 Создать user2@example.com
+          </button>
+          <button @click="createSpecificUser(3)" class="btn btn--outline">
+            👤 Создать user3@example.com
+          </button>
+          <button @click="testLogin" class="btn btn--secondary">
+            🔑 Тест входа
           </button>
           <button @click="testAdminLogin" class="btn btn--outline">
-            Тест входа (АДМИН)
+            👑 Тест входа (АДМИН)
           </button>
           <button @click="testLogout" class="btn btn--outline">
-            Тест выхода
+            🚪 Тест выхода
           </button>
         </div>
       </div>
@@ -130,32 +139,61 @@
 
   const testRegister = async () => {
     try {
+      // Генерируем уникальный номер пользователя
+      const userNumber = Math.floor(Math.random() * 1000) + 1
       const testData = {
-        email: 'test@example.com',
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
+        email: `user${userNumber}@example.com`,
+        password: 'password',
+        passwordConfirmation: 'password',
+        firstName: `User${userNumber}`,
+        lastName: 'Test',
         phone: '+37312345678'
       }
       
+      console.log('Регистрируем пользователя:', testData.email)
       await authStore.register(testData)
+      console.log('✅ Регистрация успешна! Проверьте email для подтверждения.')
       logger.debug('Registration test completed')
     } catch (error) {
-      console.error('Registration test error:', error)
+      console.error('❌ Ошибка регистрации:', error)
+    }
+  }
+
+  const createSpecificUser = async (userNumber: number) => {
+    try {
+      const testData = {
+        email: `user${userNumber}@example.com`,
+        password: 'password',
+        passwordConfirmation: 'password',
+        firstName: `User${userNumber}`,
+        lastName: 'Test',
+        phone: '+37312345678'
+      }
+      
+      console.log(`Создаем пользователя user${userNumber}@example.com`)
+      await authStore.register(testData)
+      console.log(`✅ Пользователь user${userNumber}@example.com создан! Проверьте email для подтверждения.`)
+      logger.debug(`Specific user ${userNumber} registration completed`)
+    } catch (error) {
+      console.error(`❌ Ошибка создания пользователя user${userNumber}:`, error)
     }
   }
 
   const testLogin = async () => {
     try {
+      // Используем случайного пользователя для входа
+      const userNumber = Math.floor(Math.random() * 100) + 1
       const credentials = {
-        email: 'test@example.com',
-        password: 'password123'
+        email: `user${userNumber}@example.com`,
+        password: 'password'
       }
       
+      console.log('Входим как пользователь:', credentials.email)
       await authStore.login(credentials)
+      console.log('✅ Вход успешен!')
       logger.debug('Login test completed')
     } catch (error) {
-      console.error('Login test error:', error)
+      console.error('❌ Ошибка входа:', error)
     }
   }
 

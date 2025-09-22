@@ -21,6 +21,13 @@ Rails.application.routes.draw do
       put 'auth/profile', to: 'auth#update_profile'
       put 'auth/change_password', to: 'auth#change_password'
       
+      # Registration route alias for frontend compatibility
+      post 'auth/sign_up', to: 'registrations#create'
+      
+      # Email confirmation routes
+      get 'email/confirm', to: 'email_confirmations#confirm'
+      post 'email/resend', to: 'email_confirmations#resend'
+      
       # Search routes
       get 'search/departure_cities', to: 'search#departure_cities'
       get 'search/countries', to: 'search#countries'

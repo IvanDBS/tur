@@ -4,6 +4,7 @@ export { default as BaseInput } from './BaseInput.vue'
 export { default as BaseSelect } from './BaseSelect.vue'
 export { default as FormField } from './FormField.vue'
 export { default as StatusBadge } from './StatusBadge.vue'
+export { default as ConfirmDialog } from './ConfirmDialog.vue'
 
 // Re-export types for better DX
 export type { default as BaseButtonProps } from './BaseButton.vue'

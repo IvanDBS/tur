@@ -46,7 +46,7 @@ export default {
     selectCity: 'Select city',
     selectCountry: 'Select country',
     selectPackage: 'Select package',
-    arrivalCityAuto: 'City will be selected automatically',
+    arrivalCityAuto: 'Will be selected automatically',
     checkInFrom: 'Check-in from',
     checkInTo: 'Check-in to',
     nightsFrom: 'Hotel nights from',

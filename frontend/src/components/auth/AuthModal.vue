@@ -31,9 +31,10 @@
 
 <script setup lang="ts">
   import { ref, watch } from 'vue'
-  import { useAuthStore } from '@/stores/auth'
+  import { useAuthStore } from '../../stores/auth'
   import LoginForm from './LoginForm.vue'
   import RegisterForm from './RegisterForm.vue'
+  import { useAuthModal } from '../../composables/useAuthModal'
 
   interface Props {
     isOpen: boolean
@@ -47,7 +48,8 @@
   const emit = defineEmits<Emits>()
 
   const authStore = useAuthStore()
-  const mode = ref<'login' | 'register'>('login')
+  const { authModalMode } = useAuthModal()
+  const mode = authModalMode
 
   const close = () => {
     emit('close')
@@ -80,6 +82,9 @@
       }
     }
   )
+
+  // Export component
+  defineExpose({})
 </script>
 
 <style scoped>

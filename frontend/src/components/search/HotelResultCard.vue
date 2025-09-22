@@ -1,5 +1,6 @@
 <template>
-  <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop === true, [getAvailabilityClass()]: true }">
+  <div>
+    <div class="hotel-result-card" :class="{ 'stop-sale': result.hotel.in_stop === true, [getAvailabilityClass()]: true }">
     <!-- Hotel Image Section -->
     <div class="hotel-image-section">
       <div class="hotel-image">
@@ -178,13 +179,24 @@
       </div>
     </div>
   </div>
+
+  <!-- Auth Required Modal -->
+  <AuthRequiredModal 
+    :is-open="showAuthRequiredModal"
+    :title="$t('auth.bookingRequiresAuth')"
+    :message="$t('auth.bookingRequiresAuthDesc')"
+    @close="handleAuthModalClose"
+  />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNightWord, formatDateShort } from '../../utils/dateUtils'
 import { useI18n } from '../../composables/useI18n'
+import { useAuthStore } from '../../stores/auth'
+import AuthRequiredModal from '../ui/AuthRequiredModal.vue'
 import type { SearchResult, GroupedSearchResult } from '../../types/search'
 
 // Get router instance at the top level of setup()
@@ -192,6 +204,12 @@ const router = useRouter()
 
 // I18n
 const { t: $t } = useI18n()
+
+// Auth store
+const authStore = useAuthStore()
+
+// Modal state
+const showAuthRequiredModal = ref(false)
 
 interface Props {
   result: GroupedSearchResult
@@ -243,6 +261,12 @@ const canBook = computed(() => {
 
 // Handle booking
 const handleBook = () => {
+  // Check if user is authenticated
+  if (!authStore.isAuthenticated) {
+    showAuthRequiredModal.value = true
+    return
+  }
+  
   // Booking button clicked
   
   // Create unique key for grouped result (same format as in useSearchForm)
@@ -273,6 +297,12 @@ const handleBook = () => {
     alert('Ошибка перехода на страницу бронирования')
   })
 }
+
+// Handle auth modal close
+const handleAuthModalClose = () => {
+  showAuthRequiredModal.value = false
+}
+
 
 
 
@@ -344,6 +374,12 @@ const getAvailabilityTooltip = () => {
     return $t('hotelCard.availability')
   }
   return $t('hotelCard.notAvailable')
+}
+
+
+// Components
+const components = {
+  AuthRequiredModal
 }
 
 // Export component

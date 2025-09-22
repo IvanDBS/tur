@@ -88,6 +88,11 @@ export const useSearchPagination = () => {
         return
       }
       
+      // Логируем статус in_stop для отладки
+      if (result.accommodation.hotel.in_stop === true) {
+        logger.info(`🚫 Hotel ${result.accommodation.hotel.name} (${result.accommodation.hotel.id}) room ${result.accommodation.room.name} (${result.accommodation.room.id}) is in STOP SALE`)
+      }
+      
       const hotelKey = `${result.accommodation.hotel.id}`
       
       if (groupedMap.has(hotelKey)) {
@@ -114,6 +119,7 @@ export const useSearchPagination = () => {
             meal: result.accommodation.meal,
             placement: result.accommodation.placement,
             price: result.price,
+            in_stop: result.accommodation.hotel.in_stop, // Сохраняем статус стоп-сейла для комнаты
             flightOptions: [{
               ...result.tickets,
               price: result.price
@@ -129,6 +135,11 @@ export const useSearchPagination = () => {
         }
         if (currentPrice > existing.maxPrice) {
           existing.maxPrice = currentPrice
+        }
+        
+        // Обновляем статус in_stop: отель в стопе, если любая комната в стопе
+        if (result.accommodation.hotel.in_stop === true) {
+          existing.hotel.in_stop = true
         }
       } else {
         // Создаем новый группированный результат
@@ -151,6 +162,7 @@ export const useSearchPagination = () => {
             meal: result.accommodation.meal,
             placement: result.accommodation.placement,
             price: result.price,
+            in_stop: result.accommodation.hotel.in_stop, // Сохраняем статус стоп-сейла для комнаты
             flightOptions: [{
               ...result.tickets,
               price: result.price
@@ -165,7 +177,18 @@ export const useSearchPagination = () => {
     })
     
     // Сортируем по минимальной цене
-    return Array.from(groupedMap.values()).sort((a, b) => a.minPrice - b.minPrice)
+    const finalResults = Array.from(groupedMap.values()).sort((a, b) => a.minPrice - b.minPrice)
+    
+    // Логируем финальные результаты для отладки
+    logger.info(`🏨 Final grouped results: ${finalResults.length} hotels`)
+    finalResults.forEach((result, index) => {
+      logger.info(`🏨 Hotel ${index + 1}: ${result.hotel.name} (${result.hotel.id}) - in_stop: ${result.hotel.in_stop}, roomOptions: ${result.roomOptions.length}`)
+      result.roomOptions.forEach((room, roomIndex) => {
+        logger.info(`  📦 Room ${roomIndex + 1}: ${room.room.name} (${room.room.id}) - Price: ${room.price?.amount} ${room.price?.currency}`)
+      })
+    })
+    
+    return finalResults
   }
 
   // Метод для обработки смены страницы

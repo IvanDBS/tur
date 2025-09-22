@@ -313,6 +313,9 @@ export default {
     enterFiscalCode: 'Enter fiscal code',
     selectTitle: 'Select title',
     passportValidityWarning: 'Passport validity less than 6 months!',
+    nameValidationWarning: 'Only Latin letters are allowed!',
+    passportValidationWarning: 'Only Latin letters and numbers are allowed!',
+    fiscalCodeValidationWarning: 'Only numbers are allowed!',
     other: 'Other'
   },
   timeUnits: {
@@ -337,7 +340,15 @@ export default {
     standardInsurance: 'Standard insurance',
     extendedInsurance: 'Extended insurance',
     noInsurance: 'No insurance',
-    insuranceDecline: 'Insurance decline'
+    insuranceDecline: 'Insurance decline',
+    honeymooners: 'Honeymooners',
+    regularGuest: 'Regular Guest',
+    twinBeds: 'Twin Beds',
+    groundFloor: 'Ground Floor',
+    notGroundFloor: 'Not Ground Floor',
+    babyCot: 'Baby Cot',
+    handicapAccessible: 'Handicap Accessible',
+    doubleBed: 'Double Bed'
   },
   bookingSummary: {
     baseCost: 'Base tour cost',
@@ -464,6 +475,50 @@ export default {
       cancelled: 'Cancelled',
       failed: 'Payment Error',
       unknown: 'Unknown'
+    }
+  },
+  auth: {
+    loginRequired: 'Authorization Required',
+    loginRequiredForBooking: 'To complete your booking, please log in to your account. This will only take a moment.',
+    bookingRequiresAuth: 'To book this tour, please sign in or create an account',
+    bookingRequiresAuthDesc: 'Sign in to continue with your booking, or create a new account if you don\'t have one yet.',
+    login: 'Sign In',
+    register: 'Create Account',
+    loginTitle: 'Sign In',
+    loginSubtitle: 'Enter your credentials to access your account',
+    registerTitle: 'Create Account',
+    registerSubtitle: 'Create a new account to start booking tours',
+    email: 'Email',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    phone: 'Phone Number',
+    enterEmail: 'Enter your email',
+    enterPassword: 'Enter your password',
+    enterConfirmPassword: 'Confirm your password',
+    enterFirstName: 'Enter your first name',
+    enterLastName: 'Enter your last name',
+    enterPhone: 'Enter your phone number',
+    alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: 'Don\'t have an account?',
+    switchToLogin: 'Sign In',
+    switchToRegister: 'Create Account',
+    forgotPassword: 'Forgot Password?',
+    rememberMe: 'Remember Me',
+    termsAndConditions: 'I agree to the Terms and Conditions',
+    emailConfirmation: {
+      title: 'Email Confirmation Required',
+      message: 'We have sent a confirmation email to your address. Please check your inbox and click the confirmation link to activate your account.',
+      checkEmail: 'Check your email',
+      resendEmail: 'Resend confirmation email',
+      emailSent: 'Confirmation email sent!',
+      emailResent: 'Confirmation email resent!',
+      backToLogin: 'Back to Sign In',
+      confirmationSuccess: 'Email confirmed successfully!',
+      confirmationError: 'Email confirmation failed. Please try again.',
+      invalidToken: 'Invalid or expired confirmation token.',
+      alreadyConfirmed: 'Email already confirmed.'
     }
   }
 }

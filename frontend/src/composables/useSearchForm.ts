@@ -627,7 +627,8 @@ export const useSearchForm = () => {
       }) : searchData.meals.value.map(meal => {
         const originalMealName = meal.name || meal.label || meal.id.toString()
         return originalMealName
-      }).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index)
+      }).filter(Boolean).filter((meal, index, arr) => arr.indexOf(meal) === index),
+      options: ["night", "day", "group_by_hotel"]
     }
     
     logger.info('🔍 Search parameters prepared:', {
@@ -645,6 +646,7 @@ export const useSearchForm = () => {
       price_from: searchParams.price_from,
       price_to: searchParams.price_to,
       meals: searchParams.meals,
+      options: searchParams.options,
       selected_hotels_count: searchParams.selected_hotels?.length || 0,
       selected_hotels_first_5: searchParams.selected_hotels?.slice(0, 5) || []
     })

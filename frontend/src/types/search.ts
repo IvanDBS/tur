@@ -282,6 +282,7 @@ export interface RoomOption {
   meal: SearchResultMeal
   placement: SearchResultPlacement
   price: SearchResultPrice
+  in_stop?: boolean // Статус стоп-сейла для конкретного варианта комнаты
   // Массив вариантов перелетов для этого варианта комнаты
   flightOptions: (SearchResultTickets & { price: SearchResultPrice })[]
 }

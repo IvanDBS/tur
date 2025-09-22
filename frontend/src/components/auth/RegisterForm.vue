@@ -1,16 +1,16 @@
 <template>
   <div class="auth-form">
     <div class="auth-form__header">
-      <h2 class="auth-form__title">Регистрация</h2>
-      <p class="auth-form__subtitle">Создайте новый аккаунт</p>
+      <h2 class="auth-form__title">{{ $t('auth.registerTitle') }}</h2>
+      <p class="auth-form__subtitle">{{ $t('auth.registerSubtitle') }}</p>
     </div>
 
     <form @submit.prevent="handleSubmit" class="auth-form__content">
       <FormField
         v-model="form.email"
         type="email"
-        label="Email"
-        placeholder="Введите ваш email"
+        :label="$t('auth.email')"
+        :placeholder="$t('auth.enterEmail')"
         :error="errors.email"
         required
       />
@@ -19,8 +19,8 @@
         <FormField
           v-model="form.firstName"
           type="text"
-          label="Имя"
-          placeholder="Имя"
+          :label="$t('auth.firstName')"
+          :placeholder="$t('auth.enterFirstName')"
           :error="errors.firstName"
           class="form-group--half"
         />
@@ -28,8 +28,8 @@
         <FormField
           v-model="form.lastName"
           type="text"
-          label="Фамилия"
-          placeholder="Фамилия"
+          :label="$t('auth.lastName')"
+          :placeholder="$t('auth.enterLastName')"
           :error="errors.lastName"
           class="form-group--half"
         />
@@ -38,17 +38,17 @@
       <FormField
         v-model="form.phone"
         type="tel"
-        label="Телефон (необязательно)"
-        placeholder="+7 (999) 123-45-67"
+        :label="$t('auth.phone')"
+        :placeholder="$t('auth.enterPhone')"
         :error="errors.phone"
-        hint="Необязательное поле"
+        hint="Optional"
       />
 
       <FormField
         v-model="form.password"
         type="password"
-        label="Пароль"
-        placeholder="Введите пароль"
+        :label="$t('auth.password')"
+        :placeholder="$t('auth.enterPassword')"
         :error="errors.password"
         required
       />
@@ -56,8 +56,8 @@
       <FormField
         v-model="form.passwordConfirmation"
         type="password"
-        label="Подтверждение пароля"
-        placeholder="Повторите пароль"
+        :label="$t('auth.confirmPassword')"
+        :placeholder="$t('auth.enterConfirmPassword')"
         :error="errors.passwordConfirmation"
         required
       />
@@ -98,15 +98,15 @@
             </circle>
           </svg>
         </span>
-        <span v-else>Зарегистрироваться</span>
+        <span v-else>{{ $t('auth.register') }}</span>
       </button>
     </form>
 
     <div class="auth-form__footer">
       <p class="auth-form__text">
-        Уже есть аккаунт?
+        {{ $t('auth.alreadyHaveAccount') }}
         <button @click="$emit('switch-mode', 'login')" class="auth-form__link">
-          Войти
+          {{ $t('auth.switchToLogin') }}
         </button>
       </p>
     </div>
@@ -115,16 +115,18 @@
 
 <script setup lang="ts">
   import { reactive } from 'vue'
-  import { useAuthStore } from '@/stores/auth'
-  import { useFormValidation, validationRules } from '@/composables/useFormValidation'
-  import FormField from '@/components/ui/FormField.vue'
-  import type { RegisterCredentials } from '@/types/auth'
+  import { useAuthStore } from '../../stores/auth'
+  import { useFormValidation, validationRules } from '../../composables/useFormValidation'
+  import FormField from '../ui/FormField.vue'
+  import { useI18n } from '../../composables/useI18n'
+  import type { RegisterCredentials } from '../../types/auth'
 
   const emit = defineEmits<{
     'switch-mode': [mode: 'login']
     'register-success': []
   }>()
 
+  const { t: $t } = useI18n()
   const authStore = useAuthStore()
 
   const form = reactive<RegisterCredentials>({

@@ -10,13 +10,19 @@
           v-for="roomOption in roomOptions" 
           :key="roomOption.id"
           class="room-option"
-          :class="{ 'selected': selectedRoomOption?.id === roomOption.id }"
-          @click="selectRoomOption(roomOption)"
+          :class="{ 
+            'selected': selectedRoomOption?.id === roomOption.id,
+            'stop-sale': roomOption.in_stop === true
+          }"
+          @click="roomOption.in_stop !== true && selectRoomOption(roomOption)"
         >
           <div class="room-option-content">
             <!-- Selection Indicator -->
             <div class="selection-indicator">
-              <div class="radio-button" :class="{ 'selected': selectedRoomOption?.id === roomOption.id }">
+              <div class="radio-button" :class="{ 
+                'selected': selectedRoomOption?.id === roomOption.id,
+                'disabled': roomOption.in_stop === true
+              }">
                 <div class="radio-dot"></div>
               </div>
             </div>
@@ -40,6 +46,7 @@
                 </div>
                 <div class="room-column price-column">
                   <div class="room-price">
+                    <span v-if="roomOption.in_stop === true" class="stop-sale-badge">STOP SALE</span>
                     <span class="price-amount">{{ formatPrice(getRoomPrice(roomOption)) }} €</span>
                   </div>
                 </div>
@@ -184,6 +191,22 @@ const selectRoomOption = (roomOption: RoomOption) => {
   box-shadow: 0 2px 8px rgba(26, 60, 97, 0.15);
 }
 
+.room-option.stop-sale {
+  background: #fef2f2;
+  cursor: not-allowed;
+}
+
+.room-option.stop-sale:hover {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.room-option.stop-sale.selected {
+  border-color: var(--color-border);
+  background: #fef2f2;
+  box-shadow: none;
+}
+
 .room-option-content {
   display: flex;
   align-items: center;
@@ -208,7 +231,7 @@ const selectRoomOption = (roomOption: RoomOption) => {
   display: grid;
   grid-template-columns: 2fr 2fr 1fr 1fr;
   gap: 1rem;
-  align-items: start;
+  align-items: center;
 }
 
 .room-column {
@@ -240,7 +263,7 @@ const selectRoomOption = (roomOption: RoomOption) => {
 .room-price {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .price-amount {
@@ -248,6 +271,28 @@ const selectRoomOption = (roomOption: RoomOption) => {
   font-weight: 700;
   color: var(--color-primary);
   white-space: nowrap;
+}
+
+.stop-sale-badge {
+  background: #fecaca;
+  color: #dc2626;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-right: 4rem;
+  white-space: nowrap;
+  border: 1px solid #fca5a5;
+}
+
+.radio-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.radio-button.disabled .radio-dot {
+  background: #9ca3af;
 }
 
 .room-info {

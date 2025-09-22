@@ -142,6 +142,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useBooking } from '../composables/useBooking'
 import { useI18n } from '../composables/useI18n'
+import { useAuthStore } from '../stores/auth'
+import { useNotifications } from '../composables/useNotifications'
 import '../styles/spinners.css'
 // Import components directly
 import HotelInfoBlock from '../components/booking/HotelInfoBlock.vue'
@@ -162,6 +164,8 @@ const props = defineProps<Props>()
 const { t: $t } = useI18n()
 
 // Composables
+const authStore = useAuthStore()
+const { showError } = useNotifications()
 
 // Wrapper for updateTourist to match TouristDataBlock emit signature
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
@@ -293,6 +297,12 @@ const retryLoad = () => {
 // }
 
 const handleBook = async () => {
+  // Check if user is authenticated
+  if (!authStore.isAuthenticated) {
+    showError($t('auth.loginRequired'), $t('auth.loginRequiredForBooking'))
+    return
+  }
+  
   // Scroll to top to show the spinner
   window.scrollTo({ top: 0, behavior: 'smooth' })
   
@@ -483,6 +493,12 @@ watch(() => bookingData.value.tourists, () => {
 
 // Lifecycle
 onMounted(async () => {
+  // Check if user is authenticated when page loads
+  if (!authStore.isAuthenticated) {
+    showError($t('auth.loginRequired'), $t('auth.loginRequiredForBooking'))
+    return
+  }
+  
   try {
     await loadSearchResult()
   } catch {

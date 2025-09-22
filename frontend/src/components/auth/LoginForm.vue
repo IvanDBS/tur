@@ -1,16 +1,16 @@
 <template>
   <div class="auth-form">
     <div class="auth-form__header">
-      <h2 class="auth-form__title">Вход в систему</h2>
-      <p class="auth-form__subtitle">Введите ваши данные для входа</p>
+      <h2 class="auth-form__title">{{ $t('auth.loginTitle') }}</h2>
+      <p class="auth-form__subtitle">{{ $t('auth.loginSubtitle') }}</p>
     </div>
 
     <form @submit.prevent="handleSubmit" class="auth-form__content">
       <FormField
         v-model="form.email"
         type="email"
-        label="Email"
-        placeholder="Введите ваш email"
+        :label="$t('auth.email')"
+        :placeholder="$t('auth.enterEmail')"
         :error="errors.email"
         required
       />
@@ -18,8 +18,8 @@
       <FormField
         v-model="form.password"
         type="password"
-        label="Пароль"
-        placeholder="Введите ваш пароль"
+        :label="$t('auth.password')"
+        :placeholder="$t('auth.enterPassword')"
         :error="errors.password"
         required
       />
@@ -60,18 +60,18 @@
             </circle>
           </svg>
         </span>
-        <span v-else>Войти</span>
+        <span v-else>{{ $t('auth.login') }}</span>
       </button>
     </form>
 
     <div class="auth-form__footer">
       <p class="auth-form__text">
-        Нет аккаунта?
+        {{ $t('auth.dontHaveAccount') }}
         <button
           @click="$emit('switch-mode', 'register')"
           class="auth-form__link"
         >
-          Зарегистрироваться
+          {{ $t('auth.switchToRegister') }}
         </button>
       </p>
     </div>
@@ -80,16 +80,18 @@
 
 <script setup lang="ts">
   import { reactive } from 'vue'
-  import { useAuthStore } from '@/stores/auth'
-  import { useFormValidation, validationRules } from '@/composables/useFormValidation'
-  import FormField from '@/components/ui/FormField.vue'
-  import type { LoginCredentials } from '@/types/auth'
+  import { useAuthStore } from '../../stores/auth'
+  import { useFormValidation, validationRules } from '../../composables/useFormValidation'
+  import FormField from '../ui/FormField.vue'
+  import { useI18n } from '../../composables/useI18n'
+  import type { LoginCredentials } from '../../types/auth'
 
   const emit = defineEmits<{
     'switch-mode': [mode: 'register']
     'login-success': []
   }>()
 
+  const { t: $t } = useI18n()
   const authStore = useAuthStore()
 
   const form = reactive<LoginCredentials>({

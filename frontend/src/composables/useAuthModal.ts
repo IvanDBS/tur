@@ -1,9 +1,11 @@
 import { ref } from 'vue'
 
 const isAuthModalOpen = ref(false)
+const authModalMode = ref<'login' | 'register'>('login')
 
 export const useAuthModal = () => {
-  const openAuthModal = () => {
+  const openAuthModal = (mode: 'login' | 'register' = 'login') => {
+    authModalMode.value = mode
     isAuthModalOpen.value = true
   }
 
@@ -13,6 +15,7 @@ export const useAuthModal = () => {
 
   return {
     isAuthModalOpen,
+    authModalMode,
     openAuthModal,
     closeAuthModal,
   }

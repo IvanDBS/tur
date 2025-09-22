@@ -70,15 +70,6 @@
           <button @click="testRegister" class="btn btn--primary">
             🎲 Случайная регистрация
           </button>
-          <button @click="createSpecificUser(1)" class="btn btn--outline">
-            👤 Создать user1@example.com
-          </button>
-          <button @click="createSpecificUser(2)" class="btn btn--outline">
-            👤 Создать user2@example.com
-          </button>
-          <button @click="createSpecificUser(3)" class="btn btn--outline">
-            👤 Создать user3@example.com
-          </button>
           <button @click="testLogin" class="btn btn--secondary">
             🔑 Тест входа
           </button>
@@ -159,25 +150,6 @@
     }
   }
 
-  const createSpecificUser = async (userNumber: number) => {
-    try {
-      const testData = {
-        email: `user${userNumber}@example.com`,
-        password: 'password',
-        passwordConfirmation: 'password',
-        firstName: `User${userNumber}`,
-        lastName: 'Test',
-        phone: '+37312345678'
-      }
-      
-      console.log(`Создаем пользователя user${userNumber}@example.com`)
-      await authStore.register(testData)
-      console.log(`✅ Пользователь user${userNumber}@example.com создан! Проверьте email для подтверждения.`)
-      logger.debug(`Specific user ${userNumber} registration completed`)
-    } catch (error) {
-      console.error(`❌ Ошибка создания пользователя user${userNumber}:`, error)
-    }
-  }
 
   const testLogin = async () => {
     try {

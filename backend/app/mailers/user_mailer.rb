@@ -1,45 +1,70 @@
-# frozen_string_literal: true
-
-# User Mailer for user-related emails
+# UserMailer for sending user notifications
 class UserMailer < ApplicationMailer
-  default from: ENV['MAIL_FROM'] || 'noreply@yourdomain.com'
+  default from: ENV['MAIL_FROM'] || 'noreply@migo.md'
 
-  def confirmation_email(user)
-    @user = user
-    @confirmation_url = generate_confirmation_url(user)
-    @site_name = Rails.application.class.module_parent_name
-
+  def notification_email(notification)
+    @notification = notification
+    @user = notification.user
+    @title = notification.title
+    @message = notification.message
+    @notification_type = notification.notification_type
+    @metadata = notification.metadata || {}
+    
+    # Set subject based on notification type
+    subject_prefix = case notification.notification_type
+                    when 'success'
+                      '✅ '
+                    when 'warning'
+                      '⚠️ '
+                    when 'error'
+                      '❌ '
+                    when 'booking_update'
+                      '📋 '
+                    else
+                      'ℹ️ '
+                    end
+    
     mail(
       to: @user.email,
-      subject: "Подтвердите регистрацию в #{@site_name}",
-      template_name: 'confirmation_email'
+      subject: "#{subject_prefix}#{@title}",
+      template_name: 'notification_email'
     )
   end
-
-  private
-
-  def generate_confirmation_url(user)
-    # Generate a secure confirmation token
-    token = generate_confirmation_token(user)
+  
+  def welcome_email(user)
+    @user = user
+    @name = user.full_name
     
-    # In development, use localhost
-    if Rails.env.development?
-      "http://localhost:3000/api/v1/email/confirm?token=#{token}"
-    else
-      # In production, use your domain
-      "https://yourdomain.com/api/v1/email/confirm?token=#{token}"
-    end
+    mail(
+      to: @user.email,
+      subject: 'Добро пожаловать в migo.md!',
+      template_name: 'welcome_email'
+    )
   end
-
-  def generate_confirmation_token(user)
-    # Create a secure token that expires in 24 hours
-    payload = {
-      user_id: user.id,
-      email: user.email,
-      exp: 24.hours.from_now.to_i,
-      type: 'email_confirmation'
-    }
+  
+  def booking_confirmation_email(booking)
+    @booking = booking
+    @user = booking.user
+    @tour_details = booking.tour_details || {}
+    @customer_data = booking.customer_data || {}
     
-    JWT.encode(payload, Rails.application.credentials.secret_key_base)
+    mail(
+      to: @user.email,
+      subject: "Подтверждение бронирования #{booking.obs_booking_hash}",
+      template_name: 'booking_confirmation_email'
+    )
+  end
+  
+  def booking_cancellation_email(booking, reason = nil)
+    @booking = booking
+    @user = booking.user
+    @reason = reason
+    @tour_details = booking.tour_details || {}
+    
+    mail(
+      to: @user.email,
+      subject: "Отмена бронирования #{booking.obs_booking_hash}",
+      template_name: 'booking_cancellation_email'
+    )
   end
 end

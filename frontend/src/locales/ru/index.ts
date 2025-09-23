@@ -197,6 +197,7 @@ export default {
     accommodationVariant: 'Выбор варианта проживания',
     roomType: 'Тип номера',
     accommodationType: 'Тип размещения',
+    loadMoreOptions: 'Загрузить еще {count} вариантов',
     flightSelection: 'Выбор авиаперелета',
     flightSelectionTitle: 'Выбор авиаперелета',
     departure: 'Туда',

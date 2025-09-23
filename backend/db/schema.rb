@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_18_154101) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_22_192342) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,6 +116,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_18_154101) do
     t.index ["jti"], name: "index_jwt_denylist_on_jti", unique: true
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.text "message", null: false
+    t.string "notification_type", default: "info", null: false
+    t.string "delivery_channels", default: ["in_app"], array: true
+    t.datetime "read_at"
+    t.json "metadata", default: {}
+    t.string "event_type"
+    t.string "event_id"
+    t.boolean "delivered", default: false
+    t.datetime "delivered_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["delivered"], name: "index_notifications_on_delivered"
+    t.index ["event_type", "event_id"], name: "index_notifications_on_event_type_and_event_id"
+    t.index ["notification_type"], name: "index_notifications_on_notification_type"
+    t.index ["user_id", "created_at"], name: "index_notifications_on_user_id_and_created_at"
+    t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
   create_table "packages", force: :cascade do |t|
     t.bigint "hotel_id", null: false
     t.string "name", null: false
@@ -189,6 +211,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_18_154101) do
   add_foreign_key "availabilities", "packages"
   add_foreign_key "bookings", "search_queries"
   add_foreign_key "bookings", "users"
+  add_foreign_key "notifications", "users"
   add_foreign_key "packages", "hotels"
   add_foreign_key "search_queries", "users"
 end

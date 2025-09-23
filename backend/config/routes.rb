@@ -76,9 +76,39 @@ Rails.application.routes.draw do
       post 'admin/bookings/sync_all', to: 'admin#sync_all_bookings'
       get 'admin/bookings/:id/obs-details', to: 'admin#obs_booking_details'
       
+      # Notifications routes
+      resources :notifications, only: [:index, :show, :destroy] do
+        member do
+          patch :mark_read
+        end
+        collection do
+          patch :mark_all_read
+          get :unread_count
+        end
+      end
+      
       # Admin users routes
       namespace :admin do
         resources :users, only: [:index, :show, :update, :destroy]
+        
+        # Admin notifications routes
+        resources :notifications, only: [:index, :show, :create, :update, :destroy] do
+          collection do
+            post :bulk
+            get :stats
+            post :cleanup
+          end
+        end
+        
+        # Notification monitoring routes
+        namespace :notification_monitoring do
+          get :metrics
+          get :channel_performance
+          get :error_analysis
+          get :health
+          post :check_alerts
+          get :dashboard
+        end
         
         # IP Management routes
         namespace :ip_management do
@@ -116,6 +146,9 @@ Rails.application.routes.draw do
       post 'webhook/obs', to: 'webhook#obs_webhook'
     end
   end
+  
+  # ActionCable mount (temporarily disabled)
+  # mount ActionCable.server => '/cable'
   
   # Health check for load balancers
   get "up" => "rails/health#show", as: :rails_health_check

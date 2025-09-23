@@ -284,7 +284,11 @@ export interface RoomOption {
   price: SearchResultPrice
   in_stop?: boolean // Статус стоп-сейла для конкретного варианта комнаты
   // Массив вариантов перелетов для этого варианта комнаты
-  flightOptions: (SearchResultTickets & { price: SearchResultPrice })[]
+  flightOptions: (SearchResultTickets & { 
+    price: SearchResultPrice
+    rid: string
+    unique_key: string
+  })[]
 }
 
 // Группированный результат поиска (один отель с несколькими вариантами комнат и перелетов)
@@ -300,6 +304,8 @@ export interface GroupedSearchResult {
   // OBS API поля для бронирования
   rid: string
   unique_key: string
+  // Количество дополнительных результатов для этого отеля (из hotel_results_counter)
+  hotel_results_counter: number
   // Массив вариантов комнат для этого отеля
   roomOptions: RoomOption[]
   // Минимальная цена среди всех вариантов

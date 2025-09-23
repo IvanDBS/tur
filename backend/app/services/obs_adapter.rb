@@ -68,11 +68,11 @@ class ObsAdapter < OperatorAdapter
     access_token = get_access_token
     headers['Authorization'] = "Bearer #{access_token}" if access_token
 
-    # Debug: log actual headers being sent
-    Rails.logger.info "🔑 ObsAdapter sending headers: #{headers.inspect}"
-    
-    # Debug: log actual params being sent
-    Rails.logger.info "📋 ObsAdapter sending params: #{params.inspect}"
+    # Debug: log actual headers being sent (only in verbose mode)
+    if Rails.env.development? && ENV['OBS_VERBOSE_LOGGING'] == 'true'
+      Rails.logger.info "🔑 ObsAdapter sending headers: #{headers.inspect}"
+      Rails.logger.info "📋 ObsAdapter sending params: #{params.inspect}"
+    end
 
     # Log request (without sensitive data)
     log_request(method, path, params, headers, start_time)

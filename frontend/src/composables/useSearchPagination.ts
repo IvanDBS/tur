@@ -108,7 +108,9 @@ export const useSearchPagination = () => {
           // Добавляем вариант перелета к существующему варианту комнаты
           const flightOptionWithPrice = {
             ...result.tickets,
-            price: result.price
+            price: result.price,
+            rid: result.rid,
+            unique_key: result.unique_key
           }
           existingRoomOption.flightOptions.push(flightOptionWithPrice)
         } else {
@@ -122,7 +124,9 @@ export const useSearchPagination = () => {
             in_stop: result.accommodation.hotel.in_stop, // Сохраняем статус стоп-сейла для комнаты
             flightOptions: [{
               ...result.tickets,
-              price: result.price
+              price: result.price,
+              rid: result.rid,
+              unique_key: result.unique_key
             }]
           }
           existing.roomOptions.push(newRoomOption)
@@ -141,6 +145,11 @@ export const useSearchPagination = () => {
         if (result.accommodation.hotel.in_stop === true) {
           existing.hotel.in_stop = true
         }
+        
+        // Обновляем hotel_results_counter: берем максимальное значение
+        if ((result.hotel_results_counter || 0) > existing.hotel_results_counter) {
+          existing.hotel_results_counter = result.hotel_results_counter || 0
+        }
       } else {
         // Создаем новый группированный результат
         const roomKey = `${result.accommodation.room.id}-${result.accommodation.meal.id}-${result.accommodation.placement.id}`
@@ -156,6 +165,7 @@ export const useSearchPagination = () => {
           // Сохраняем оригинальные поля OBS API для бронирования
           rid: result.rid,
           unique_key: result.unique_key,
+          hotel_results_counter: result.hotel_results_counter || 0,
           roomOptions: [{
             id: roomKey,
             room: result.accommodation.room,

@@ -43,6 +43,12 @@ export const useSearchState = () => {
         timestamp: Date.now()
       }
       
+      console.log('🔍 Saving to sessionStorage:', {
+        hasLastSearchParams: !!state?.lastSearchParams,
+        lastSearchParams: state?.lastSearchParams,
+        keys: Object.keys(searchState)
+      })
+      
       sessionStorage.setItem('searchState', JSON.stringify(searchState))
       logger.info('💾 Search state saved to sessionStorage')
     } catch (error) {

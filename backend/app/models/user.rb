@@ -13,6 +13,7 @@ class User < ApplicationRecord
   # Associations
   has_many :search_queries, dependent: :destroy
   has_many :bookings, dependent: :destroy
+  has_many :notifications, dependent: :destroy
 
   # Encrypt sensitive data
   encrypts :obs_refresh_token, :obs_access_token
@@ -24,6 +25,8 @@ class User < ApplicationRecord
   # Callbacks
   before_validation :generate_obs_user_id, on: :create
   before_validation :set_uid, on: :create
+  after_create :trigger_user_registered_event
+  after_update :trigger_user_updated_event, if: :saved_change_to_banned?
 
   # Instance methods
   def generate_jwt
@@ -100,6 +103,16 @@ class User < ApplicationRecord
     end
   end
 
+  def full_name
+    if first_name.present? && last_name.present?
+      "#{first_name} #{last_name}"
+    elsif first_name.present?
+      first_name
+    else
+      email.split('@')[0]
+    end
+  end
+
   private
 
   def generate_obs_user_id
@@ -108,5 +121,27 @@ class User < ApplicationRecord
 
   def set_uid
     self.uid = email if uid.blank?
+  end
+  
+  def trigger_user_registered_event
+    EventBus.instance.user_registered(self)
+  end
+  
+  def trigger_user_updated_event
+    if banned?
+      EventBus.instance.publish(EventBus::EVENTS[:user_banned], {
+        user_id: id,
+        user_email: email,
+        user_name: full_name,
+        banned_at: Time.current
+      })
+    else
+      EventBus.instance.publish(EventBus::EVENTS[:user_unbanned], {
+        user_id: id,
+        user_email: email,
+        user_name: full_name,
+        unbanned_at: Time.current
+      })
+    end
   end
 end

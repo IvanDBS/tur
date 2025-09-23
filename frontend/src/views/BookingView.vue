@@ -48,6 +48,7 @@
           :selected-flight="bookingData.selectedFlight"
           @update:selected-room="updateSelectedRoom"
           @reset:selected-flight="resetSelectedFlight"
+          @load-more-options="handleLoadMoreOptions"
         />
 
         <!-- Flight Selection Block -->
@@ -144,6 +145,8 @@ import { useBooking } from '../composables/useBooking'
 import { useI18n } from '../composables/useI18n'
 import { useAuthStore } from '../stores/auth'
 import { useNotifications } from '../composables/useNotifications'
+import { useSearchData } from '../composables/useSearchData'
+import { useSearchPagination } from '../composables/useSearchPagination'
 import '../styles/spinners.css'
 // Import components directly
 import HotelInfoBlock from '../components/booking/HotelInfoBlock.vue'
@@ -152,6 +155,7 @@ import FlightSelectionBlock from '../components/booking/FlightSelectionBlock.vue
 import TouristDataBlock from '../components/booking/TouristDataBlock.vue'
 import AdditionalServicesBlock from '../components/booking/AdditionalServicesBlock.vue'
 import type { BookingNotes, TouristData } from '../types/booking'
+import type { GroupedSearchResult } from '../types/search'
 
 // Props
 interface Props {
@@ -166,6 +170,8 @@ const { t: $t } = useI18n()
 // Composables
 const authStore = useAuthStore()
 const { showError } = useNotifications()
+const { performSearch } = useSearchData()
+const { groupResultsByHotel } = useSearchPagination()
 
 // Wrapper for updateTourist to match TouristDataBlock emit signature
 const updateTourist = (touristId: string, field: keyof TouristData, value: string | number | boolean) => {
@@ -315,6 +321,228 @@ const handleBook = async () => {
 
 const updateBookingNotes = (notes: Partial<BookingNotes>) => {
   bookingNotes.value = { ...bookingNotes.value, ...notes }
+}
+
+// Handle loading more options for a specific hotel
+const handleLoadMoreOptions = async (groupedResult: GroupedSearchResult) => {
+  try {
+    // Get search parameters from sessionStorage
+    let params = null
+    
+    // Try to get from searchState first
+    const searchState = sessionStorage.getItem('searchState')
+    console.log('🔍 searchState from sessionStorage:', searchState ? 'EXISTS' : 'NOT FOUND')
+    
+    if (searchState) {
+      const parsedState = JSON.parse(searchState)
+      console.log('🔍 parsedState.lastSearchParams:', parsedState.lastSearchParams ? 'EXISTS' : 'NOT FOUND')
+      console.log('🔍 parsedState keys:', Object.keys(parsedState))
+      console.log('🔍 Full parsedState:', parsedState)
+      if (parsedState.lastSearchParams) {
+        params = parsedState.lastSearchParams
+        console.log('🔍 Using params from searchState:', params)
+      } else if (parsedState.searchForm) {
+        // Try to reconstruct from searchForm
+        console.log('🔍 Attempting to reconstruct from searchForm:', parsedState.searchForm)
+        const searchForm = parsedState.searchForm
+        if (searchForm.departureCity && searchForm.destination && searchForm.package && searchForm.checkInDate && searchForm.checkOutDate) {
+          params = {
+            country: searchForm.destination.id,
+            package_template: searchForm.package.id,
+            airport_city_from: searchForm.departureCity.id,
+            airport_city_to: searchForm.arrivalCity ? [searchForm.arrivalCity.id] : [50004], // Default if not available
+            date_from: searchForm.checkInDate,
+            date_to: searchForm.checkOutDate,
+            nights_from: searchForm.nights || 6,
+            nights_to: searchForm.nights || 6,
+            adults: searchForm.adults || 1,
+            children: searchForm.children || 0,
+            children_age: searchForm.childrenAges || [],
+            meals: ["AI and better", "BB", "FB", "HB", "RO"],
+            options: ["night", "day", "group_by_hotel"]
+          }
+          console.log('🔍 Reconstructed params from searchForm:', params)
+        }
+      }
+    }
+    
+    // Fallback: try to get from lastSearchParams directly
+    if (!params) {
+      const searchParams = sessionStorage.getItem('lastSearchParams')
+      console.log('🔍 lastSearchParams from sessionStorage:', searchParams ? 'EXISTS' : 'NOT FOUND')
+      if (searchParams) {
+        params = JSON.parse(searchParams)
+        console.log('🔍 Using params from lastSearchParams:', params)
+      }
+    }
+    
+    // Try to get from bookingSearchResult as fallback
+    if (!params) {
+      const bookingSearchResult = sessionStorage.getItem('bookingSearchResult')
+      console.log('🔍 bookingSearchResult from sessionStorage:', bookingSearchResult ? 'FOUND' : 'NOT FOUND')
+      
+      if (bookingSearchResult) {
+        try {
+          const bookingResult = JSON.parse(bookingSearchResult)
+          console.log('🔍 bookingSearchResult parsed:', bookingResult)
+          // Try to extract search parameters from booking result
+          if (bookingResult.searchParams) {
+            params = bookingResult.searchParams
+            console.log('🔍 Using searchParams from bookingSearchResult:', params)
+          }
+        } catch (error) {
+          console.error('Error parsing bookingSearchResult:', error)
+        }
+      }
+    }
+    
+    // If still no params, try to reconstruct from searchResult
+    if (!params && searchResult.value) {
+      console.log('🔍 Attempting to reconstruct params from searchResult')
+      // Try to get basic parameters from the search result
+      const result = searchResult.value as GroupedSearchResult
+      if (result.hotel && result.dates && result.nights && result.tourists) {
+        // This is a fallback - we'll use minimal required parameters
+        params = {
+          country: 223, // Default country (you might want to make this dynamic)
+          package_template: 53, // Default package (you might want to make this dynamic)
+          airport_city_from: 48478, // Default departure city (you might want to make this dynamic)
+          airport_city_to: [50004], // Default arrival city (you might want to make this dynamic)
+          date_from: result.dates.check_in,
+          date_to: result.dates.check_in, // Fix: use check_in instead of check_out
+          nights_from: result.nights.total,
+          nights_to: result.nights.total,
+          adults: result.tourists.adults,
+          children: result.tourists.children_ages.length,
+          children_age: result.tourists.children_ages,
+          meals: ["AI и лучше", "BB", "FB", "HB", "RO"], // Fix: use Russian names
+          options: ["night", "day", "group_by_hotel"]
+        }
+        console.log('🔍 Reconstructed params from searchResult:', params)
+      }
+    }
+    
+    if (!params) {
+      console.error('No search parameters found in sessionStorage or searchResult')
+      showError('Ошибка', 'Не удалось найти параметры поиска')
+      return
+    }
+    
+    // Fix the parameters to match the working format
+    const fixedParams = {
+      ...params,
+      // Fix date_to to match date_from (this is crucial!)
+      date_to: params.date_from,
+      // Fix meals to use Russian names
+      meals: ["AI и лучше", "BB", "FB", "HB", "RO"],
+      // Fix selected_hotels to be number, not string
+      selected_hotels: [parseInt(groupedResult.hotel.id)],
+      // Remove tickets field completely
+      tickets: undefined,
+      // Increase per_page to get more results
+      page: 1,
+      per_page: 100 // Get more results to see all room options
+    }
+    
+    // Remove tickets field completely
+    delete fixedParams.tickets
+    
+    // Make new search request for this specific hotel
+    console.log('🔍 Making search request with params:', fixedParams)
+    console.log('🔍 Hotel ID being searched:', groupedResult.hotel.id)
+    console.log('🔍 Hotel name:', groupedResult.hotel.name)
+    console.log('🔍 Fixed params keys:', Object.keys(fixedParams))
+    
+    let searchResponse = await performSearch(fixedParams)
+    console.log('🔍 Search response (specific hotel):', searchResponse)
+    console.log('🔍 Search response results type:', typeof searchResponse.results)
+    console.log('🔍 Search response results length:', Array.isArray(searchResponse.results) ? searchResponse.results.length : 'not array')
+    console.log('🔍 Total results available:', searchResponse.total_results)
+    console.log('🔍 Page info:', { page: searchResponse.page, per_page: searchResponse.per_page })
+    if (typeof searchResponse.results === 'object' && searchResponse.results !== null) {
+      console.log('🔍 Search response results keys:', Object.keys(searchResponse.results))
+    }
+    
+    // Check if we got results
+    if (!searchResponse.results || (Array.isArray(searchResponse.results) && searchResponse.results.length === 0) || 
+        (typeof searchResponse.results === 'object' && Object.keys(searchResponse.results).length === 0)) {
+      console.log('🔍 No results found with fixed parameters')
+    }
+    
+    if (searchResponse && searchResponse.results) {
+      let resultsArray = []
+      
+      // Handle both array and object formats
+      if (Array.isArray(searchResponse.results)) {
+        resultsArray = searchResponse.results
+        console.log('🔍 Search results found (array):', resultsArray.length, 'results')
+      } else if (typeof searchResponse.results === 'object') {
+        // Convert object to array (like their main service)
+        resultsArray = Object.values(searchResponse.results)
+        console.log('🔍 Search results found (object):', resultsArray.length, 'results')
+      }
+      
+      if (resultsArray.length > 0) {
+        // Filter results by hotel if we searched without hotel filter
+        const targetHotelId = groupedResult.hotel.id
+        const filteredResults = resultsArray.filter(result => 
+          result.accommodation?.hotel?.id == targetHotelId || 
+          result.accommodation?.hotel?.id === targetHotelId
+        )
+        console.log('🔍 Filtered results for hotel', targetHotelId, ':', filteredResults.length, 'results')
+        
+        // Log each result to understand what we're working with
+        filteredResults.forEach((result, index) => {
+          console.log(`🔍 Result ${index + 1}:`, {
+            hotel: result.accommodation?.hotel?.name,
+            room: result.accommodation?.room?.name,
+            meal: result.accommodation?.meal?.name,
+            in_stop: result.accommodation?.hotel?.in_stop,
+            price: result.price?.amount
+          })
+        })
+        
+        // Group the results to get the updated hotel data
+        const groupedResults = groupResultsByHotel(filteredResults.length > 0 ? filteredResults : resultsArray)
+        console.log('🔍 Grouped results:', groupedResults.length, 'hotels')
+        
+          if (groupedResults.length > 0) {
+            const updatedResult = groupedResults[0] // Get the first (and only) hotel result
+            console.log('🔍 Updated result room options:', updatedResult.roomOptions.length)
+            console.log('🔍 Room options details:', updatedResult.roomOptions.map(option => ({
+              room: option.room.name,
+              meal: option.meal.name,
+              in_stop: option.in_stop,
+              price: option.price?.amount,
+              flightOptions: option.flightOptions.length
+            })))
+            
+            // Update the search result in the booking state, preserving current selection
+            initializeBooking(updatedResult, true)
+            console.log('🔍 Booking state updated with new options')
+          } else {
+            console.warn('🔍 No grouped results found')
+          }
+        } else {
+          console.warn('🔍 No results in resultsArray')
+          // Show user-friendly message when no additional options are found
+          showError('Нет дополнительных вариантов', `Для отеля "${groupedResult.hotel.name}" не найдено дополнительных вариантов размещения с текущими параметрами поиска.`)
+        }
+      } else {
+        console.warn('🔍 No search results in response:', searchResponse)
+        if (searchResponse && typeof searchResponse === 'object') {
+          console.log('🔍 Response keys:', Object.keys(searchResponse))
+          if (searchResponse.results) {
+            console.log('🔍 Results type:', typeof searchResponse.results, 'isArray:', Array.isArray(searchResponse.results))
+          }
+        }
+        // Show user-friendly message when no search results
+        showError('Нет результатов', `Для отеля "${groupedResult.hotel.name}" не найдено результатов поиска. Возможно, отель недоступен для выбранных дат.`)
+      }
+  } catch (error) {
+    console.error('Error loading more options:', error)
+    showError('Ошибка загрузки', 'Не удалось загрузить дополнительные варианты')
+  }
 }
 
 // Helper methods for getting service names and descriptions

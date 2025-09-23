@@ -197,6 +197,7 @@ export default {
     accommodationVariant: 'Accommodation option selection',
     roomType: 'Room type',
     accommodationType: 'Accommodation type',
+    loadMoreOptions: 'Load {count} more options',
     flightSelection: 'Flight selection',
     departure: 'Departure',
     return: 'Return',

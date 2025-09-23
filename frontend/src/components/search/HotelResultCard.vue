@@ -85,7 +85,7 @@
         <div class="room-options-summary">
           <div class="room-label">{{ $t('hotelCard.accommodationOptions') }}</div>
           <div class="room-count">
-            {{ result.roomOptions?.length || 1 }} {{ getRoomWord(result.roomOptions?.length || 1) }}
+            {{ getAccommodationOptionsCount() }} {{ getRoomWord(getAccommodationOptionsCount()) }}
           </div>
           <div class="room-price-range" v-if="result.minPrice !== result.maxPrice">
             {{ $t('hotelCard.from') }} {{ result.minPrice }} {{ $t('hotelCard.to') }} {{ result.maxPrice }} {{ result.currency }}
@@ -351,6 +351,20 @@ const getFlightOptionsCount = () => {
     })
     
     return uniqueFlights.size
+  }
+  
+  // For regular SearchResult, return 1
+  return 1
+}
+
+// Get accommodation options count (including hotel_results_counter)
+const getAccommodationOptionsCount = () => {
+  if ('roomOptions' in props.result) {
+    const groupedResult = props.result as GroupedSearchResult
+    // Показываем количество вариантов комнат + дополнительные варианты из hotel_results_counter
+    const currentOptions = groupedResult.roomOptions?.length || 1
+    const additionalOptions = groupedResult.hotel_results_counter || 0
+    return currentOptions + additionalOptions
   }
   
   // For regular SearchResult, return 1

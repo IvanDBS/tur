@@ -136,29 +136,33 @@ export const useBooking = () => {
   }
 
   // Initialize booking with search result
-  const initializeBooking = (result: SearchResult | GroupedSearchResult) => {
+  const initializeBooking = (result: SearchResult | GroupedSearchResult, preserveSelection = false) => {
     searchResult.value = result
     bookingData.searchResult = result as SearchResult
     
-    // Auto-select first room if available
-    if ('roomOptions' in result && result.roomOptions?.length > 0) {
-      const firstRoom = result.roomOptions[0]
-      bookingData.selectedRoom = {
-        room: firstRoom.room,
-        meal: firstRoom.meal,
-        placement: firstRoom.placement,
-        price: firstRoom.price
+    // Only auto-select if no room is currently selected and we're not preserving selection
+    if (!preserveSelection && !bookingData.selectedRoom) {
+      if ('roomOptions' in result && result.roomOptions?.length > 0) {
+        const firstRoom = result.roomOptions[0]
+        bookingData.selectedRoom = {
+          room: firstRoom.room,
+          meal: firstRoom.meal,
+          placement: firstRoom.placement,
+          price: firstRoom.price
+        }
+        logger.booking('Auto-selected first room')
+      } else if ('accommodation' in result && result.accommodation) {
+        // For regular SearchResult
+        bookingData.selectedRoom = {
+          room: result.accommodation.room,
+          meal: result.accommodation.meal,
+          placement: result.accommodation.placement,
+          price: result.price
+        }
+        logger.booking('Auto-selected room from regular result')
       }
-      logger.booking('Auto-selected first room')
-    } else if ('accommodation' in result && result.accommodation) {
-      // For regular SearchResult
-      bookingData.selectedRoom = {
-        room: result.accommodation.room,
-        meal: result.accommodation.meal,
-        placement: result.accommodation.placement,
-        price: result.price
-      }
-      logger.booking('Auto-selected room from regular result')
+    } else if (preserveSelection) {
+      logger.booking('Preserved existing room selection')
     }
     
     // Auto-select first flight if available
@@ -220,19 +224,49 @@ export const useBooking = () => {
   // Update selected flight
   const updateSelectedFlight = (flight: SelectedFlight) => {
     bookingData.selectedFlight = flight
+    console.log('🔍 updateSelectedFlight called:', {
+      outbound: {
+        id: flight.outbound.id,
+        name: flight.outbound.name,
+        airline: flight.outbound.airline?.airline
+      },
+      inbound: {
+        id: flight.inbound.id,
+        name: flight.inbound.name,
+        airline: flight.inbound.airline?.airline
+      },
+      outboundId: flight.outbound.id,
+      inboundId: flight.inbound.id
+    })
     logger.booking('Selected flight updated')
   }
 
   // Update selected room
   const updateSelectedRoom = (room: SelectedRoom) => {
     bookingData.selectedRoom = room
+    console.log('🔍 updateSelectedRoom called:', {
+      room: {
+        id: room.room.id,
+        name: room.room.name
+      },
+      meal: {
+        id: room.meal.id,
+        name: room.meal.name
+      },
+      price: {
+        amount: room.price?.amount,
+        currency: room.price?.currency
+      },
+      roomId: room.room.id,
+      mealId: room.meal.id
+    })
     logger.booking('Selected room updated')
   }
 
   // Reset selected flight (when room changes)
   const resetSelectedFlight = () => {
     bookingData.selectedFlight = undefined
-    logger.booking('Selected flight reset due to room change')
+    // logger.booking('Selected flight reset due to room change')
   }
 
   // Update tourist data
@@ -240,7 +274,8 @@ export const useBooking = () => {
     const index = bookingData.tourists.findIndex(t => t.id === touristId)
     if (index !== -1) {
       bookingData.tourists[index] = { ...bookingData.tourists[index], ...data }
-      logger.booking('Tourist data updated:', touristId)
+      // Removed excessive logging to prevent console spam
+      // logger.booking('Tourist data updated:', touristId)
     }
   }
 
@@ -296,6 +331,15 @@ export const useBooking = () => {
   const createBooking = async (bookingNotes?: any): Promise<BookingCreateResponse | null> => {
     if (!searchResult.value) return null
 
+    // Validate that user has selected room and flight
+    if (!bookingData.selectedRoom) {
+      throw new Error('Пожалуйста, выберите тип размещения')
+    }
+    
+    if (!bookingData.selectedFlight) {
+      throw new Error('Пожалуйста, выберите перелет')
+    }
+
     try {
       loading.value = true
       clearError()
@@ -304,15 +348,96 @@ export const useBooking = () => {
       // Use the same structure as seeds for consistency
       
       
-      // Create proper OBS booking hash from search result
-      // According to OBS API docs: hash = rid:unique_key
-      const obsBookingHash = searchResult.value.rid && searchResult.value.unique_key 
-        ? `${searchResult.value.rid}:${searchResult.value.unique_key}`
-        : null
+      // Create proper OBS booking hash from selected room and flight
+      // We need to find the specific result that matches our selection
+      let obsBookingHash = null
+      
+      if (searchResult.value && 'roomOptions' in searchResult.value) {
+        const groupedResult = searchResult.value as GroupedSearchResult
+        
+        console.log('🔍 Searching for matching room and flight:', {
+          selectedRoomId: bookingData.selectedRoom?.room.id,
+          selectedMealId: bookingData.selectedRoom?.meal.id,
+          selectedOutboundId: bookingData.selectedFlight?.outbound.id,
+          selectedInboundId: bookingData.selectedFlight?.inbound.id,
+          availableRoomOptions: groupedResult.roomOptions?.length
+        })
+        
+        // Find the room option that matches our selection
+        const selectedRoomOption = groupedResult.roomOptions?.find(option => 
+          option.room.id === bookingData.selectedRoom?.room.id &&
+          option.meal.id === bookingData.selectedRoom?.meal.id
+        )
+        
+        console.log('🔍 Selected room option found:', {
+          found: !!selectedRoomOption,
+          roomId: selectedRoomOption?.room.id,
+          mealId: selectedRoomOption?.meal.id,
+          flightOptionsCount: selectedRoomOption?.flightOptions?.length
+        })
+        
+        if (selectedRoomOption && bookingData.selectedFlight) {
+          console.log('🔍 Available flight options:', selectedRoomOption.flightOptions?.map(flight => ({
+            fromId: flight.from.id,
+            toId: flight.to.id,
+            price: flight.price?.amount,
+            rid: flight.rid,
+            unique_key: flight.unique_key
+          })))
+          
+          // Find the flight option that matches our selection
+          const selectedFlightOption = selectedRoomOption.flightOptions?.find(flight => 
+            flight.from.id === bookingData.selectedFlight?.outbound.id &&
+            flight.to.id === bookingData.selectedFlight?.inbound.id
+          )
+          
+          console.log('🔍 Selected flight option found:', {
+            found: !!selectedFlightOption,
+            fromId: selectedFlightOption?.from.id,
+            toId: selectedFlightOption?.to.id,
+            rid: selectedFlightOption?.rid,
+            unique_key: selectedFlightOption?.unique_key
+          })
+          
+          // Now flightOptions have rid/unique_key, so we can use the specific flight option's hash
+          if (selectedFlightOption && selectedFlightOption.rid && selectedFlightOption.unique_key) {
+            obsBookingHash = `${selectedFlightOption.rid}:${selectedFlightOption.unique_key}`
+            console.log('🔍 Using specific flight option booking hash:', {
+              rid: selectedFlightOption.rid,
+              unique_key: selectedFlightOption.unique_key,
+              price: selectedFlightOption.price?.amount
+            })
+          }
+        }
+      }
+      
+      // Fallback to original logic if we couldn't find the specific selection
+      if (!obsBookingHash && searchResult.value.rid && searchResult.value.unique_key) {
+        obsBookingHash = `${searchResult.value.rid}:${searchResult.value.unique_key}`
+        console.log('🔍 Using fallback booking hash from search result')
+      }
 
       if (!obsBookingHash) {
         throw new Error('Invalid search result: missing rid or unique_key for booking')
       }
+
+      console.log('🔍 Creating booking with data:', {
+        selectedRoom: {
+          roomId: bookingData.selectedRoom?.room?.id,
+          roomName: bookingData.selectedRoom?.room?.name,
+          mealId: bookingData.selectedRoom?.meal?.id,
+          mealName: bookingData.selectedRoom?.meal?.name,
+          price: bookingData.selectedRoom?.price?.amount
+        },
+        selectedFlight: {
+          outboundId: bookingData.selectedFlight?.outbound?.id,
+          outboundName: bookingData.selectedFlight?.outbound?.name,
+          inboundId: bookingData.selectedFlight?.inbound?.id,
+          inboundName: bookingData.selectedFlight?.inbound?.name
+        },
+        totalPrice: totalPrice.value,
+        obsBookingHash
+      })
 
       const requestData = {
         booking: {
@@ -357,17 +482,21 @@ export const useBooking = () => {
       }
 
       logger.apiCall('POST', '/bookings')
-      const response = await apiClient.post<BookingCreateResponse>('/bookings', requestData)
+      const response = await apiClient.post<any>('/bookings', requestData)
 
       logger.booking('Booking created successfully')
       
       // Clear saved search state since booking is complete
       try {
         sessionStorage.removeItem('searchState')
+        sessionStorage.removeItem('allLoadedResults')
         logger.booking('Search state cleared after successful booking')
       } catch (error) {
         logger.warn('Failed to clear search state:', error)
       }
+      
+      // Small delay to ensure user sees the success state
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // Redirect to bookings page or show success message
       router.push({ name: 'bookings' })
@@ -375,6 +504,7 @@ export const useBooking = () => {
       return response
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create booking'
+      logger.error('Booking creation failed:', err)
       setError(message)
       return null
     } finally {

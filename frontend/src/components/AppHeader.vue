@@ -33,9 +33,15 @@
           <router-link to="/contact" class="nav-link">{{ $t('navigation.contact') }}</router-link>
         </div>
 
-        <!-- Language Switcher -->
-        <div class="nav-language">
-          <LanguageSwitcher />
+        <!-- Language Switcher and Notifications -->
+        <div class="nav-actions">
+          <!-- Language Switcher -->
+          <div class="nav-language">
+            <LanguageSwitcher />
+          </div>
+          
+          <!-- Notifications -->
+          <NotificationDropdown />
         </div>
 
         <!-- Auth Section -->
@@ -137,9 +143,16 @@
           >{{ $t('navigation.contact') }}</router-link
         >
 
-        <!-- Mobile Language Switcher -->
-        <div class="mobile-language">
-          <LanguageSwitcher />
+        <!-- Mobile Language Switcher and Notifications -->
+        <div class="mobile-actions">
+          <div class="mobile-language">
+            <LanguageSwitcher />
+          </div>
+          
+          <button class="mobile-notification-btn" title="Notifications">
+            <img src="@/assets/icons/bell.svg" alt="Notifications" class="mobile-notification-icon" />
+            <span>Уведомления</span>
+          </button>
         </div>
 
         <!-- Mobile Auth -->
@@ -166,6 +179,7 @@
   import { useAuthStore } from '../stores/auth'
   import { useAuthModal } from '../composables/useAuthModal'
   import LanguageSwitcher from './ui/LanguageSwitcher.vue'
+  import NotificationDropdown from './NotificationDropdown.vue'
 
   // Header component for the application
 
@@ -338,6 +352,13 @@
     background: var(--color-secondary);
     border-radius: 1px;
   }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
 
   .nav-language {
     display: flex;
@@ -557,10 +578,44 @@
     background: var(--color-secondary-hover);
   }
 
-  .mobile-language {
+  .mobile-actions {
     padding: 1rem;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .mobile-notification-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+
+  .mobile-notification-btn:hover {
+    background: var(--color-secondary-muted);
+    color: var(--color-secondary);
+  }
+
+  .mobile-notification-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+  }
+
+  .mobile-language {
+    padding: 0;
   }
 
   /* Mobile Responsive */

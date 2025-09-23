@@ -64,6 +64,12 @@ module Api
 
       attr_reader :current_user
 
+      def ensure_admin!
+        unless @current_user&.admin?
+          render_error('Access denied. Admin privileges required.', :forbidden)
+        end
+      end
+
       def render_success(data = {}, message = 'Success', status = :ok)
         unless response_body.present?
           render json: {

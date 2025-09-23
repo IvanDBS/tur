@@ -55,16 +55,29 @@
             
           </div>
         </div>
+        
+        <!-- Load More Options Button -->
+        <div v-if="hasAdditionalOptions" class="load-more-section">
+          <button 
+            class="load-more-button"
+            :disabled="isLoadingMore"
+            @click="loadMoreOptions"
+          >
+            <div v-if="isLoadingMore" class="loading-spinner"></div>
+            <span v-else>{{ $t('searchResults.loadMoreOptions', { count: additionalOptionsCount }) }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { SearchResult, GroupedSearchResult, RoomOption } from '../../types/search'
 import type { SelectedRoom, SelectedFlight } from '../../types/booking'
 import { formatPrice } from '../../utils/stringUtils'
+import { useSearchData } from '../../composables/useSearchData'
 
 interface Props {
   searchResult: SearchResult | GroupedSearchResult
@@ -76,7 +89,14 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:selectedRoom': [room: SelectedRoom]
   'reset:selectedFlight': []
+  'loadMoreOptions': [searchResult: GroupedSearchResult]
 }>()
+
+// Search API composable (not used directly in this component, but available for future use)
+// const { performSearch } = useSearchData()
+
+// State for loading more options
+const isLoadingMore = ref(false)
 
 // Computed
 const isGroupedResult = computed(() => 'roomOptions' in props.searchResult)
@@ -109,6 +129,26 @@ const selectedRoomOption = computed(() => {
   ) || null
 })
 
+// Check if there are additional options to load
+const hasAdditionalOptions = computed(() => {
+  if (!isGroupedResult.value) return false
+  const groupedResult = props.searchResult as GroupedSearchResult
+  const hasCounter = (groupedResult.hotel_results_counter || 0) > 0
+  console.log('🔍 hasAdditionalOptions check:', {
+    hotel_results_counter: groupedResult.hotel_results_counter,
+    hasCounter,
+    hotelName: groupedResult.hotel.name
+  })
+  return hasCounter
+})
+
+// Get count of additional options
+const additionalOptionsCount = computed(() => {
+  if (!isGroupedResult.value) return 0
+  const groupedResult = props.searchResult as GroupedSearchResult
+  return groupedResult.hotel_results_counter || 0
+})
+
 // Methods
 const getRoomPrice = (roomOption: RoomOption): number => {
   // Если выбран перелет, ищем цену для комбинации комната + перелет
@@ -139,6 +179,25 @@ const selectRoomOption = (roomOption: RoomOption) => {
   
   // Сбрасываем выбранный перелет при смене комнаты
   emit('reset:selectedFlight')
+}
+
+// Load more options for this specific hotel
+const loadMoreOptions = async () => {
+  if (!isGroupedResult.value || isLoadingMore.value) return
+  
+  isLoadingMore.value = true
+  
+  try {
+    const groupedResult = props.searchResult as GroupedSearchResult
+    
+    // Emit event to parent to handle loading more options
+    // The parent will make a new search request for this specific hotel
+    emit('loadMoreOptions', groupedResult)
+  } catch (error) {
+    console.error('Error loading more options:', error)
+  } finally {
+    isLoadingMore.value = false
+  }
 }
 
 </script>
@@ -377,5 +436,58 @@ const selectRoomOption = (roomOption: RoomOption) => {
   .info-item {
     font-size: 0.8rem;
   }
+}
+
+/* Load More Options Styles */
+.load-more-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+}
+
+.load-more-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.load-more-button:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 60, 97, 0.3);
+}
+
+.load-more-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

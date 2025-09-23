@@ -81,6 +81,21 @@ if Rails.env.production? || Rails.env.development?
       'cron' => '*/5 * * * *',
       'class' => 'ReplicaHealthMonitoringJob',
       'description' => 'Monitor read replica health and performance every 5 minutes'
+    },
+    
+    # Notification cleanup daily at 3 AM
+    'notification_cleanup' => {
+      'cron' => '0 3 * * *',
+      'class' => 'NotificationCleanupJob',
+      'args' => [30], # Keep notifications for 30 days
+      'description' => 'Clean up old notifications daily at 3 AM'
+    },
+    
+    # Notification monitoring every 5 minutes
+    'notification_monitoring' => {
+      'cron' => '*/5 * * * *',
+      'class' => 'NotificationMonitoringJob',
+      'description' => 'Monitor notification system health and send alerts every 5 minutes'
     }
   })
   

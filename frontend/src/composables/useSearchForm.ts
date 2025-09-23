@@ -849,13 +849,22 @@ export const useSearchForm = () => {
       tourists: {
         adults: searchForm.value.adults || 1,
         children_ages: searchForm.value.children && searchForm.value.children > 0 ? searchForm.value.childrenAges : []
-      }
+      },
+      // Добавляем параметры поиска для возможности загрузки дополнительных вариантов
+      searchParams: lastSearchParams.value
     }
     
     // Сохраняем результат с данными о туристах в sessionStorage для бронирования
     sessionStorage.setItem('bookingSearchResult', JSON.stringify(resultWithTourists))
     
     // Сохраняем состояние поиска перед переходом на бронирование
+    console.log('🔍 Saving search state before booking:', {
+      lastSearchParams: lastSearchParams.value,
+      hasLastSearchParams: !!lastSearchParams.value,
+      searchForm: searchForm.value,
+      selectedFilters: selectedFilters.value
+    })
+    
     saveSearchState({
       searchForm: searchForm.value,
       selectedFilters: selectedFilters.value,

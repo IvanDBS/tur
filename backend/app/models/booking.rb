@@ -43,6 +43,9 @@ class Booking < ApplicationRecord
 
   # Callbacks
   before_validation :set_default_status, on: :create
+  # Temporarily disabled to prevent infinite notification loop
+  # after_create :trigger_booking_created_event
+  after_update :trigger_booking_status_changed_event, if: :saved_change_to_status?
 
   # Scopes
   scope :by_user, ->(user) { where(user: user) }
@@ -138,5 +141,37 @@ class Booking < ApplicationRecord
 
   def set_default_status
     self.status ||= 'pending'
+  end
+  
+  def trigger_booking_created_event
+    EventBus.instance.booking_created(self)
+  end
+  
+  def trigger_booking_status_changed_event
+    old_status = saved_change_to_status?[0]
+    new_status = saved_change_to_status?[1]
+    
+    case new_status
+    when 'confirmed'
+      EventBus.instance.booking_confirmed(self)
+    when 'cancelled'
+      EventBus.instance.booking_cancelled(self, 'Status changed to cancelled')
+    when 'changed'
+      EventBus.instance.publish(EventBus::EVENTS[:booking_changed], {
+        user_id: user_id,
+        booking_id: id,
+        booking_hash: obs_booking_hash,
+        old_status: old_status,
+        new_status: new_status,
+        changes: { status: [old_status, new_status] }
+      })
+    when 'expired'
+      EventBus.instance.publish(EventBus::EVENTS[:booking_expired], {
+        user_id: user_id,
+        booking_id: id,
+        booking_hash: obs_booking_hash,
+        expired_at: Time.current
+      })
+    end
   end
 end

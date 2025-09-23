@@ -22,7 +22,7 @@
       <button 
         @click="openNotificationModal" 
         :disabled="bookings.length === 0"
-        class="btn btn-secondary"
+        class="btn btn-outline"
         title="Отправить уведомления выбранным пользователям"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -35,6 +35,19 @@
       <span class="sync-info">
         Последняя синхронизация: {{ lastSyncTime || 'Никогда' }}
       </span>
+      
+      <button 
+        @click="clearAllFilters" 
+        class="btn btn-outline"
+        title="Сбросить все фильтры"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+        </svg>
+        Сбросить фильтры
+      </button>
     </div>
 
     <!-- Bookings Table -->
@@ -505,18 +518,25 @@ const bookings = computed(() => {
       const flightNumber = getFlightNumber(departure).toLowerCase()
       const flightDate = formatDateDDMMYYYY(departure.date).toLowerCase()
       
-      // Also check if search term is a date in MM.DD.YYYY format and convert it
-      let searchTerm = searchFlight
-      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(searchFlight)) {
+      // Check if search term is a date and try both formats
+      if (/^\d{1,2}\.\d{1,2}\.\d{3,4}$/.test(searchFlight)) {
         const parts = searchFlight.split('.')
         if (parts.length === 3) {
-          const [month, day, year] = parts
-          // Convert MM.DD.YYYY to DD.MM.YYYY for comparison
-          searchTerm = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`
+          const [first, second, year] = parts
+          // Since data is in DD.MM.YYYY format, try both interpretations:
+          // 1. User input as DD.MM.YYYY (direct match)
+          // 2. User input as MM.DD.YYYY (swap day and month)
+          const format1 = `${first.padStart(2, '0')}.${second.padStart(2, '0')}.${year.padStart(4, '0')}` // DD.MM.YYYY
+          const format2 = `${second.padStart(2, '0')}.${first.padStart(2, '0')}.${year.padStart(4, '0')}` // MM.DD.YYYY -> DD.MM.YYYY
+          
+          // Check if either format matches
+          return flightNumber.includes(searchFlight) || 
+                 flightDate.includes(format1) || 
+                 flightDate.includes(format2)
         }
       }
       
-      return flightNumber.includes(searchFlight) || flightDate.includes(searchTerm)
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
     })
   }
 
@@ -531,18 +551,25 @@ const bookings = computed(() => {
       const flightNumber = getFlightNumber(arrival).toLowerCase()
       const flightDate = formatDateDDMMYYYY(arrival.date).toLowerCase()
       
-      // Also check if search term is a date in MM.DD.YYYY format and convert it
-      let searchTerm = searchFlight
-      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(searchFlight)) {
+      // Check if search term is a date and try both formats
+      if (/^\d{1,2}\.\d{1,2}\.\d{3,4}$/.test(searchFlight)) {
         const parts = searchFlight.split('.')
         if (parts.length === 3) {
-          const [month, day, year] = parts
-          // Convert MM.DD.YYYY to DD.MM.YYYY for comparison
-          searchTerm = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`
+          const [first, second, year] = parts
+          // Since data is in DD.MM.YYYY format, try both interpretations:
+          // 1. User input as DD.MM.YYYY (direct match)
+          // 2. User input as MM.DD.YYYY (swap day and month)
+          const format1 = `${first.padStart(2, '0')}.${second.padStart(2, '0')}.${year.padStart(4, '0')}` // DD.MM.YYYY
+          const format2 = `${second.padStart(2, '0')}.${first.padStart(2, '0')}.${year.padStart(4, '0')}` // MM.DD.YYYY -> DD.MM.YYYY
+          
+          // Check if either format matches
+          return flightNumber.includes(searchFlight) || 
+                 flightDate.includes(format1) || 
+                 flightDate.includes(format2)
         }
       }
       
-      return flightNumber.includes(searchFlight) || flightDate.includes(searchTerm)
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
     })
   }
 

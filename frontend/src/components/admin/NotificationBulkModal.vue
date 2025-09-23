@@ -36,20 +36,14 @@
         
         <div class="form-group">
           <label for="notification_type">Тип уведомления *</label>
-          <select 
-            id="notification_type" 
-            v-model="form.notification_type" 
-            required
-            class="form-select"
-          >
-            <option value="info">Информация</option>
-            <option value="success">Успех</option>
-            <option value="warning">Предупреждение</option>
-            <option value="error">Ошибка</option>
-            <option value="booking_update">Обновление бронирования</option>
-            <option value="system">Система</option>
-            <option value="admin_message">Сообщение админа</option>
-          </select>
+          <BaseSelect
+            id="notification_type"
+            v-model="form.notification_type"
+            :options="notificationTypeOptions"
+            :required="true"
+            placeholder="Выберите тип уведомления"
+            class="notification-type-select"
+          />
         </div>
         
         <div class="form-group">
@@ -62,12 +56,7 @@
                 v-model="form.delivery_channels"
                 class="channel-checkbox"
               />
-              <span class="channel-label">
-                <span :class="['channel-icon', `icon-${channel.value}`]">
-                  {{ channel.icon }}
-                </span>
-                {{ channel.label }}
-              </span>
+              <span class="channel-text">{{ channel.label }}</span>
             </label>
           </div>
         </div>
@@ -230,6 +219,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useAdminNotificationsApi } from '../../composables/useNotificationsApi'
 import { useUsersApi, type User } from '../../composables/useUsersApi'
+import { BaseSelect } from '../ui'
 import type { BulkNotificationData, DeliveryChannel } from '../../types/notifications'
 
 const props = defineProps<{
@@ -250,7 +240,7 @@ const form = ref({
   title: '',
   message: '',
   notification_type: 'info' as 'info' | 'success' | 'warning' | 'error' | 'booking_update' | 'system' | 'admin_message',
-  delivery_channels: ['in_app'] as DeliveryChannel[],
+  delivery_channels: ['email'] as DeliveryChannel[],
   metadata: {}
 })
 
@@ -259,7 +249,7 @@ if (props.preSelectedUsers && props.preSelectedUsers.length > 0) {
   form.value.title = 'Изменение времени вылета'
   form.value.message = 'Уважаемый клиент! Время вылета вашего рейса было изменено. Пожалуйста, проверьте актуальную информацию в вашем бронировании.'
   form.value.notification_type = 'warning'
-  form.value.delivery_channels = ['in_app', 'email']
+  form.value.delivery_channels = ['email']
 }
 
 const metadataJson = ref('')
@@ -286,11 +276,21 @@ const filters = ref({
 
 // Delivery channels
 const deliveryChannels = ref([
-  { value: 'in_app', label: 'В приложении', icon: '📱' },
-  { value: 'email', label: 'Email', icon: '📧' },
-  { value: 'sms', label: 'SMS', icon: '💬' },
-  { value: 'push', label: 'Push-уведомления', icon: '🔔' },
-  { value: 'webhook', label: 'Webhook', icon: '🔗' }
+  { value: 'email', label: 'Email' },
+  { value: 'sms', label: 'SMS' },
+  { value: 'push', label: 'Push-уведомления' },
+  { value: 'webhook', label: 'Webhook' }
+])
+
+// Notification type options with colored indicators
+const notificationTypeOptions = ref([
+  { value: 'info', label: 'Информация', color: '#3B82F6' },
+  { value: 'success', label: 'Успех', color: '#10B981' },
+  { value: 'warning', label: 'Предупреждение', color: '#F59E0B' },
+  { value: 'error', label: 'Ошибка', color: '#EF4444' },
+  { value: 'booking_update', label: 'Обновление бронирования', color: '#8B5CF6' },
+  { value: 'system', label: 'Система', color: '#6B7280' },
+  { value: 'admin_message', label: 'Сообщение админа', color: '#1F2937' }
 ])
 
 // Computed
@@ -502,10 +502,11 @@ onMounted(async () => {
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000000;
   padding: 1rem;
+  padding-top: 2rem;  
   box-sizing: border-box;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -515,9 +516,9 @@ onMounted(async () => {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 800px;
+  max-width: 1000px;
   width: 100%;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100vh - 12rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -607,42 +608,162 @@ onMounted(async () => {
   margin-top: 0.25rem;
 }
 
+/* Стили для селекта типа уведомления с цветными индикаторами */
+.notification-type-select :deep(.multiselect__option) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-type-select :deep(.multiselect__option::before) {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="info"]::before) {
+  background-color: #3B82F6;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="success"]::before) {
+  background-color: #10B981;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="warning"]::before) {
+  background-color: #F59E0B;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="error"]::before) {
+  background-color: #EF4444;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="booking_update"]::before) {
+  background-color: #8B5CF6;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="system"]::before) {
+  background-color: #6B7280;
+}
+
+.notification-type-select :deep(.multiselect__option[data-value="admin_message"]::before) {
+  background-color: #1F2937;
+}
+
+/* Стили для выбранного значения */
+.notification-type-select :deep(.multiselect__single) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-type-select :deep(.multiselect__single::before) {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="info"]::before) {
+  background-color: #3B82F6;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="success"]::before) {
+  background-color: #10B981;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="warning"]::before) {
+  background-color: #F59E0B;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="error"]::before) {
+  background-color: #EF4444;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="booking_update"]::before) {
+  background-color: #8B5CF6;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="system"]::before) {
+  background-color: #6B7280;
+}
+
+.notification-type-select :deep(.multiselect__single[data-value="admin_message"]::before) {
+  background-color: #1F2937;
+}
+
 .channels-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
 }
 
 .channel-option {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .channel-option:hover {
   background: var(--color-background-soft);
 }
 
-.channel-checkbox {
+/* Общие стили для всех чекбоксов */
+.channel-checkbox,
+.selection-radio,
+.user-checkbox-input {
   margin: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border);
+  appearance: none;
+  background: white;
+  cursor: pointer;
+  position: relative;
 }
 
-.channel-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.channel-checkbox:checked,
+.selection-radio:checked,
+.user-checkbox-input:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.channel-checkbox:checked::after,
+.selection-radio:checked::after,
+.user-checkbox-input:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.channel-checkbox {
+  flex-shrink: 0;
+}
+
+.channel-text {
   font-size: 0.875rem;
   color: var(--color-text);
+  white-space: nowrap;
+  margin-left: 0.5rem;
 }
 
-.channel-icon {
-  font-size: 1rem;
-}
 
 .user-selection {
   border: 1px solid var(--color-border);
@@ -664,9 +785,10 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.selection-radio {
-  margin: 0;
+.selection-option span {
+  margin-left: 0.5rem;
 }
+
 
 .filter-section {
   margin-top: 1rem;
@@ -731,14 +853,12 @@ onMounted(async () => {
   background: var(--color-background-soft);
 }
 
-.user-checkbox-input {
-  margin: 0;
-}
 
 .user-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  margin-left: 0.5rem;
 }
 
 .user-name {
@@ -857,10 +977,11 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 0.5rem;
+    padding-top: 4rem;
   }
   
   .modal-content {
-    max-height: calc(100vh - 1rem);
+    max-height: calc(100vh - 8rem);
   }
   
   .modal-header,
@@ -870,7 +991,7 @@ onMounted(async () => {
   }
   
   .channels-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .selection-options {

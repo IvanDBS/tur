@@ -18,6 +18,20 @@
           Синхронизировать
         </span>
       </button>
+      
+      <button 
+        @click="openNotificationModal" 
+        :disabled="bookings.length === 0"
+        class="btn btn-secondary"
+        title="Отправить уведомления выбранным пользователям"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        Уведомить пользователей ({{ bookings.length }})
+      </button>
+      
       <span class="sync-info">
         Последняя синхронизация: {{ lastSyncTime || 'Никогда' }}
       </span>
@@ -218,12 +232,21 @@
                 />
               </td>
               <td>
-                <BaseInput
-                  v-model="searchFilters.departure_flight"
-                  placeholder="Номер или дата..."
-                  size="xs"
-                  @input="debouncedSearch"
-                />
+                <div class="flight-filter">
+                  <BaseInput
+                    v-model="searchFilters.departure_flight"
+                    placeholder="Номер или дата..."
+                    size="xs"
+                    @input="debouncedSearch"
+                  />
+                  <input
+                    v-model="searchFilters.departure_date"
+                    type="date"
+                    class="form-input form-input--xs flight-date-filter"
+                    @change="debouncedSearch"
+                    title="Фильтр по дате вылета"
+                  />
+                </div>
               </td>
               <td>
                 <BaseInput
@@ -374,6 +397,14 @@
         </div>
       </template>
     </Suspense>
+
+    <!-- Notification Modal -->
+    <NotificationBulkModal
+      v-if="showNotificationModal"
+      :pre-selected-users="selectedUsersForNotification"
+      @close="showNotificationModal = false"
+      @created="handleNotificationSent"
+    />
   </div>
 </template>
 
@@ -384,6 +415,7 @@ import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
 import StatusBadge from './components/admin/StatusBadge.vue'
 import BookingDetailsModal from '../../components/booking/BookingDetailsModal.vue'
+import { default as NotificationBulkModal } from '../../components/admin/NotificationBulkModal.vue'
 import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
 import { logger } from '../../utils/logger'
@@ -403,6 +435,10 @@ const syncing = ref(false)
 const lastSyncTime = ref<string | null>(null)
 const totalPages = ref(1)
 const totalCount = ref(0)
+
+// Notification modal state
+const showNotificationModal = ref(false)
+const selectedUsersForNotification = ref<number[]>([])
 
 // Computed filtered bookings
 const bookings = computed(() => {
@@ -482,6 +518,22 @@ const bookings = computed(() => {
     })
   }
 
+  // Filter by departure date if specified
+  if (searchFilters.value.departure_date && searchFilters.value.departure_date.trim()) {
+    const searchDate = searchFilters.value.departure_date.trim()
+    filtered = filtered.filter(booking => {
+      const departure = getDepartureFlight(booking)
+      if (!departure || !departure.date) return false
+      
+      // Convert departure date to YYYY-MM-DD format for comparison
+      const departureDate = new Date(departure.date)
+      const filterDate = new Date(searchDate)
+      
+      // Compare dates (ignore time)
+      return departureDate.toDateString() === filterDate.toDateString()
+    })
+  }
+
   // Filter by arrival flight if specified
   if (searchFilters.value.arrival_flight && searchFilters.value.arrival_flight.trim()) {
     const searchFlight = searchFilters.value.arrival_flight.trim().toLowerCase()
@@ -502,6 +554,48 @@ const bookings = computed(() => {
     filtered = filtered.filter(booking => {
       const touristsNames = getTouristsNames(booking).toLowerCase()
       return touristsNames.includes(searchTourists)
+    })
+  }
+
+  // Filter by created_at date if specified
+  if (searchFilters.value.created_at && searchFilters.value.created_at.trim()) {
+    const searchDate = searchFilters.value.created_at.trim()
+    filtered = filtered.filter(booking => {
+      const bookingDate = new Date(booking.created_at)
+      const filterDate = new Date(searchDate)
+      
+      // Compare dates (ignore time)
+      return bookingDate.toDateString() === filterDate.toDateString()
+    })
+  }
+
+  // Filter by check_in date if specified
+  if (searchFilters.value.check_in && searchFilters.value.check_in.trim()) {
+    const searchDate = searchFilters.value.check_in.trim()
+    filtered = filtered.filter(booking => {
+      const checkInDate = getCheckInDate(booking)
+      if (checkInDate === 'N/A') return false
+      
+      // Convert DD.MM.YYYY to YYYY-MM-DD for comparison
+      const [day, month, year] = checkInDate.split('.')
+      const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      
+      return formattedDate === searchDate
+    })
+  }
+
+  // Filter by check_out date if specified
+  if (searchFilters.value.check_out && searchFilters.value.check_out.trim()) {
+    const searchDate = searchFilters.value.check_out.trim()
+    filtered = filtered.filter(booking => {
+      const checkOutDate = getCheckOutDate(booking)
+      if (checkOutDate === 'N/A') return false
+      
+      // Convert DD.MM.YYYY to YYYY-MM-DD for comparison
+      const [day, month, year] = checkOutDate.split('.')
+      const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      
+      return formattedDate === searchDate
     })
   }
 
@@ -526,6 +620,7 @@ const searchFilters = ref({
   check_out: '',
   tourists: '',
   departure_flight: '',
+  departure_date: '',
   arrival_flight: '',
   total_amount: '',
   user_name: '',
@@ -618,7 +713,7 @@ const loadBookings = async () => {
     
     
     // API returns data in response.data structure
-    const data = (response.data || response) as {
+    const data = (response as any).data || response as {
       bookings?: unknown[]
       pagination?: {
         total_pages: number
@@ -672,7 +767,7 @@ const loadBookings = async () => {
     totalPages.value = data.pagination?.total_pages || 1
     totalCount.value = data.pagination?.total_count || 0
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to load bookings:', error)
     // Fallback to empty array on error
     allBookings.value = []
@@ -706,6 +801,7 @@ const clearAllFilters = () => {
     check_out: '',
     tourists: '',
     departure_flight: '',
+    departure_date: '',
     arrival_flight: '',
     total_amount: '',
     user_name: '',
@@ -760,6 +856,23 @@ const handleStatusChanged = () => {
   loadBookings()
 }
 
+// Notification functions
+const openNotificationModal = () => {
+  // Get unique user IDs from filtered bookings
+  const userIds = [...new Set(bookings.value.map(booking => booking.user.id))]
+  console.log('Filtered bookings count:', bookings.value.length)
+  console.log('Unique user IDs:', userIds)
+  console.log('User IDs count:', userIds.length)
+  selectedUsersForNotification.value = userIds
+  showNotificationModal.value = true
+}
+
+const handleNotificationSent = () => {
+  showNotificationModal.value = false
+  selectedUsersForNotification.value = []
+  console.log('Уведомления отправлены пользователям с заявками на выбранную дату')
+}
+
 // Sync functions
 const syncAllBookings = async () => {
   try {
@@ -779,7 +892,7 @@ const syncAllBookings = async () => {
     
     console.log('Все заявки синхронизированы')
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to sync all bookings:', error)
     alert(`Ошибка синхронизации всех заявок: ${error.message}`)
   } finally {
@@ -803,7 +916,7 @@ const syncBooking = async (booking: AdminBooking) => {
     
     console.log(`Заявка ${booking.id} синхронизирована`)
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to sync booking:', error)
     alert(`Ошибка синхронизации заявки ${booking.id}: ${error.message}`)
   } finally {
@@ -1206,6 +1319,36 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+}
+
+.sync-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+  border: 1px solid var(--color-secondary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+  border-color: var(--color-secondary-hover);
+}
+
+.flight-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flight-date-filter {
+  font-size: 10px;
+  padding: 2px 4px;
 }
 
 

@@ -149,7 +149,22 @@
                 </button>
               </div>
               
-              <div class="user-list">
+              <!-- Show pre-selected users info -->
+              <div v-if="props.preSelectedUsers && props.preSelectedUsers.length > 0" class="pre-selected-users-list">
+                <h4>Пользователи из отфильтрованных заявок:</h4>
+                <div class="user-list">
+                  <div v-for="user in availableUsers" :key="user.id" class="user-item selected">
+                    <span class="user-info">
+                      <span class="user-name">{{ getUserDisplayName(user) }}</span>
+                      <span class="user-email">{{ user.email }}</span>
+                    </span>
+                    <span class="selected-badge">✓</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Regular user selection -->
+              <div v-else class="user-list">
                 <div v-for="user in availableUsers" :key="user.id" class="user-item">
                   <label class="user-checkbox">
                     <input 
@@ -169,6 +184,9 @@
           </div>
           
           <div class="selection-summary">
+            <div v-if="preSelectedUsersInfo" class="pre-selected-info">
+              <strong>{{ preSelectedUsersInfo }}</strong>
+            </div>
             <strong>Выбрано пользователей: {{ selectedUsersCount }}</strong>
             <div v-if="selectedUsersCount > 1000" class="warning-message">
               ⚠️ Максимум 1000 пользователей за одну рассылку
@@ -209,10 +227,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useAdminNotificationsApi } from '@/composables/useNotificationsApi'
-import { useUsersApi, type User } from '@/composables/useUsersApi'
-import type { BulkNotificationData, DeliveryChannel } from '@/types/notifications'
+import { useAuthStore } from '../../stores/auth'
+import { useAdminNotificationsApi } from '../../composables/useNotificationsApi'
+import { useUsersApi, type User } from '../../composables/useUsersApi'
+import type { BulkNotificationData, DeliveryChannel } from '../../types/notifications'
+
+const props = defineProps<{
+  preSelectedUsers?: number[]
+}>()
 
 const emit = defineEmits<{
   close: []
@@ -227,10 +249,18 @@ const { loading: usersLoading, getUsers, searchUsers, getFilteredUsers } = useUs
 const form = ref({
   title: '',
   message: '',
-  notification_type: 'info' as const,
+  notification_type: 'info' as 'info' | 'success' | 'warning' | 'error' | 'booking_update' | 'system' | 'admin_message',
   delivery_channels: ['in_app'] as DeliveryChannel[],
   metadata: {}
 })
+
+// Set default values for flight time change notification if pre-selected users are provided
+if (props.preSelectedUsers && props.preSelectedUsers.length > 0) {
+  form.value.title = 'Изменение времени вылета'
+  form.value.message = 'Уважаемый клиент! Время вылета вашего рейса было изменено. Пожалуйста, проверьте актуальную информацию в вашем бронировании.'
+  form.value.notification_type = 'warning'
+  form.value.delivery_channels = ['in_app', 'email']
+}
 
 const metadataJson = ref('')
 const metadataError = ref('')
@@ -240,6 +270,12 @@ const selectionType = ref<'all' | 'filtered' | 'custom'>('all')
 const selectedUserIds = ref<number[]>([])
 const availableUsers = ref<User[]>([])
 const allUsers = ref<User[]>([])
+
+// Initialize with pre-selected users if provided
+if (props.preSelectedUsers && props.preSelectedUsers.length > 0) {
+  selectionType.value = 'custom'
+  selectedUserIds.value = [...props.preSelectedUsers]
+}
 
 const userSearchQuery = ref('')
 const filters = ref({
@@ -269,6 +305,14 @@ const selectedUsersCount = computed(() => {
     default:
       return 0
   }
+})
+
+// Show pre-selected users info
+const preSelectedUsersInfo = computed(() => {
+  if (props.preSelectedUsers && props.preSelectedUsers.length > 0) {
+    return `Предварительно выбрано пользователей из заявок: ${props.preSelectedUsers.length}`
+  }
+  return ''
 })
 
 const isFormValid = computed(() => {
@@ -353,7 +397,16 @@ const loadAllUsers = async () => {
     const response = await getUsers({ per_page: 1000 }) // Get all users
     console.log('Users loaded:', response.data.users.length)
     allUsers.value = response.data.users
-    availableUsers.value = response.data.users
+    
+    // If we have pre-selected users, filter to show only those users
+    if (props.preSelectedUsers && props.preSelectedUsers.length > 0) {
+      availableUsers.value = response.data.users.filter(user => 
+        props.preSelectedUsers!.includes(user.id)
+      )
+      console.log('Filtered to pre-selected users:', availableUsers.value.length)
+    } else {
+      availableUsers.value = response.data.users
+    }
   } catch (err) {
     console.error('Failed to load users:', err)
   }
@@ -698,6 +751,28 @@ onMounted(async () => {
   color: var(--color-text-soft);
 }
 
+.pre-selected-users-list {
+  margin-bottom: 1rem;
+}
+
+.pre-selected-users-list h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.user-item.selected {
+  background: #e8f5e8;
+  border-left: 3px solid #4caf50;
+}
+
+.selected-badge {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
 .selection-summary {
   margin-top: 1rem;
   padding: 0.75rem;
@@ -705,6 +780,16 @@ onMounted(async () => {
   border-radius: 6px;
   color: var(--color-primary);
   text-align: center;
+}
+
+.pre-selected-info {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: #e8f5e8;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  color: #2e7d32;
+  font-size: 0.875rem;
 }
 
 .warning-message {

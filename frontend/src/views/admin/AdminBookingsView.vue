@@ -232,21 +232,12 @@
                 />
               </td>
               <td>
-                <div class="flight-filter">
-                  <BaseInput
-                    v-model="searchFilters.departure_flight"
-                    placeholder="Номер или дата..."
-                    size="xs"
-                    @input="debouncedSearch"
-                  />
-                  <input
-                    v-model="searchFilters.departure_date"
-                    type="date"
-                    class="form-input form-input--xs flight-date-filter"
-                    @change="debouncedSearch"
-                    title="Фильтр по дате вылета"
-                  />
-                </div>
+                <BaseInput
+                  v-model="searchFilters.departure_flight"
+                  placeholder="Номер или дата..."
+                  size="xs"
+                  @input="debouncedSearch"
+                />
               </td>
               <td>
                 <BaseInput
@@ -514,25 +505,21 @@ const bookings = computed(() => {
       const flightNumber = getFlightNumber(departure).toLowerCase()
       const flightDate = formatDateDDMMYYYY(departure.date).toLowerCase()
       
-      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
+      // Also check if search term is a date in MM.DD.YYYY format and convert it
+      let searchTerm = searchFlight
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(searchFlight)) {
+        const parts = searchFlight.split('.')
+        if (parts.length === 3) {
+          const [month, day, year] = parts
+          // Convert MM.DD.YYYY to DD.MM.YYYY for comparison
+          searchTerm = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`
+        }
+      }
+      
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchTerm)
     })
   }
 
-  // Filter by departure date if specified
-  if (searchFilters.value.departure_date && searchFilters.value.departure_date.trim()) {
-    const searchDate = searchFilters.value.departure_date.trim()
-    filtered = filtered.filter(booking => {
-      const departure = getDepartureFlight(booking)
-      if (!departure || !departure.date) return false
-      
-      // Convert departure date to YYYY-MM-DD format for comparison
-      const departureDate = new Date(departure.date)
-      const filterDate = new Date(searchDate)
-      
-      // Compare dates (ignore time)
-      return departureDate.toDateString() === filterDate.toDateString()
-    })
-  }
 
   // Filter by arrival flight if specified
   if (searchFilters.value.arrival_flight && searchFilters.value.arrival_flight.trim()) {
@@ -544,7 +531,18 @@ const bookings = computed(() => {
       const flightNumber = getFlightNumber(arrival).toLowerCase()
       const flightDate = formatDateDDMMYYYY(arrival.date).toLowerCase()
       
-      return flightNumber.includes(searchFlight) || flightDate.includes(searchFlight)
+      // Also check if search term is a date in MM.DD.YYYY format and convert it
+      let searchTerm = searchFlight
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(searchFlight)) {
+        const parts = searchFlight.split('.')
+        if (parts.length === 3) {
+          const [month, day, year] = parts
+          // Convert MM.DD.YYYY to DD.MM.YYYY for comparison
+          searchTerm = `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`
+        }
+      }
+      
+      return flightNumber.includes(searchFlight) || flightDate.includes(searchTerm)
     })
   }
 
@@ -620,7 +618,6 @@ const searchFilters = ref({
   check_out: '',
   tourists: '',
   departure_flight: '',
-  departure_date: '',
   arrival_flight: '',
   total_amount: '',
   user_name: '',
@@ -801,7 +798,6 @@ const clearAllFilters = () => {
     check_out: '',
     tourists: '',
     departure_flight: '',
-    departure_date: '',
     arrival_flight: '',
     total_amount: '',
     user_name: '',

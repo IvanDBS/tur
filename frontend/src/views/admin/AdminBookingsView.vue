@@ -305,7 +305,7 @@
             </tr>
             <tr v-for="booking in bookings" :key="booking.id" class="table-row">
               <td class="booking-id">{{ booking.id }}</td>
-              <td class="operator">{{ getOperator(booking) }}</td>
+              <td class="operator">{{ getOperator() }}</td>
               <td class="operator-id">{{ booking.operator_id || 'N/A' }}</td>
               <td class="booking-number">{{ booking.obs_order_id || 'N/A' }}</td>
               <td class="booking-date">{{ formatDateDDMMYYYY(booking.created_at) }}</td>
@@ -338,10 +338,10 @@
                 <div class="user-email">{{ booking.user.email }}</div>
               </td>
               <td class="status">
-                <StatusBadge :status="booking.status" />
+                <StatusBadge :status="booking.status" class="table-status-badge" />
               </td>
               <td class="operator-status">
-                <StatusBadge :status="getOperatorStatus(booking)" />
+                <StatusBadge :status="getOperatorStatus(booking)" class="table-status-badge" />
               </td>
               <td class="actions">
                 <button 
@@ -415,20 +415,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { BaseButton, BaseSelect, BaseInput } from '../../components/ui'
+import { BaseSelect, BaseInput } from '../../components/ui'
 import { Pagination } from '../../components'
-import StatusBadge from './components/admin/StatusBadge.vue'
+import { StatusBadge } from '../../components/ui'
 import BookingDetailsModal from '../../components/booking/BookingDetailsModal.vue'
 import { default as NotificationBulkModal } from '../../components/admin/NotificationBulkModal.vue'
-import { formatDate } from '../../utils/dateUtils'
 import { debounce } from '../../utils/debounce'
-import { logger } from '../../utils/logger'
 import { useAdminApi } from '../../composables/useAdminApi'
-import { BOOKING_DEFAULTS, getDefaultValue } from '../../constants/bookingDefaults'
 import type { AdminBooking } from '../../types/admin'
 
 // Admin API
-const { getAdminBookings, updateBookingStatus, syncAllBookings: apiSyncAllBookings, syncBookingStatus: apiSyncBooking } = useAdminApi()
+const { getAdminBookings, syncAllBookings: apiSyncAllBookings, syncBookingStatus: apiSyncBooking } = useAdminApi()
 const loading = ref(false)
 
 // State
@@ -458,8 +455,8 @@ const bookings = computed(() => {
 
   // Filter by operator if specified
   if (searchFilters.value.operator && searchFilters.value.operator.trim()) {
-    filtered = filtered.filter(booking => 
-      getOperator(booking) === searchFilters.value.operator
+    filtered = filtered.filter(() => 
+      getOperator() === searchFilters.value.operator
     )
   }
 
@@ -735,6 +732,9 @@ const loadBookings = async () => {
       _t: Date.now() // Add timestamp to prevent caching
     })
     
+    console.log('API Response:', response)
+    console.log('Bookings from API:', (response as any).data?.bookings || (response as any).bookings)
+    
     
     // API returns data in response.data structure
     const data = (response as any).data || response as {
@@ -749,6 +749,7 @@ const loadBookings = async () => {
     // Transform API data to match AdminBooking interface
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     allBookings.value = (data.bookings || []).map((booking: any) => {
+      console.log(`Processing booking ${booking.id}: operator_status="${booking.operator_status}"`)
       // Parse tour_details if it's a string
       let tourDetails = booking.tour_details
       if (typeof tourDetails === 'string') {
@@ -854,25 +855,6 @@ const viewDetails = (booking: AdminBooking) => {
   selectedBooking.value = booking
 }
 
-const confirmBooking = async (booking: AdminBooking) => {
-  try {
-    await updateBookingStatus(booking.id.toString(), 'confirmed')
-    booking.status = 'confirmed'
-    booking.confirmed_at = new Date().toISOString()
-  } catch (error) {
-    console.error('Failed to confirm booking:', error)
-  }
-}
-
-const rejectBooking = async (booking: AdminBooking) => {
-  try {
-    await updateBookingStatus(booking.id.toString(), 'cancelled')
-    booking.status = 'cancelled'
-    booking.cancelled_at = new Date().toISOString()
-  } catch (error) {
-    console.error('Failed to reject booking:', error)
-  }
-}
 
 const handleStatusChanged = () => {
   selectedBooking.value = null
@@ -900,24 +882,44 @@ const handleNotificationSent = () => {
 const syncAllBookings = async () => {
   try {
     syncing.value = true
-    const response = await apiSyncAllBookings()
+    await apiSyncAllBookings()
     
     // Update last sync time
     lastSyncTime.value = new Date().toLocaleString('ru-RU')
     
     console.log('Синхронизация всех заявок запущена')
     
-    // Wait a bit for the jobs to complete
-    await new Promise(resolve => setTimeout(resolve, 5000))
+    // Wait for the jobs to complete with retries
+    let attempts = 0
+    const maxAttempts = 3
     
-    // Reload bookings to show updated statuses
-    await loadBookings()
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      await loadBookings()
+      
+      // Check if any bookings have been updated (count bookings with unknown/N/A status)
+      const unknownStatusCount = allBookings.value.filter(b => 
+        !b.operator_status || b.operator_status === 'unknown' || b.operator_status === 'N/A'
+      ).length
+      
+      console.log(`Попытка ${attempts + 1}/${maxAttempts} - осталось ${unknownStatusCount} заявок с неизвестным статусом`)
+      
+      if (unknownStatusCount === 0) {
+        console.log('Все заявки синхронизированы успешно')
+        break
+      }
+      
+      attempts++
+    }
     
-    console.log('Все заявки синхронизированы')
+    if (attempts >= maxAttempts) {
+      console.log('Синхронизация может занять больше времени')
+    }
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to sync all bookings:', error)
-    alert(`Ошибка синхронизации всех заявок: ${error.message}`)
+    const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка'
+    alert(`Ошибка синхронизации всех заявок: ${errorMessage}`)
   } finally {
     syncing.value = false
   }
@@ -926,22 +928,52 @@ const syncAllBookings = async () => {
 const syncBooking = async (booking: AdminBooking) => {
   try {
     syncing.value = true
-    const response = await apiSyncBooking(booking.id.toString())
+    const originalStatus = booking.operator_status
+    await apiSyncBooking(booking.id.toString())
     
-    // Show success message
-    console.log(`Синхронизация заявки ${booking.id} запущена`)
+    console.log(`Синхронизация заявки ${booking.id} запущена (исходный статус: "${originalStatus}")`)
     
-    // Wait a bit for the job to complete
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // Wait for the job to complete with retries
+    let attempts = 0
+    const maxAttempts = 3
     
-    // Update the specific booking status
-    await loadBookings()
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      await loadBookings()
+      
+      // Check if the booking status has been updated
+      const updatedBooking = allBookings.value.find(b => b.id === booking.id)
+      console.log(`Заявка ${booking.id}: исходный статус="${originalStatus}", текущий статус="${updatedBooking?.operator_status}"`)
+      
+      // Check if status has changed from unknown/N/A to a real status
+      if (updatedBooking && updatedBooking.operator_status && 
+          updatedBooking.operator_status !== 'unknown' && 
+          updatedBooking.operator_status !== 'N/A' &&
+          (originalStatus === 'unknown' || originalStatus === 'N/A' || !originalStatus)) {
+        console.log(`Заявка ${booking.id} синхронизирована успешно: ${originalStatus} -> ${updatedBooking.operator_status}`)
+        break
+      }
+      
+      // Also check if status changed from one real status to another
+      if (updatedBooking && updatedBooking.operator_status && 
+          updatedBooking.operator_status !== originalStatus &&
+          originalStatus && originalStatus !== 'unknown' && originalStatus !== 'N/A') {
+        console.log(`Заявка ${booking.id} синхронизирована успешно: ${originalStatus} -> ${updatedBooking.operator_status}`)
+        break
+      }
+      
+      attempts++
+      console.log(`Попытка ${attempts}/${maxAttempts} для заявки ${booking.id}`)
+    }
     
-    console.log(`Заявка ${booking.id} синхронизирована`)
+    if (attempts >= maxAttempts) {
+      console.log(`Заявка ${booking.id} - синхронизация может занять больше времени`)
+    }
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to sync booking:', error)
-    alert(`Ошибка синхронизации заявки ${booking.id}: ${error.message}`)
+    const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка'
+    alert(`Ошибка синхронизации заявки ${booking.id}: ${errorMessage}`)
   } finally {
     syncing.value = false
   }
@@ -1025,8 +1057,8 @@ const sortBookings = () => {
         bValue = getOperatorStatus(b)
         break
       case 'operator':
-        aValue = getOperator(a)
-        bValue = getOperator(b)
+        aValue = getOperator()
+        bValue = getOperator()
         break
       case 'operator_id':
         aValue = a.operator_id || 0
@@ -1176,14 +1208,14 @@ const getTouristsCount = (booking: AdminBooking) => {
 }
 
 // New helper functions
-const getOperator = (booking: AdminBooking) => {
+const getOperator = () => {
   // For now, return OBS as default, can be extended based on booking data
   return 'OBS'
 }
 
 const getOperatorStatus = (booking: AdminBooking) => {
   // Return operator_status from API if available
-  if (booking.operator_status) {
+  if (booking.operator_status && booking.operator_status !== 'unknown') {
     return booking.operator_status
   }
   
@@ -1197,6 +1229,11 @@ const getOperatorStatus = (booking: AdminBooking) => {
   const customerData = booking.customer_data as any
   if (customerData?.info?.order_status?.name) {
     return customerData.info.order_status.name
+  }
+  
+  // If we have an obs_booking_hash but no status, it means we need to sync
+  if (booking.obs_booking_hash && !booking.operator_status) {
+    return 'unknown'
   }
   
   return 'N/A'
@@ -1430,6 +1467,13 @@ onMounted(() => {
   line-height: 1.2;
 }
 
+/* Уменьшаем размер шрифта для статусов в таблице */
+.table-status-badge {
+  font-size: var(--font-size-xs) !important;
+  font-weight: var(--font-weight-normal) !important;
+  padding: 2px 6px !important;
+}
+
 .table th {
   background: var(--color-background-soft);
   font-weight: var(--font-weight-semibold);
@@ -1479,6 +1523,9 @@ onMounted(() => {
   padding: var(--spacing-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-sm);
+  height: var(--input-height);
+  min-height: var(--input-height);
+  box-sizing: border-box;
 }
 
 .table-row:hover {
@@ -1487,6 +1534,24 @@ onMounted(() => {
 
 .booking-id {
   text-align: center !important;
+  width: 50px;
+  max-width: 50px;
+  min-width: 50px;
+}
+
+.operator-id {
+  text-align: center !important;
+  width: 60px;
+  max-width: 60px;
+  min-width: 60px;
+}
+
+.status,
+.operator-status {
+  width: 120px;
+  max-width: 120px;
+  min-width: 120px;
+  text-align: center;
 }
 
 .user-info {
@@ -1534,13 +1599,14 @@ onMounted(() => {
 
 .departure-flight,
 .arrival-flight {
-  min-width: 120px;
+  min-width: 80px;
+  width: 80px;
+  max-width: 80px;
 }
 
-
-
 .tourists {
-  min-width: 150px;
+  min-width: 200px;
+  width: 200px;
 }
 
 .tourists-list {
@@ -1555,6 +1621,24 @@ onMounted(() => {
 
 .form-input[type="date"]::-webkit-inner-spin-button,
 .form-input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+/* Компактные стили для полей дат в админке */
+.search-row .form-input[type="date"] {
+  padding: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  height: var(--input-height);
+  min-height: var(--input-height);
+  box-sizing: border-box;
+}
+
+/* Скрываем только внутренние кнопки, но оставляем календарь */
+.search-row .form-input[type="date"]::-webkit-inner-spin-button,
+.search-row .form-input[type="date"]::-webkit-clear-button {
   display: none;
 }
 

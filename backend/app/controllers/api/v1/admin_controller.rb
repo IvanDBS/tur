@@ -7,6 +7,9 @@ module Api
 
       # GET /api/v1/admin/bookings
       def bookings
+        # Force fresh data by clearing any potential caching
+        ActiveRecord::Base.connection.clear_query_cache if ActiveRecord::Base.connection.respond_to?(:clear_query_cache)
+        
         bookings_query = Booking.includes(:user, :search_query).recent
 
         # Apply filters
@@ -23,6 +26,12 @@ module Api
 
         # Paginate results
         pagy, bookings = pagy(bookings_query, items: params[:per_page] || 20)
+
+        # Log booking data for debugging
+        Rails.logger.info "Admin bookings API: returning #{bookings.count} bookings"
+        bookings.each do |booking|
+          Rails.logger.info "Booking #{booking.id}: operator_status='#{booking.operator_status}', last_synced_at='#{booking.last_synced_at}'"
+        end
 
         render_success({
           bookings: bookings.map do |booking|
